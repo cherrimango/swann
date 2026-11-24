@@ -13,6 +13,9 @@ requests
 dnslib
 qrcode[pil]
 python-multipart
+cryptography>=42
+pillow>=10
+httpx
 pytest
 # optional: live screenshots in evidence packs
 # playwright  (then: python -m playwright install chromium)

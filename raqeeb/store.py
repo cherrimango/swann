@@ -1,39 +1,15 @@
 """SQLite store for the command centre: hunt feed, resident reports, blocklist (antibodies) and audit log."""
 import json
-import sqlite3
 import threading
 import time
-from pathlib import Path
 
-DB = Path(__file__).resolve().parent.parent / "data" / "raqeeb.db"
 _lock = threading.Lock()
-
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS feed (id INTEGER PRIMARY KEY, url TEXT UNIQUE, host TEXT, brand TEXT, risk REAL,
-    verdict TEXT, source TEXT, reason TEXT, ts REAL);
-CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY, kind TEXT, content TEXT, verdict TEXT, risk REAL,
-    brand TEXT, emirate TEXT, ts REAL);
-CREATE TABLE IF NOT EXISTS blocklist (domain TEXT PRIMARY KEY, reason TEXT, brand TEXT, added_by TEXT, ts REAL);
-CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY, action TEXT, detail TEXT, ts REAL);
-"""
-
-
-def conn():
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    c = sqlite3.connect(DB, check_same_thread=False)
-    c.row_factory = sqlite3.Row
-    return c
-
-
-_c = None
 
 
 def db():
-    global _c
-    if _c is None:
-        _c = conn()
-        _c.executescript(SCHEMA)
-    return _c
+    """Shared connection from raqeeb.db (runs migrations on first use)."""
+    from .db import db as _db
+    return _db()
 
 
 def _rows(cur):
@@ -73,16 +49,16 @@ def block(domain, reason, brand, added_by):
     with _lock:
         db().execute("INSERT OR REPLACE INTO blocklist (domain,reason,brand,added_by,ts) VALUES (?,?,?,?,?)",
                      (domain.lower(), reason, brand, added_by, time.time()))
-        db().execute("INSERT INTO audit (action,detail,ts) VALUES (?,?,?)",
-                     ("block", json.dumps({"domain": domain, "by": added_by}), time.time()))
+        db().execute("INSERT INTO audit (action,detail,ts,actor) VALUES (?,?,?,?)",
+                     ("block", json.dumps({"domain": domain}), time.time(), added_by))
         db().commit()
 
 
 def unblock(domain, by):
     with _lock:
         db().execute("DELETE FROM blocklist WHERE domain = ?", (domain.lower(),))
-        db().execute("INSERT INTO audit (action,detail,ts) VALUES (?,?,?)",
-                     ("unblock", json.dumps({"domain": domain, "by": by}), time.time()))
+        db().execute("INSERT INTO audit (action,detail,ts,actor) VALUES (?,?,?,?)",
+                     ("unblock", json.dumps({"domain": domain}), time.time(), by))
         db().commit()
 
 

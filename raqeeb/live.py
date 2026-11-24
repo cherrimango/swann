@@ -13,10 +13,12 @@ import ssl
 from pathlib import Path
 
 import requests
+from types import SimpleNamespace
 
 from .brands import BRANDS, official_brand
 from .engine import TOP_LEGIT, scan
 from .evidence import write_pack
+from .security import UnsafeTarget, check_url, safe_get
 from .urlparse import parse
 
 UA_MOBILE = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 "
@@ -45,10 +47,9 @@ def sha256(data: bytes) -> str:
 
 
 def fetch(url, ua):
-    r = requests.get(url, headers={"User-Agent": ua, "Accept-Language": "ar-AE,en;q=0.8"},
-                     timeout=TIMEOUT, allow_redirects=True)
-    chain = [{"status": h.status_code, "url": h.url} for h in r.history] + [{"status": r.status_code, "url": r.url}]
-    return r, chain
+    """SSRF-safe fetch: every redirect hop is checked against private / internal addresses."""
+    r, chain, text = safe_get(url, headers={"User-Agent": ua, "Accept-Language": "ar-AE,en;q=0.8"}, timeout=TIMEOUT)
+    return SimpleNamespace(text=text, url=r.url, status_code=r.status_code), chain
 
 
 def client_redirect(html: str):
@@ -104,6 +105,7 @@ def hosting(host):
 
 def tls(host):
     try:
+        check_url(f"https://{host}/")
         ctx = ssl.create_default_context()
         with socket.create_connection((host, 443), timeout=TIMEOUT) as s, ctx.wrap_socket(s, server_hostname=host) as ss:
             c = ss.getpeercert()
@@ -144,6 +146,14 @@ def screenshot(url, dest: Path):
         with sync_playwright() as pw:
             b = pw.chromium.launch()
             pg = b.new_page(user_agent=UA_MOBILE, viewport={"width": 390, "height": 844})
+
+            def guard(route):  # the headless browser may not reach internal addresses either
+                try:
+                    check_url(route.request.url)
+                    route.continue_()
+                except UnsafeTarget:
+                    route.abort()
+            pg.route("**/*", guard)
             pg.goto(url, timeout=15000, wait_until="domcontentloaded")
             pg.screenshot(path=str(dest), full_page=False)
             b.close()

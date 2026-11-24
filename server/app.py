@@ -1,13 +1,15 @@
-"""RAQEEB server: API for the police command centre and the resident app, plus live updates over WebSocket.
+"""RAQEEB server: RAQEEB Command (officials), RAQEEB Protect (citizens) and the intelligence API, with live updates.
 
     uvicorn server.app:app --host 0.0.0.0 --port 8000
-    open http://localhost:8000/          police command centre
-    open http://<laptop-ip>:8000/app     resident phone app (same Wi-Fi)
+    open http://localhost:8000/          RAQEEB Command (sign in with an account from data/first_run_credentials.txt)
+    open http://<laptop-ip>:8000/app     RAQEEB Protect, the citizen app (same Wi-Fi)
 """
 import asyncio
 import csv
+import html
 import io
 import json
+import os
 import socket
 import time
 import zipfile
@@ -15,13 +17,13 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from raqeeb import store
+from raqeeb import auth, content, intel, protection, store
 from raqeeb.brands import BRANDS, SCAM_TYPES
 from raqeeb.campaigns import build as build_campaigns
 from raqeeb.engine import model, scan_many
@@ -30,40 +32,16 @@ from raqeeb.messages import check_message
 from raqeeb.scamcast import SEASONS, forecast, predicted_domains
 from raqeeb.urlparse import parse
 
+from .deps import current_user, rate, require, require_official
+from .hub import hub
+from .v2 import router as v2_router
+
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
 EVIDENCE = ROOT / "evidence"
 UAE_SCAMS = ROOT / "data" / "uae_scam_urls.csv"
 CAMPAIGNS: dict = {"campaigns": [], "graph": {"nodes": [], "edges": []}}
 REPLAY: list[dict] = []
-
-
-class Hub:
-    """Fan-out of live events to every connected dashboard and phone."""
-
-    def __init__(self):
-        self.clients: set[WebSocket] = set()
-
-    async def join(self, ws: WebSocket):
-        await ws.accept()
-        self.clients.add(ws)
-
-    def leave(self, ws: WebSocket):
-        self.clients.discard(ws)
-
-    async def send(self, event: str, data: dict):
-        msg = json.dumps({"event": event, "data": data, "ts": time.time()}, ensure_ascii=False, default=str)
-        dead = []
-        for ws in list(self.clients):
-            try:
-                await ws.send_text(msg)
-            except Exception:  # noqa: BLE001
-                dead.append(ws)
-        for ws in dead:
-            self.leave(ws)
-
-
-hub = Hub()
 
 
 def _top_reason(r):
@@ -86,16 +64,52 @@ def seed():
                        f"Reported in {row['source']}", _top_reason(res), ts=0)
 
 
+async def _expiry_loop():
+    """Every hour: expire global blocks past their date and send them back to review."""
+    while True:
+        pkg = await asyncio.to_thread(protection.expire_due)
+        if pkg:
+            await hub.send("protection", {"version": pkg["payload"]["version"], "rules": len(pkg["payload"]["rules"])}, audience="all")
+        await asyncio.sleep(3600)
+
+
 @asynccontextmanager
 async def lifespan(_app):
     model()
+    created = auth.bootstrap()
+    if created:
+        print("RAQEEB Command accounts created. Credentials: data/first_run_credentials.txt")
     seed()
+    protection.latest()
+    task = asyncio.create_task(_expiry_loop())
     yield
+    task.cancel()
 
 
-app = FastAPI(title="RAQEEB — UAE scam intelligence", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(title="RAQEEB 2.0: UAE scam intelligence", lifespan=lifespan)
+_origins = [o for o in os.environ.get("RAQEEB_CORS_ORIGINS", "").split(",") if o]
+if _origins:
+    app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=WEB), name="static")
+app.include_router(v2_router)
+
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+       "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
+       "frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    resp = await call_next(request)
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "no-referrer")
+    resp.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=()")
+    if not request.url.path.startswith(("/docs", "/redoc", "/openapi")):
+        resp.headers.setdefault("Content-Security-Policy", CSP)
+    if request.url.path.startswith("/api/"):
+        resp.headers.setdefault("Cache-Control", "no-store")
+    return resp
 
 
 # ---------- pages ----------
@@ -121,7 +135,7 @@ def service_worker():
 
 @app.get("/blocked", response_class=HTMLResponse, include_in_schema=False)
 def blocked_page(d: str = ""):
-    return (WEB / "app" / "blocked.html").read_text(encoding="utf-8").replace("{{DOMAIN}}", d[:120])
+    return (WEB / "app" / "blocked.html").read_text(encoding="utf-8").replace("{{DOMAIN}}", html.escape(d[:120]))
 
 
 # ---------- scanning ----------
@@ -142,12 +156,15 @@ class MessageIn(BaseModel):
 
 
 def _with_block(r):
-    r["blocked"] = store.is_blocked(r["host"]) if r.get("host") else False
+    r["blocked"] = bool(r.get("host") and (protection.check_value(r["url"]) or store.is_blocked(r["host"])))
     return r
 
 
-@app.post("/api/scan")
-async def api_scan(body: ScanIn):
+@app.post("/api/scan", dependencies=[Depends(rate("check"))])
+async def api_scan(body: ScanIn, user=Depends(current_user)):
+    if body.live and not (user and auth.can(user["role"], "view_evidence")):
+        raise HTTPException(403, "Live evidence collection is for authorised officials")
+    content.bump("checks")
     r = scan_many([body.url])[0]
     if body.live:
         from raqeeb.live import enrich
@@ -157,50 +174,52 @@ async def api_scan(body: ScanIn):
     return _with_block(r)
 
 
-@app.get("/api/check")
+@app.get("/api/check", dependencies=[Depends(rate("check"))])
 def api_check(url: str):
-    return _with_block(scan_many([url])[0])
+    content.bump("checks")
+    r = _with_block(scan_many([url])[0])
+    if r["blocked"]:
+        content.bump("checks_blocked")
+    return r
 
 
 @app.post("/api/scan/batch")
-def api_batch(body: BatchIn):
-    if len(body.urls) > 10000:
-        raise HTTPException(413, "Send at most 10,000 URLs per call")
+def api_batch(body: BatchIn, user=Depends(current_user)):
+    cap = 10000 if user and user["role"] in auth.OFFICIAL_ROLES else 50
+    if len(body.urls) > cap:
+        raise HTTPException(413, f"Send at most {cap:,} URLs per call")
     return scan_many(body.urls)
 
 
-@app.post("/api/check-message")
-async def api_message(body: MessageIn):
+@app.post("/api/check-message", dependencies=[Depends(rate("check"))])
+async def api_message(body: MessageIn, user=Depends(current_user)):
+    """Check a message. With report=true it is filed through the RAQEEB 2.0 citizen-report pipeline."""
+    from raqeeb import community
+    content.bump("checks")
     r = check_message(body.text)
     for link in r["links"]:
         _with_block(link)
     if body.report:
-        brand = next((l["impersonated_brand"]["name"] for l in r["links"] if l.get("impersonated_brand")), "")
-        rid = store.add_report("message", body.text, r["verdict"], r["risk_score"], brand, body.emirate)
-        await hub.send("report", {"id": rid, "verdict": r["verdict"], "risk": r["risk_score"], "brand": brand,
-                                  "emirate": body.emirate, "preview": body.text[:140]})
-        for link in r["links"]:
-            if link["label"]:
-                store.add_feed(link["url"], link["host"], (link.get("impersonated_brand") or {}).get("name", ""),
-                               link["risk_score"], link["verdict"], "Resident report (RAQEEB app)", _top_reason(link))
-                await hub.send("feed", {"url": link["url"], "risk": link["risk_score"], "verdict": link["verdict"],
-                                        "brand": (link.get("impersonated_brand") or {}).get("name", ""),
-                                        "source": "Resident report (RAQEEB app)", "reason": _top_reason(link)})
+        emirate = body.emirate if body.emirate in auth.EMIRATES else None
+        rep = await asyncio.to_thread(community.submit, user, "auto", body.text, emirate)
+        r["report_ref"] = rep["ref"]
+        await hub.send("citizen_report", {"ref": rep["ref"], "type": rep["type"], "risk": rep["risk"],
+                                          "severity": rep["severity"], "emirate": emirate, "threats": rep["threat_refs"]})
     return r
 
 
 # ---------- intelligence ----------
-@app.get("/api/feed")
+@app.get("/api/feed", dependencies=[Depends(require("view_investigations"))])
 def api_feed(limit: int = 200, brand: str | None = None):
     return store.feed(limit=min(limit, 1000), brand=brand)
 
 
-@app.get("/api/campaigns")
+@app.get("/api/campaigns", dependencies=[Depends(require("view_investigations"))])
 def api_campaigns():
     return CAMPAIGNS
 
 
-@app.get("/api/stats")
+@app.get("/api/stats", dependencies=[Depends(require_official)])
 def api_stats():
     s = store.stats()
     s["campaigns"] = len(CAMPAIGNS["campaigns"])
@@ -274,7 +293,7 @@ def _hunt_job(body: HuntIn, loop):
 
 
 @app.post("/api/hunt")
-async def api_hunt(body: HuntIn, tasks: BackgroundTasks):
+async def api_hunt(body: HuntIn, tasks: BackgroundTasks, user=Depends(require("run_hunt"))):
     tasks.add_task(_hunt_job, body, asyncio.get_running_loop())
     return {"started": True, "mode": body.mode}
 
@@ -284,39 +303,56 @@ class BlockIn(BaseModel):
     domain: str
     reason: str = ""
     brand: str = ""
-    by: str = "officer"
 
 
 @app.post("/api/antibody")
-async def api_antibody(body: BlockIn):
+async def api_antibody(body: BlockIn, user=Depends(require("approve_block"))):
+    """One-step officer block (1.0 'antibody'), now routed through the 2.0 policy: the domain becomes a threat record,
+    is confirmed by this approver, and is published in a new signed protection version with an expiry."""
+    from raqeeb import community
     p = parse(body.domain)
     target = p.host.removeprefix("www.") or body.domain.lower()
-    store.block(target, body.reason, body.brand, body.by)
-    await hub.send("antibody", {"domain": target, "brand": body.brand, "reason": body.reason})
-    return {"blocked": target}
+    r = scan_many([target])[0]
+    t, _ = intel.upsert("domain", target, intel.category_for("domain", None, None), body.brand or
+                        (r.get("impersonated_brand") or {}).get("name", ""), r["risk_score"], r["risk_score"] / 100,
+                        {"officer_reason": body.reason[:300]}, None, source=f"officer:{user['email']}", actor=user["email"])
+    if t["status"] != "confirmed_malicious":
+        community.review(t["id"], "confirmed_malicious", user, body.reason or "confirmed by approver")
+    pkg = protection.global_block(t["id"], user, note=body.reason)
+    store.block(target, body.reason, body.brand, user["email"])
+    await hub.send("antibody", {"domain": target, "brand": body.brand, "reason": body.reason}, audience="all")
+    await hub.send("protection", {"version": pkg["payload"]["version"], "rules": len(pkg["payload"]["rules"])}, audience="all")
+    return {"blocked": target, "threat_id": t["id"], "version": pkg["payload"]["version"]}
 
 
 @app.delete("/api/antibody/{domain}")
-async def api_unblock(domain: str):
-    store.unblock(domain, "officer")
-    await hub.send("unblock", {"domain": domain})
+async def api_unblock(domain: str, user=Depends(require("approve_block"))):
+    store.unblock(domain, user["email"])
+    t = intel.find("domain", domain)
+    if t and t["block_status"] == "global":
+        protection.unblock(t["id"], user, "lifted by approver")
+    else:
+        protection.publish(user["email"], f"Unblock {domain}")
+    await hub.send("unblock", {"domain": domain}, audience="all")
     return {"unblocked": domain}
 
 
 @app.get("/api/blocklist")
 def api_blocklist():
-    return store.blocklist()
+    """Domains currently blocked for everyone (from the latest signed protection package)."""
+    return [{"domain": r["value"], "brand": r["brand"], "reason": r["category"], "expires": r["expires"]}
+            for r in protection.latest()["payload"]["rules"] if r["type"] in ("domain", "host")]
 
 
 @app.get("/api/blocklist.txt", response_class=PlainTextResponse)
 def api_blocklist_txt(fmt: str = "plain"):
-    doms = [b["domain"] for b in store.blocklist()]
+    doms = protection.domain_rules_for_dns()
     if fmt == "hosts":
         return "\n".join(f"0.0.0.0 {d}" for d in doms) + "\n"
     return "\n".join(doms) + "\n"
 
 
-@app.get("/api/reports")
+@app.get("/api/reports", dependencies=[Depends(require("view_investigations"))])
 def api_reports():
     return store.reports()
 
@@ -327,7 +363,7 @@ class EvidenceIn(BaseModel):
 
 
 @app.post("/api/evidence")
-async def api_evidence(body: EvidenceIn):
+async def api_evidence(body: EvidenceIn, user=Depends(require("view_evidence"))):
     from raqeeb.evidence import write_pack
     from raqeeb.live import enrich
     r = scan_many([body.url])[0]
@@ -347,12 +383,12 @@ def _case(case_id: str) -> Path:
 
 
 @app.get("/api/evidence/{case_id}/report", response_class=HTMLResponse)
-def api_evidence_report(case_id: str):
+def api_evidence_report(case_id: str, user=Depends(require("view_evidence"))):
     return (_case(case_id) / "report.html").read_text(encoding="utf-8")
 
 
 @app.get("/api/evidence/{case_id}/zip")
-def api_evidence_zip(case_id: str):
+def api_evidence_zip(case_id: str, user=Depends(require("view_evidence"))):
     folder = _case(case_id)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
@@ -381,13 +417,13 @@ def api_join_url():
         ip = "127.0.0.1"
     finally:
         s.close()
-    return {"url": f"http://{ip}:8000/app"}
+    return {"url": f"http://{ip}:{os.environ.get('RAQEEB_PORT', '8000')}/app"}
 
 
 # ---------- live updates ----------
 @app.websocket("/ws")
-async def ws(websocket: WebSocket):
-    await hub.join(websocket)
+async def ws(websocket: WebSocket, token: str | None = None):
+    await hub.join(websocket, token)
     try:
         while True:
             await websocket.receive_text()

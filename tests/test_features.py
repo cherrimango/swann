@@ -34,9 +34,14 @@ def test_same_kit_on_two_domains_is_one_campaign():
 
 def test_antibody_reaches_blocklist_and_phones():
     from server.app import app
-    with TestClient(app) as c, c.websocket_connect("/ws") as ws:
-        c.post("/api/antibody", json={"domain": "test-scam-domain.top", "brand": "Test", "reason": "test"})
-        assert '"antibody"' in ws.receive_text()
+    with TestClient(app) as c:
+        token = c.post("/api/auth/login", json={"email": "admin@raqeeb.local", "password": "test-admin-password"}).json()["token"]
+        h = {"Authorization": f"Bearer {token}"}
+        assert c.post("/api/antibody", json={"domain": "test-scam-domain.top"}).status_code == 401
+        with c.websocket_connect("/ws") as ws:
+            c.post("/api/antibody", json={"domain": "test-scam-domain.top", "brand": "Test", "reason": "test"}, headers=h)
+            assert '"antibody"' in ws.receive_text()
         assert "test-scam-domain.top" in c.get("/api/blocklist.txt").text
         assert c.get("/api/check?url=http://test-scam-domain.top/pay").json()["blocked"] is True
-        c.delete("/api/antibody/test-scam-domain.top")
+        c.delete("/api/antibody/test-scam-domain.top", headers=h)
+        assert "test-scam-domain.top" not in c.get("/api/blocklist.txt").text
