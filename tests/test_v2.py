@@ -138,13 +138,15 @@ def test_block_for_me_is_personal(c):
     assert "annoying-offers.example" not in c.get("/api/blocklist.txt").text
 
 
-# 9. Global blocking needs both the approve_block permission and a confirmed-malicious threat.
+# 9. Analysts verify, officials approve; global blocking needs approval permission and an approved threat.
 def test_global_block_policy(c):
     adm, analyst = admin(c), official(c, "cyber_analyst")
     t = c.post("/api/threats", json={"indicator": f"http://etisalat-points-{secrets.token_hex(2)}.top/"}, headers=analyst).json()
     assert c.post(f"/api/threats/{t['id']}/block", json={}, headers=analyst).status_code == 403
     assert c.post(f"/api/threats/{t['id']}/block", json={}, headers=adm).status_code == 409  # not yet confirmed
-    assert set_status(c, analyst, t["id"], "confirmed_malicious").status_code == 200
+    assert set_status(c, analyst, t["id"], "analyst_verified").status_code == 200
+    assert set_status(c, analyst, t["id"], "confirmed_malicious").status_code == 403  # analysts verify, officials approve
+    assert set_status(c, adm, t["id"], "confirmed_malicious").status_code == 200
     r = c.post(f"/api/threats/{t['id']}/block", json={"expiry_days": 14}, headers=adm)
     assert r.status_code == 200 and r.json()["threat"]["block_status"] == "global"
 
@@ -296,7 +298,7 @@ def test_full_workflow(c):
     adm, analyst = admin(c), official(c, "cyber_analyst")
     assert c.get(f"/api/threats/{tid}", headers=analyst).json()["status"] == "community_corroborated"
     assert set_status(c, analyst, tid, "analyst_verified").status_code == 200
-    assert set_status(c, analyst, tid, "confirmed_malicious").status_code == 200
+    assert set_status(c, adm, tid, "confirmed_malicious").status_code == 200
     v = c.post(f"/api/threats/{tid}/block", json={"expiry_days": 30, "note": "fake fines portal"}, headers=adm).json()["version"]
     pkg = c.get("/api/protection/latest").json()
     assert pkg["payload"]["version"] == v and protection.verify(pkg)

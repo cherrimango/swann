@@ -28,7 +28,9 @@ PERMISSIONS = {
     "view_investigations": OFFICIAL_ROLES,
     "verify_threat": {"super_admin", "police_admin", "cyber_analyst", "intel_analyst"},
     "edit_investigation": {"super_admin", "police_admin", "cyber_analyst", "investigation_officer", "intel_analyst"},
+    "approve_threat": {"super_admin", "police_admin"},  # official approval: separate from analyst verification
     "approve_block": {"super_admin", "police_admin"},
+    "manage_registry": {"super_admin", "police_admin"},
     "rollback": {"super_admin", "police_admin"},
     "run_hunt": {"super_admin", "police_admin", "cyber_analyst", "intel_analyst"},
     "view_evidence": {"super_admin", "police_admin", "cyber_analyst", "investigation_officer", "intel_analyst"},

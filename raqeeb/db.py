@@ -58,6 +58,16 @@ MIGRATIONS = [
     CREATE INDEX idx_reports_user ON citizen_reports(user_id);
     CREATE INDEX idx_points_user ON points(user_id);
     """,
+    # 4 — Link Intelligence Engine scans and the organisation registry
+    """
+    CREATE TABLE scans (id TEXT PRIMARY KEY, url TEXT, verdict TEXT, risk_score REAL, mode TEXT, status TEXT NOT NULL,
+        report TEXT, user_id INTEGER, created REAL);
+    CREATE INDEX idx_scans_user ON scans(user_id);
+    CREATE TABLE organizations (id TEXT PRIMARY KEY, name TEXT NOT NULL, name_ar TEXT, sector TEXT, domains TEXT NOT NULL,
+        keywords TEXT, added_by TEXT, created REAL);
+    ALTER TABLE threats ADD COLUMN demo INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE citizen_reports ADD COLUMN details TEXT;
+    """,
 ]
 
 

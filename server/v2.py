@@ -183,6 +183,8 @@ async def threat_status(tid: str, body: StatusIn, user=Depends(require("verify_t
         raise HTTPException(400, "Choose a review decision")
     if not intel.get(tid):
         raise HTTPException(404, "No threat with that ID")
+    if body.status == "confirmed_malicious" and not auth.can(user["role"], "approve_threat"):
+        raise HTTPException(403, "Analysts verify threats. Official approval needs a Police or Super Administrator.")
     t = community.review(tid, body.status, user, body.note)
     audit("threat_status", user, {"id": tid, "status": body.status, "note": body.note[:200]})
     await hub.send("threat", {"id": tid, "status": t["status"], "status_label": t["status_label"]})

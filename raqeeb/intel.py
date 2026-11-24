@@ -17,9 +17,9 @@ CATEGORIES = {
 STATUSES = ["new", "analysing", "under_review", "community_corroborated", "analyst_verified", "confirmed_malicious",
             "rejected", "duplicate", "false_positive", "resolved"]
 STATUS_LABELS = {
-    "new": "Newly submitted", "analysing": "AI analysis in progress", "under_review": "Under review",
+    "new": "Newly discovered", "analysing": "AI analysis in progress", "under_review": "Under investigation",
     "community_corroborated": "Community corroborated", "analyst_verified": "Analyst verified",
-    "confirmed_malicious": "Confirmed malicious", "rejected": "Rejected", "duplicate": "Duplicate",
+    "confirmed_malicious": "Officially approved", "rejected": "Rejected", "duplicate": "Duplicate",
     "false_positive": "False positive", "resolved": "Resolved",
 }
 VERIFIED = {"analyst_verified", "confirmed_malicious"}

@@ -34,6 +34,7 @@ from raqeeb.urlparse import parse
 
 from .deps import current_user, rate, require, require_official
 from .hub import hub
+from .api_v1 import router as v1_router
 from .v2 import router as v2_router
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -92,6 +93,7 @@ if _origins:
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.include_router(v2_router)
+app.include_router(v1_router)
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
