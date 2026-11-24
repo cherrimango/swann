@@ -1,169 +1,219 @@
-// RAQEEB resident app (installable web app). All text from the network is inserted with textContent.
+// RAQEEB Protect 2.0 (installable web app). All text from the network is inserted with textContent.
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
-const T = {
-  en: {
-    checkTitle: 'Check before you tap', checkLede: 'Paste a link or a whole message. RAQEEB tells you if it’s a scam and why.',
-    inputLabel: 'Link or message', inputPh: 'Paste a link or a message you received', checkBtn: 'Check it', qrBtn: 'Scan a QR code',
-    qrHint: 'Point the camera at the QR code', cancel: 'Cancel', tipsTitle: 'Remember',
-    tip1: 'No bank or government entity asks for your OTP or UAE PASS approval by phone.',
-    tip2: 'Fines, tolls and parcel fees are paid in the official app, not through a link.',
-    tip3: 'A price far below the official one is the most common ticket scam.',
-    alertsTitle: 'Scam alerts', alertsLede: 'When police block a new scam, it reaches your phone here instantly.',
-    notifyBtn: 'Turn on alert notifications', notifyOn: 'Alert notifications are on',
-    guardTitle: 'UAE PASS guard',
-    guardLede: 'The most damaging scam in the UAE: a fake official calls and asks you to approve a login. On Android, RAQEEB sees the call and the approval request together, and stops you before you tap approve.',
-    onCall: 'Simulate: I’m on a call with an unknown number', simulateBtn: 'Simulate a UAE PASS approval request',
-    guardNote: 'This is a demo of the Android guard. It doesn’t connect to UAE PASS.',
-    tabCheck: 'Check', tabAlerts: 'Alerts', tabGuard: 'Guard', reportBtn: 'Report to Aman', close: 'Close',
-    emirateLabel: 'Your emirate', sendReport: 'Send report', amanAlso: 'You can also contact Aman directly:',
-    reportDone: 'Report sent. Thank you — it helps protect others.',
-    toEyebrow: 'RAQEEB stopped an approval', toTitle: 'Someone is trying to log in as you.',
-    toBody: 'You’re on a call with an unknown number and a UAE PASS approval just arrived. Real officials never ask you to approve a login. Hang up first.',
-    toDeny: 'I didn’t ask for this. Decline', toAllow: 'It was me',
-    scam: 'Scam', suspicious: 'Be careful', safe: 'Looks safe', pretends: n => `Pretends to be ${n}`,
-    thisLink: 'This link', official: 'Official', checking: 'Checking…', empty: 'Paste a link or message first.',
-    noAlerts: 'No alerts yet. New blocks appear here the moment police push them.',
-    blockedNew: 'New scam blocked in the UAE', blockedFor: b => b ? `Impersonating ${b}. Blocked on your phone.` : 'Blocked on your phone.',
-    guardOff: 'No call is active, so the approval would go through. The guard steps in only during calls.',
-    declined: 'Declined. Never share codes or approvals with a caller. You can report the number to Aman: 8002626.',
-    adviceScam: 'Don’t open it or pay. Delete the message and report it.', adviceWarn: 'Don’t enter any details. Open the service from its official app instead.',
-    adviceSafe: 'No scam signs found. Still, pay and log in only through official apps.',
-    noQr: 'This browser can’t scan QR codes. Try Chrome on Android, or paste the link instead.', qrFound: 'QR code found: checking it',
-    unicodeNote: u => `“${u.char}” is not a normal letter: ${u.name}.`, similar: p => `${p}% similar to the official address.`,
-    offline: 'Can’t reach RAQEEB right now. Check your connection.',
-  },
-  ar: {
-    checkTitle: 'تحقّق قبل أن تضغط', checkLede: 'الصق رابطاً أو رسالة كاملة، وسيخبرك رقيب إن كانت احتيالاً ولماذا.',
-    inputLabel: 'رابط أو رسالة', inputPh: 'الصق رابطاً أو رسالة وصلتك', checkBtn: 'تحقّق', qrBtn: 'امسح رمز QR',
-    qrHint: 'وجّه الكاميرا نحو رمز QR', cancel: 'إلغاء', tipsTitle: 'تذكّر',
-    tip1: 'لا يطلب أي بنك أو جهة حكومية رمز التحقق أو موافقة الهوية الرقمية عبر الهاتف.',
-    tip2: 'تُدفع المخالفات والتعرفة ورسوم الطرود من التطبيق الرسمي، لا عبر رابط.',
-    tip3: 'السعر الأقل بكثير من السعر الرسمي هو أكثر احتيالات التذاكر شيوعاً.',
-    alertsTitle: 'تنبيهات الاحتيال', alertsLede: 'عندما تحظر الشرطة احتيالاً جديداً، يصل إلى هاتفك هنا فوراً.',
-    notifyBtn: 'فعّل إشعارات التنبيه', notifyOn: 'إشعارات التنبيه مفعّلة',
-    guardTitle: 'حارس الهوية الرقمية',
-    guardLede: 'أخطر احتيال في الإمارات: منتحل صفة رسمية يتصل ويطلب منك الموافقة على تسجيل دخول. على أندرويد، يرى رقيب المكالمة وطلب الموافقة معاً، ويوقفك قبل أن تضغط موافقة.',
-    onCall: 'محاكاة: أنا في مكالمة مع رقم مجهول', simulateBtn: 'محاكاة طلب موافقة من الهوية الرقمية',
-    guardNote: 'هذا عرض تجريبي لحارس أندرويد، ولا يتصل بالهوية الرقمية.',
-    tabCheck: 'تحقّق', tabAlerts: 'التنبيهات', tabGuard: 'الحارس', reportBtn: 'أبلغ خدمة أمان', close: 'إغلاق',
-    emirateLabel: 'إمارتك', sendReport: 'أرسل البلاغ', amanAlso: 'يمكنك أيضاً التواصل مع أمان مباشرة:',
-    reportDone: 'تم إرسال البلاغ. شكراً لك، فهو يحمي الآخرين.',
-    toEyebrow: 'رقيب أوقف طلب موافقة', toTitle: 'شخص ما يحاول تسجيل الدخول باسمك.',
-    toBody: 'أنت في مكالمة مع رقم مجهول ووصل للتو طلب موافقة من الهوية الرقمية. الجهات الرسمية لا تطلب منك الموافقة على تسجيل دخول. أنهِ المكالمة أولاً.',
-    toDeny: 'لم أطلب ذلك. ارفض', toAllow: 'أنا من طلب',
-    scam: 'احتيال', suspicious: 'احذر', safe: 'يبدو آمناً', pretends: n => `ينتحل صفة ${n}`,
-    thisLink: 'هذا الرابط', official: 'الرسمي', checking: 'جارٍ التحقق…', empty: 'الصق رابطاً أو رسالة أولاً.',
-    noAlerts: 'لا توجد تنبيهات بعد. يظهر كل حظر جديد هنا لحظة إرساله من الشرطة.',
-    blockedNew: 'تم حظر احتيال جديد في الإمارات', blockedFor: b => b ? `ينتحل صفة ${b}. محظور على هاتفك.` : 'محظور على هاتفك.',
-    guardOff: 'لا توجد مكالمة نشطة، لذلك ستتم الموافقة. يتدخل الحارس أثناء المكالمات فقط.',
-    declined: 'تم الرفض. لا تشارك الرموز أو الموافقات مع أي متصل. يمكنك الإبلاغ عن الرقم لدى أمان: 8002626.',
-    adviceScam: 'لا تفتحه ولا تدفع. احذف الرسالة وأبلغ عنها.', adviceWarn: 'لا تُدخل أي بيانات. افتح الخدمة من تطبيقها الرسمي بدلاً من ذلك.',
-    adviceSafe: 'لا توجد علامات احتيال. ومع ذلك، ادفع وسجّل الدخول عبر التطبيقات الرسمية فقط.',
-    noQr: 'هذا المتصفح لا يدعم مسح رموز QR. جرّب كروم على أندرويد أو الصق الرابط.', qrFound: 'تم العثور على رمز QR: جارٍ التحقق',
-    unicodeNote: u => `الحرف «${u.char}» ليس حرفاً عادياً: ${u.name}.`, similar: p => `مشابه للعنوان الرسمي بنسبة ${p}٪.`,
-    offline: 'تعذّر الوصول إلى رقيب الآن. تحقّق من اتصالك.',
-  },
-};
-let lang = localStorage.getItem('raqeeb-lang') || 'en';
-const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
-
-function applyLang() {
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  $$('[data-i]').forEach(el => { el.textContent = t(el.dataset.i); });
-  $$('[data-ph]').forEach(el => { el.placeholder = t(el.dataset.ph); });
-  $('#lang').textContent = lang === 'ar' ? 'English' : 'عربي';
-  renderAlerts();
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
 }
-$('#lang').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; localStorage.setItem('raqeeb-lang', lang); applyLang(); });
 
-/* tabs */
-$$('.tabs button').forEach(b => b.addEventListener('click', () => {
-  $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-  $$('.tab').forEach(x => x.classList.toggle('on', x.id === `t-${b.dataset.tab}`));
-  if (b.dataset.tab === 'alerts') { unseen = 0; updateCount(); }
-}));
+let lang = localStorage.getItem('raqeeb-lang') || 'en';
+let TOKEN = localStorage.getItem('raqeeb_token');
+let ME = null, META = null, PROFILE = null;
+const t = (k, ...a) => { const v = T[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+const typeLabel = k => lang === 'ar' ? TYPE_AR[k] : META?.report_types[k] || k;
+const statusLabel = s => lang === 'ar' ? STATUS_AR[s] || s : META?.statuses[s] || s;
+const emirateLabel = e => lang === 'ar' ? EMIRATE_AR[e] || e : e;
+const sevLabel = s => lang === 'ar' ? SEVERITY_AR[s] || s : s;
+const fmtDate = ts => new Date(ts * 1000).toLocaleString(lang === 'ar' ? 'ar-AE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+async function api(path, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
+  let body = opts.body;
+  if (body && !(body instanceof FormData)) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(body); }
+  const r = await fetch(path, { method: opts.method || (body ? 'POST' : 'GET'), headers, body });
+  if (r.status === 401 && TOKEN) { setToken(null); }
+  if (!r.ok) {
+    let msg = String(r.status);
+    try { msg = (await r.json()).detail || msg; } catch { /* not JSON */ }
+    const e = new Error(Array.isArray(msg) ? msg.map(x => x.msg).join('; ') : msg); e.status = r.status; throw e;
+  }
+  return r.json();
+}
+function setToken(tok) {
+  TOKEN = tok;
+  if (tok) localStorage.setItem('raqeeb_token', tok); else localStorage.removeItem('raqeeb_token');
+}
 
 function banner(title, text, ms = 6000) {
   const el = $('#banner');
-  el.replaceChildren(Object.assign(document.createElement('b'), { textContent: title }), document.createTextNode(text));
+  el.replaceChildren(title ? h('b', {}, title) : '', text || '');
   el.hidden = false;
   clearTimeout(banner.tm);
   banner.tm = setTimeout(() => { el.hidden = true; }, ms);
 }
 
-/* checking */
+/* ---------------- language ---------------- */
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  $$('[data-i]').forEach(el => { const v = t(el.dataset.i); if (typeof v === 'string') el.textContent = v; });
+  $$('[data-ph]').forEach(el => { el.placeholder = t(el.dataset.ph); });
+  $('#lang').textContent = lang === 'ar' ? 'English' : 'عربي';
+  fillEmirates();
+  renderTypes();
+  renderShield();
+  renderAlerts();
+  if (BRANDS) renderBrands();
+  syncAuthForm();
+  for (const fn of [loadSeason, loadMyReports, loadBlocks, loadFamily, loadCommunity, loadProfile]) fn().catch(() => {});
+}
+$('#lang').addEventListener('click', () => { lang = lang === 'ar' ? 'en' : 'ar'; localStorage.setItem('raqeeb-lang', lang); applyLang(); });
+
+/* ---------------- tabs ---------------- */
+function go(tab) {
+  $$('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === tab));
+  $$('.tab').forEach(x => x.classList.toggle('on', x.id === `t-${tab}`));
+  scrollTo(0, 0);
+  ({ protect: () => { loadBlocks(); loadFamily(); }, report: loadMyReports, community: loadCommunity, profile: loadProfile }[tab])?.();
+}
+$$('.tabs button').forEach(b => b.addEventListener('click', () => go(b.dataset.tab)));
+$$('[data-goto]').forEach(b => b.addEventListener('click', () => go(b.dataset.goto)));
+
+function fillEmirates() {
+  if (!META) return;
+  for (const id of ['#r-emirate', '#a-emirate', '#s-emirate']) {
+    const sel = $(id), cur = sel.value || ME?.emirate || 'Abu Dhabi';
+    sel.replaceChildren(...META.emirates.map(e => h('option', { value: e, selected: e === cur }, emirateLabel(e))));
+  }
+  const lb = $('#lb-emirate'), cur = lb.value;
+  lb.replaceChildren(h('option', { value: '' }, t('allEmirates')), ...META.emirates.map(e => h('option', { value: e, selected: e === cur }, emirateLabel(e))));
+}
+
+/* ---------------- signed protection package (works offline) ---------------- */
+let PKG = JSON.parse(localStorage.getItem('raqeeb_pkg') || 'null');
+let SIG_STATE = localStorage.getItem('raqeeb_sig') || 'sigServer';
+let ONLINE = true;
+function canonical(v) {  // same bytes as the server: sorted keys, no spaces, UTF-8
+  if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canonical(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+async function verifyPackage(pkg) {
+  try {
+    const { public_key } = await api('/api/protection/public-key');
+    const raw = Uint8Array.from(atob(public_key), c => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey('raw', raw, { name: 'Ed25519' }, false, ['verify']);
+    const sig = Uint8Array.from(atob(pkg.signature), c => c.charCodeAt(0));
+    return await crypto.subtle.verify({ name: 'Ed25519' }, key, sig, new TextEncoder().encode(canonical(pkg.payload))) ? 'sigOk' : 'sigBad';
+  } catch { return 'sigServer'; }  // this browser has no Ed25519 in WebCrypto (or no secure context)
+}
+async function syncProtection() {
+  try {
+    const pkg = await api('/api/protection/latest');
+    ONLINE = true;
+    if (PKG && pkg.payload.version === PKG.payload.version) { renderShield(); return; }
+    const state = await verifyPackage(pkg);
+    if (state === 'sigBad') { SIG_STATE = 'sigBad'; renderShield(); return; }
+    PKG = pkg; SIG_STATE = state;
+    localStorage.setItem('raqeeb_pkg', JSON.stringify(pkg)); localStorage.setItem('raqeeb_sig', state);
+  } catch { ONLINE = false; }
+  renderShield();
+}
+function renderShield() {
+  const rules = activeRules();
+  $('#shield').classList.toggle('offline', !ONLINE);
+  $('#shield-state').textContent = ONLINE ? t('shieldOn') : t('shieldOffline');
+  $('#shield-meta').textContent = PKG ? t('shieldMeta', PKG.payload.version, rules.length, t(SIG_STATE)) : '';
+}
+const activeRules = () => (PKG?.payload.rules || []).filter(r => !r.expires || r.expires > Date.now() / 1000);
+function hostOf(s) {
+  try { return new URL(/^[a-z]+:\/\//i.test(s) ? s : 'http://' + s).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
+}
+function localRule(input) {
+  const s = input.trim();
+  const host = hostOf(s);
+  let path = '';
+  try { const u = new URL(/^[a-z]+:\/\//i.test(s) ? s : 'http://' + s); path = host + u.pathname.replace(/\/$/, '') + u.search; } catch { /* not a URL */ }
+  const digits = s.replace(/[^\d+]/g, '');
+  return activeRules().find(r =>
+    (r.type === 'url' && path.startsWith(r.value)) ||
+    ((r.type === 'domain' || r.type === 'host') && host && (host === r.value || host.endsWith('.' + r.value))) ||
+    (r.type === 'phone' && digits.length > 7 && r.value.endsWith(digits.replace(/^0+/, '').slice(-9))));
+}
+
+/* ---------------- checking ---------------- */
 const looksLikeLink = s => !/\s/.test(s.trim()) && /[.]/.test(s);
 let lastInput = '', lastResult = null;
-
 $('#check-form').addEventListener('submit', e => { e.preventDefault(); check($('#input').value); });
 async function check(raw) {
   const text = (raw || '').trim();
   if (!text) { banner('', t('empty'), 3000); return; }
   lastInput = text;
   const btn = $('#check-form .go'); btn.textContent = t('checking'); btn.disabled = true;
+  const rule = localRule(text);
   try {
     let r;
     if (looksLikeLink(text)) {
-      const link = await (await fetch(`/api/check?url=${encodeURIComponent(text)}`)).json();
-      r = { kind: 'link', verdict: link.verdict === 'phishing' ? 'scam' : link.verdict, link, reasons: link.reasons };
+      const link = await api(`/api/check?url=${encodeURIComponent(text)}`);
+      r = { kind: 'link', verdict: link.blocked ? 'blocked' : link.verdict === 'phishing' ? 'scam' : link.verdict, link, reasons: link.reasons };
     } else {
-      const m = await (await fetch('/api/check-message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })).json();
+      const m = await api('/api/check-message', { body: { text } });
       const worst = [...m.links].sort((a, b) => b.risk_score - a.risk_score)[0];
-      r = { kind: 'message', verdict: m.verdict === 'looks safe' ? 'safe' : m.verdict, link: worst, msg: m,
+      r = { kind: 'message', verdict: m.links.some(l => l.blocked) ? 'blocked' : m.verdict === 'looks safe' ? 'safe' : m.verdict, link: worst, msg: m,
             reasons: [...m.script_signals, ...(worst ? worst.reasons : [])] };
     }
+    if (rule && r.verdict !== 'blocked') r.verdict = 'blocked';
     lastResult = r;
     showVerdict(r);
-  } catch { banner('', t('offline')); }
-  finally { btn.textContent = t('checkBtn'); btn.disabled = false; }
+  } catch {
+    ONLINE = false; renderShield();
+    if (rule) showVerdict({ verdict: 'blocked', reasons: [], offline: true });
+    else banner('', t('offline'));
+  } finally { btn.textContent = t('checkBtn'); btn.disabled = false; }
 }
-
 function seg(segs) {
-  const span = document.createElement('span'); span.className = 'host';
-  segs.forEach(s => { if (s.type === 'same') span.append(s.text); else { const x = document.createElement('span'); x.className = s.type; x.textContent = s.text; span.append(x); } });
-  return span;
+  return h('span', { class: 'host' }, segs.map(s => s.type === 'same' ? s.text : h('span', { class: s.type }, s.text)));
 }
-function row(label, segs) {
-  const d = document.createElement('div'); d.className = 'row';
-  const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label;
-  d.append(l, seg(segs)); return d;
-}
-
 function showVerdict(r) {
   const sheet = $('#verdict');
-  sheet.className = `sheet ${r.verdict}`;
-  $('#v-word').textContent = t(r.verdict);
+  const tone = r.verdict === 'blocked' ? 'scam' : r.verdict;
+  sheet.className = `sheet ${tone}`;
+  $('#v-word').textContent = r.verdict === 'blocked' ? t('blockedEveryone') : t(r.verdict);
   const b = r.link?.impersonated_brand;
   $('#v-brand').textContent = b ? t('pretends', lang === 'ar' ? b.name_ar : b.name) : '';
   const twin = $('#v-twin'); twin.replaceChildren();
   if (b?.twin) {
-    twin.append(row(t('thisLink'), b.twin.scam_segments), row(t('official'), b.twin.official_segments));
-    const note = document.createElement('p'); note.className = 'note';
-    note.textContent = b.twin.unicode_tricks.length ? t('unicodeNote', b.twin.unicode_tricks[0]) : t('similar', Math.round(b.twin.similarity * 100));
-    twin.append(note);
+    twin.append(h('div', { class: 'row' }, h('span', { class: 'lbl' }, t('thisLink')), seg(b.twin.scam_segments)),
+      h('div', { class: 'row' }, h('span', { class: 'lbl' }, t('official')), seg(b.twin.official_segments)),
+      h('p', { class: 'note' }, b.twin.unicode_tricks.length ? t('unicodeNote', b.twin.unicode_tricks[0]) : t('similar', Math.round(b.twin.similarity * 100))));
   }
   const seen = new Set();
-  $('#v-reasons').replaceChildren(...r.reasons.filter(x => !x.code?.startsWith('ml:') || r.reasons.length < 3)
-    .map(x => x[lang]).filter(x => x && !seen.has(x) && seen.add(x)).slice(0, 5)
-    .map(txt => Object.assign(document.createElement('li'), { textContent: txt })));
-  $('#v-advice').textContent = r.msg ? r.msg[`advice_${lang}`] : t(r.verdict === 'scam' ? 'adviceScam' : r.verdict === 'suspicious' ? 'adviceWarn' : 'adviceSafe');
-  $('#v-report').hidden = r.verdict === 'safe';
-  $('#report-box').hidden = true; $('#report-done').hidden = true;
+  const reasons = (r.verdict === 'blocked' ? [t('blockedRule')] : []).concat(
+    (r.reasons || []).map(x => x[lang]).filter(x => x && !seen.has(x) && seen.add(x)).slice(0, 5));
+  $('#v-reasons').replaceChildren(...reasons.map(txt => h('li', {}, txt)));
+  $('#v-advice').textContent = r.msg && r.verdict !== 'blocked' ? r.msg[`advice_${lang}`] : t(tone === 'scam' ? 'adviceScam' : tone === 'suspicious' ? 'adviceWarn' : 'adviceSafe');
+  $('#v-block').textContent = t('blockForMe'); $('#v-block').disabled = false;
   sheet.hidden = false; sheet.scrollTop = 0;
-  if (r.verdict === 'scam') navigator.vibrate?.([120, 60, 120]);
+  if (tone === 'scam') navigator.vibrate?.([120, 60, 120]);
 }
 $('#v-close').addEventListener('click', () => { $('#verdict').hidden = true; });
-$('#v-report').addEventListener('click', () => { $('#report-box').hidden = false; });
-$('#send-report').addEventListener('click', async () => {
-  await fetch('/api/check-message', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: lastInput, report: true, emirate: $('#emirate').value }) });
-  $('#report-done').hidden = false;
+$('#v-report').addEventListener('click', () => {
+  $('#verdict').hidden = true;
+  $('#r-text').value = lastInput;
+  selectType(lastResult?.kind === 'link' ? 'website' : 'auto');
+  go('report');
+  $('#r-text').focus();
+});
+$('#v-block').addEventListener('click', async () => {
+  if (!TOKEN) { banner('', t('signInFirst')); return; }
+  const target = lastResult?.link?.host || lastInput;
+  try { await api('/api/citizen/blocks', { body: { value: target } }); $('#v-block').textContent = t('blockedForMe'); $('#v-block').disabled = true; }
+  catch (e) { banner('', e.message); }
 });
 
-/* QR codes (quishing: fake parking and payment QR stickers) */
+/* QR codes (fake parking and payment stickers) */
 let stream = null;
 $('#qr-btn').addEventListener('click', async () => {
   if (!('BarcodeDetector' in window)) { banner('', t('noQr')); return; }
@@ -182,45 +232,66 @@ $('#qr-btn').addEventListener('click', async () => {
 function stopQr() { stream?.getTracks().forEach(x => x.stop()); stream = null; $('#qr-box').hidden = true; }
 $('#qr-stop').addEventListener('click', stopQr);
 
-/* alerts pushed by police (antibodies) */
-let ALERTS = [], unseen = 0;
-function updateCount() { const c = $('#alert-count'); c.hidden = !unseen; c.textContent = unseen; }
-function renderAlerts(freshDomain) {
+/* ---------------- home: confirmed alerts + season ---------------- */
+let ALERTS = [], freshAlert = null;
+async function loadAlerts() { try { ALERTS = await api('/api/public/alerts'); } catch { ALERTS = []; } renderAlerts(); }
+function renderAlerts() {
   const ol = $('#alerts');
-  if (!ALERTS.length) { const li = document.createElement('li'); li.className = 'empty'; li.textContent = t('noAlerts'); ol.replaceChildren(li); return; }
-  ol.replaceChildren(...ALERTS.map(a => {
-    const li = document.createElement('li'); if (a.domain === freshDomain) li.className = 'new';
-    const b = document.createElement('b'); b.textContent = a.domain;
-    const p = document.createElement('span'); p.textContent = t('blockedFor', a.brand);
-    const w = document.createElement('div'); w.className = 'when'; w.textContent = new Date(a.ts * 1000).toLocaleTimeString(lang === 'ar' ? 'ar-AE' : 'en-AE', { hour: '2-digit', minute: '2-digit' });
-    li.append(b, p, w); return li;
-  }));
+  if (!ALERTS.length) { ol.replaceChildren(h('li', { class: 'empty' }, t('noAlerts'))); return; }
+  ol.replaceChildren(...ALERTS.slice(0, 8).map(a => h('li', { class: a.id === freshAlert ? 'new' : '' },
+    h('b', { class: 'ltr' }, a.normalized), h('span', {}, [a.brand ? t('pretends', a.brand) : '', META ? (lang === 'ar' ? '' : META.categories[a.category]) : ''].filter(Boolean).join(' · ')),
+    h('div', { class: 'when' }, fmtDate(a.last_seen)))));
 }
-async function loadAlerts() {
-  try { ALERTS = (await (await fetch('/api/blocklist')).json()).map(x => ({ domain: x.domain, brand: x.brand, ts: x.ts })); } catch { ALERTS = []; }
-  renderAlerts();
-}
-$('#notify').addEventListener('click', async () => {
-  if (!('Notification' in window)) return;
-  if (await Notification.requestPermission() === 'granted') $('#notify').textContent = t('notifyOn');
-});
-function connect() {
-  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-  ws.onclose = () => setTimeout(connect, 2000);
-  ws.onmessage = ev => {
-    const { event, data } = JSON.parse(ev.data);
-    if (event !== 'antibody') return;
-    ALERTS.unshift({ domain: data.domain, brand: data.brand, ts: Date.now() / 1000 });
-    unseen++; updateCount(); renderAlerts(data.domain);
-    banner(t('blockedNew'), `${data.domain} · ${t('blockedFor', data.brand)}`);
-    navigator.vibrate?.([200, 80, 200]);
-    if ('Notification' in window && Notification.permission === 'granted') {
-      navigator.serviceWorker?.ready.then(reg => reg.showNotification(t('blockedNew'), { body: `${data.domain}\n${t('blockedFor', data.brand)}`, icon: '/static/app/icon-192.png' }));
-    }
-  };
+async function loadSeason() {
+  const f = await api('/api/public/forecast');
+  const items = f.predicted.filter(p => p.season).slice(0, 4);
+  $('#season-card').hidden = !items.length;
+  $('#season-list').replaceChildren(...items.map(p => h('li', {}, lang === 'ar' ? p.season_ar || p.season : p.season, p.advice && lang === 'en' ? h('div', { class: 'hint' }, p.advice) : null)));
 }
 
-/* UAE PASS guard demo */
+/* ---------------- protect tab ---------------- */
+$('#preview-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const out = $('#preview-out');
+  out.replaceChildren(h('p', { class: 'hint' }, t('checking')));
+  try {
+    const p = await api(`/api/preview?url=${encodeURIComponent($('#preview-url').value)}`);
+    const tone = p.risk >= 70 ? 'scam' : p.risk >= 40 ? 'suspicious' : 'safe';
+    out.replaceChildren(h('p', { class: `pv-verdict ${tone}` }, t(tone), ` · ${Math.round(p.risk)} / 100`),
+      p.final_url ? h('p', {}, h('b', {}, `${t('goesTo')}: `), h('span', { class: 'ltr' }, p.final_url)) : null,
+      p.chain ? h('p', { class: 'hint' }, t('hops', Math.max(0, p.chain.length - 1))) : null,
+      p.title ? h('p', {}, h('b', {}, `${t('pageTitle')}: `), p.title) : null,
+      p.brand ? h('p', {}, t('pretends', p.brand)) : null,
+      h('ul', {}, (p.reasons || []).slice(0, 3).map(x => h('li', {}, x[lang]))),
+      p.error ? h('p', { class: 'hint' }, p.error) : null);
+  } catch (err) { out.replaceChildren(h('p', { class: 'error' }, err.message)); }
+});
+async function loadBlocks() {
+  const ul = $('#myblocks');
+  if (!TOKEN) { ul.replaceChildren(h('li', { class: 'hint' }, t('signInFirst'))); return; }
+  const rows = await api('/api/citizen/blocks');
+  ul.replaceChildren(...(rows.length ? rows.map(b => h('li', { class: 'row-item' }, h('span', { class: 'ltr' }, b.value),
+    h('button', { class: 'link', onclick: async () => { await api(`/api/citizen/blocks?value=${encodeURIComponent(b.value)}`, { method: 'DELETE' }); loadBlocks(); } }, t('unblock'))))
+    : [h('li', { class: 'hint' }, t('noBlocks'))]));
+}
+$('#myblock-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!TOKEN) { banner('', t('signInFirst')); return; }
+  try { await api('/api/citizen/blocks', { body: { value: $('#myblock-value').value } }); $('#myblock-value').value = ''; loadBlocks(); }
+  catch (err) { banner('', err.message); }
+});
+let BRANDS = null;
+async function loadBrands() { BRANDS = await api('/api/public/brands'); renderBrands(); }
+function renderBrands() {
+  const q = $('#brand-search').value.trim().toLowerCase();
+  const list = BRANDS.filter(b => !q || (b.name + ' ' + b.name_ar + ' ' + b.official_domains.map(d => d.domain).join(' ')).toLowerCase().includes(q)).slice(0, q ? 12 : 6);
+  $('#brands').replaceChildren(...list.map(b => h('li', {},
+    h('b', {}, lang === 'ar' ? b.name_ar : b.name),
+    h('div', { class: 'domains' }, b.official_domains.map(d => h('span', { class: 'ltr dom' }, d.domain, d.verified ? '' : ` (${t('unverified')})`))),
+    h('p', { class: 'hint' }, lang === 'ar' ? b.contact_rule_ar : b.contact_rule_en))));
+}
+$('#brand-search').addEventListener('input', () => BRANDS && renderBrands());
+
 $('#simulate').addEventListener('click', () => {
   if (!$('#oncall').checked) { banner('', t('guardOff')); return; }
   setTimeout(() => { $('#takeover').hidden = false; navigator.vibrate?.([300, 100, 300, 100, 300]); }, 900);
@@ -228,10 +299,204 @@ $('#simulate').addEventListener('click', () => {
 $('#to-deny').addEventListener('click', () => { $('#takeover').hidden = true; banner('', t('declined'), 8000); });
 $('#to-allow').addEventListener('click', () => { $('#takeover').hidden = true; });
 
-/* shared into the app from another app (Web Share Target) */
+async function loadFamily() {
+  const box = $('#family');
+  if (!TOKEN) { box.replaceChildren(h('p', { class: 'hint' }, t('signInFirst'))); return; }
+  const fam = PROFILE?.family ?? (await api('/api/citizen/profile')).family;
+  if (!fam) {
+    const name = h('input', { placeholder: t('familyNamePh'), maxlength: 40 }), code = h('input', { placeholder: t('familyCodePh'), maxlength: 8, class: 'ltr' });
+    box.replaceChildren(
+      h('form', { class: 'row-form', onsubmit: async e => { e.preventDefault(); await api('/api/citizen/family', { body: { name: name.value || 'My family' } }); PROFILE = null; loadFamily(); } }, name, h('button', { class: 'go small' }, t('familyCreate'))),
+      h('form', { class: 'row-form', onsubmit: async e => { e.preventDefault(); try { await api('/api/citizen/family/join', { body: { code: code.value } }); PROFILE = null; loadFamily(); } catch (err) { banner('', err.message); } } }, code, h('button', { class: 'go small' }, t('familyJoin'))));
+    return;
+  }
+  const msg = h('input', { placeholder: t('familySharePh'), maxlength: 300 });
+  box.replaceChildren(h('p', {}, t('familyIn', fam.name, fam.members)), fam.code ? h('p', { class: 'hint' }, t('familyCode', fam.code)) : null,
+    h('form', { class: 'row-form', onsubmit: async e => { e.preventDefault(); if (!msg.value.trim()) return; const r = await api('/api/citizen/family/share', { body: { title: msg.value.slice(0, 100), body: msg.value } }); msg.value = ''; banner('', t('familySent', r.sent_to)); } },
+      msg, h('button', { class: 'go small' }, t('familyShare'))));
+}
+
+/* ---------------- report flow ---------------- */
+const TYPES = ['auto', 'website', 'sms', 'whatsapp', 'phone', 'email', 'social', 'ad', 'qr', 'app', 'gov_bank', 'other'];
+let rType = 'auto';
+function renderTypes() {
+  if (!META) return;
+  $('#types').replaceChildren(...TYPES.map(k => h('button', { type: 'button', class: k === rType ? 'on' : '', 'aria-pressed': String(k === rType), onclick: () => selectType(k) },
+    k === 'auto' ? t('auto') : typeLabel(k))));
+}
+function selectType(k) { rType = k; renderTypes(); }
+$('#r-file').addEventListener('change', () => { $('#r-file-name').textContent = $('#r-file').files[0]?.name || ''; });
+$$('.impact input').forEach(c => c.addEventListener('change', () => {
+  $('#lost-help').hidden = !$$('.impact input').some(x => x.checked && (x.value === 'lost_money' || x.value === 'paid' || x.value === 'shared_details'));
+}));
+$('#report-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const text = $('#r-text').value.trim(), file = $('#r-file').files[0];
+  if (!text && !file) { banner('', t('needInput')); return; }
+  const fd = new FormData();
+  fd.append('type', rType); fd.append('text', text); fd.append('emirate', $('#r-emirate').value);
+  fd.append('impact', JSON.stringify(Object.fromEntries($$('.impact input').map(x => [x.value, x.checked]))));
+  if (file) fd.append('file', file);
+  const btn = $('#report-form .go'); btn.disabled = true; btn.textContent = t('sending');
+  try {
+    const r = await api('/api/citizen/report', { body: fd });
+    showReportResult(r);
+    $('#report-form').reset(); $('#r-file-name').textContent = ''; $('#lost-help').hidden = true; selectType('auto');
+    loadMyReports();
+  } catch (err) { banner('', err.message); }
+  finally { btn.disabled = false; btn.textContent = t('submitReport'); }
+});
+function showReportResult(r) {
+  const box = $('#r-result');
+  box.hidden = false;
+  box.replaceChildren(
+    h('p', { class: 'ref' }, t('reportRef', r.ref)),
+    h('p', {}, h('span', { class: `pill ${r.status}` }, statusLabel(r.status)), '  ', typeLabel(r.type)),
+    r.risk != null ? h('p', { class: 'hint' }, t('riskLine', r.risk, sevLabel(r.severity))) : null,
+    h('p', {}, r[`explanation_${lang}`]),
+    r.duplicate_of ? h('p', { class: 'hint' }, t('duplicateNote', r.duplicate_of)) : h('p', { class: 'hint' }, t('nextSteps')));
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+const TRACK = ['under_review', 'community_corroborated', 'analyst_verified', 'confirmed_malicious'];
+async function loadMyReports() {
+  const ol = $('#my-reports');
+  $('#anon-note').hidden = !!TOKEN;
+  if (!TOKEN) { ol.replaceChildren(h('li', { class: 'hint' }, t('signInToTrack'))); return; }
+  const rows = await api('/api/citizen/reports');
+  ol.replaceChildren(...(rows.length ? rows.map(r => {
+    const step = TRACK.indexOf(r.status);
+    return h('li', {},
+      h('div', { class: 'r-top' }, h('b', {}, r.ref), h('span', { class: `pill ${r.status}` }, statusLabel(r.status))),
+      h('div', { class: 'hint' }, `${typeLabel(r.type)} · ${fmtDate(r.created)}`),
+      r.links?.[0] ? h('div', { class: 'ltr small' }, r.links[0].url) : null,
+      step >= 0 ? h('ol', { class: 'track', 'aria-label': t('status') }, TRACK.map((s, i) => h('li', { class: i <= step ? 'done' : '' }, statusLabel(s)))) : null);
+  }) : [h('li', { class: 'hint' }, t('noReports'))]));
+}
+
+/* ---------------- community ---------------- */
+let lbPeriod = 'week', SIMS = [], simIdx = 0;
+$$('#lb-period button').forEach(b => b.addEventListener('click', () => { lbPeriod = b.dataset.p; $$('#lb-period button').forEach(x => x.classList.toggle('on', x === b)); loadBoard(); }));
+$('#lb-emirate').addEventListener('change', () => loadBoard());
+async function loadBoard() {
+  const e = $('#lb-emirate').value;
+  const d = await api(`/api/public/leaderboard?period=${lbPeriod}${e ? `&emirate=${encodeURIComponent(e)}` : ''}`);
+  $('#leaderboard').replaceChildren(...(d.guardians.length ? d.guardians.map(g => h('li', {},
+    h('span', { class: 'rk' }, g.rank), h('span', { class: 'nm' }, g.display_name, h('small', {}, `${g.level}${g.emirate ? ' · ' + emirateLabel(g.emirate) : ''}`)),
+    h('span', { class: 'pt' }, t('pts', g.pts)))) : [h('li', { class: 'hint' }, t('noBoard'))]));
+  $('#emirate-board').replaceChildren(...(d.emirates.length ? d.emirates.map(x => h('li', {}, h('span', { class: 'nm' }, emirateLabel(x.emirate)), h('span', { class: 'pt' }, t('pts', x.pts)))) : [h('li', { class: 'hint' }, t('noBoard'))]));
+}
+async function loadCommunity() {
+  const [s, k] = await Promise.all([api('/api/public/safety-report'), api('/api/public/knowledge'), loadBoard()]);
+  $('#safety').replaceChildren(h('dl', { class: 'stats' }, [[t('confirmedN'), s.confirmed_threats], [t('reportsN'), s.citizen_reports], [t('verifiedN'), s.verified_from_citizens]]
+    .map(([a, b]) => h('div', {}, h('dt', {}, a), h('dd', {}, b)))),
+    s.most_impersonated.length ? h('p', {}, h('b', {}, `${t('mostImp')}: `), s.most_impersonated.map(x => x.brand).join(lang === 'ar' ? '، ' : ', ')) : null,
+    h('p', { class: 'hint' }, s.note));
+  $('#knowledge').replaceChildren(...k.articles.map(a => h('details', {}, h('summary', {}, a[`title_${lang}`]), h('p', {}, a[`body_${lang}`]))));
+  SIMS = k.simulations;
+  renderSim();
+}
+function renderSim(result) {
+  const box = $('#sim');
+  if (simIdx >= SIMS.length) { box.replaceChildren(h('p', {}, t('simDone'))); return; }
+  const s = SIMS[simIdx];
+  const answer = async scam => renderSim({ ...(await api(`/api/learn/simulations/${s.id}`, { body: { scam } })) });
+  box.replaceChildren(h('p', { class: 'hint' }, s.channel), h('blockquote', {}, s[`text_${lang}`]),
+    result ? h('div', { class: `sim-res ${result.correct ? 'ok' : 'no'}` }, h('b', {}, result.correct ? t('right') : t('wrong'), result.points ? t('plusPts', result.points) : ''), h('p', {}, result[`why_${lang}`]),
+      h('button', { class: 'soft', onclick: () => { simIdx++; renderSim(); } }, t('next')))
+      : h('div', { class: 'two' }, h('button', { class: 'go small danger', onclick: () => answer(true) }, t('isScam')), h('button', { class: 'go small', onclick: () => answer(false) }, t('isSafe'))));
+}
+
+/* ---------------- profile ---------------- */
+let authMode = 'register';
+$$('#auth-mode button').forEach(b => b.addEventListener('click', () => { authMode = b.dataset.m; syncAuthForm(); }));
+function syncAuthForm() {
+  $$('#auth-mode button').forEach(x => x.classList.toggle('on', x.dataset.m === authMode));
+  $('#reg-only').hidden = authMode !== 'register';
+  $('#auth-submit').textContent = authMode === 'register' ? t('register') : t('signIn');
+  $('#a-pass').autocomplete = authMode === 'register' ? 'new-password' : 'current-password';
+}
+$('#auth-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('#auth-error').textContent = '';
+  try {
+    const body = authMode === 'register'
+      ? { email: $('#a-email').value, password: $('#a-pass').value, display_name: $('#a-name').value || null, emirate: $('#a-emirate').value, public_rank: $('#a-public').checked }
+      : { email: $('#a-email').value, password: $('#a-pass').value };
+    const r = await api(`/api/auth/${authMode === 'register' ? 'register' : 'login'}`, { body });
+    if (r.user.role !== 'citizen') { $('#auth-error').textContent = 'Officials sign in to RAQEEB Command.'; return; }
+    setToken(r.token); ME = r.user; PROFILE = null;
+    $('#auth-form').reset();
+    reconnect();
+    loadProfile(); loadMyReports();
+  } catch (err) { $('#auth-error').textContent = err.message; }
+});
+async function loadProfile() {
+  $('#signed-out').hidden = !!TOKEN; $('#signed-in').hidden = !TOKEN;
+  if (!TOKEN) return;
+  const [p, notes] = await Promise.all([api('/api/citizen/profile'), api('/api/citizen/notifications')]);
+  PROFILE = p; ME = p.user;
+  const lv = p.level;
+  $('#lvl-name').textContent = lang === 'ar' ? lv.name_ar : lv.name;
+  $('#lvl-pts').textContent = `${p.user.display_name} · ${t('pts', p.points)}`;
+  $('#lvl-bar').style.width = lv.next ? `${Math.min(100, 100 * (p.points - lv.threshold) / (lv.next.at - lv.threshold))}%` : '100%';
+  $('#lvl-next').textContent = lv.next ? t('toNext', lv.next.name, lv.next.at, p.points) : t('topLevel');
+  $('#badges').replaceChildren(...(p.badges.length ? p.badges.map(b => h('li', {}, h('b', {}, lang === 'ar' ? b.name_ar : b.name), h('small', {}, fmtDate(b.earned)))) : [h('li', { class: 'hint' }, t('noBadges'))]));
+  $('#ledger').replaceChildren(...(p.ledger.length ? p.ledger.map(l => h('li', { class: 'row-item' }, h('span', {}, l.explanation, l.threat_id ? h('small', { class: 'ltr' }, ` ${l.threat_id}`) : null), h('b', { class: l.delta < 0 ? 'neg' : 'pos' }, (l.delta > 0 ? '+' : '') + l.delta))) : [h('li', { class: 'hint' }, t('noPoints'))]));
+  $('#notes').replaceChildren(...(notes.length ? notes.map(n => h('li', {}, h('b', {}, n.title), h('div', { class: 'hint' }, `${n.body} · ${fmtDate(n.created)}`))) : [h('li', { class: 'hint' }, t('noNotes'))]));
+  const seen = +localStorage.getItem('raqeeb_notes_seen') || 0;
+  const fresh = notes.filter(n => n.created > seen).length;
+  if ($('#t-profile').classList.contains('on')) localStorage.setItem('raqeeb_notes_seen', String(Date.now() / 1000));
+  $('#note-count').hidden = !fresh || $('#t-profile').classList.contains('on'); $('#note-count').textContent = fresh;
+  $('#s-name').value = p.user.display_name; $('#s-public').checked = !!p.user.public_rank;
+  fillEmirates(); $('#s-emirate').value = p.user.emirate || 'Abu Dhabi';
+}
+$('#settings').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/citizen/profile', { method: 'PATCH', body: { display_name: $('#s-name').value, emirate: $('#s-emirate').value, public_rank: $('#s-public').checked } });
+  banner('', t('saved'), 2000); loadProfile();
+});
+$('#signout').addEventListener('click', async () => {
+  try { await api('/api/auth/logout', { method: 'POST' }); } catch { /* already signed out */ }
+  setToken(null); ME = null; PROFILE = null; reconnect(); loadProfile(); loadMyReports();
+});
+$('#notify').addEventListener('click', async () => {
+  if (!('Notification' in window)) return;
+  if (await Notification.requestPermission() === 'granted') $('#notify').textContent = t('notifyOn');
+});
+
+/* ---------------- live updates ---------------- */
+let ws = null;
+function notifyDevice(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') navigator.serviceWorker?.ready.then(reg => reg.showNotification(title, { body, icon: '/static/app/icon-192.png' }));
+}
+function connect() {
+  const sock = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws${TOKEN ? `?token=${encodeURIComponent(TOKEN)}` : ''}`);
+  sock.onclose = () => { if (sock === ws) setTimeout(connect, 2000); };
+  sock.onmessage = ev => {
+    const { event, data } = JSON.parse(ev.data);
+    if (event === 'protection') {
+      syncProtection(); loadAlerts();
+      banner(t('newBlock'), t('newVersion', data.version));
+      navigator.vibrate?.([200, 80, 200]);
+      notifyDevice(t('newBlock'), t('newVersion', data.version));
+    } else if (event === 'report_status') {
+      banner(t('statusChanged', data.ref), statusLabel(data.status));
+      notifyDevice(t('statusChanged', data.ref), statusLabel(data.status));
+      loadMyReports(); loadProfile();
+    }
+  };
+  ws = sock;
+}
+function reconnect() { const old = ws; ws = null; old?.close(); connect(); }
+
+/* ---------------- start ---------------- */
 const qs = new URLSearchParams(location.search);
 const shared = [qs.get('title'), qs.get('text'), qs.get('url')].filter(Boolean).join(' ');
-
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
-applyLang(); loadAlerts(); connect();
-if (shared) { $('#input').value = shared; check(shared); }
+(async () => {
+  try { META = await api('/api/public/meta'); } catch { /* offline: static text only */ }
+  applyLang();
+  syncProtection(); loadAlerts(); loadBrands().catch(() => {});
+  connect();
+  if (shared) { $('#input').value = shared; check(shared); }
+})();

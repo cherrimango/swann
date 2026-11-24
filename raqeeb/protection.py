@@ -132,7 +132,7 @@ def global_block(tid: str, actor: dict, expiry_days: int | None = None, note: st
         raise PolicyError("Only threats confirmed malicious can be blocked for everyone. Verify and confirm it first.")
     days = expiry_days or DEFAULT_EXPIRY_DAYS
     kind, value = scope_for(t)
-    expires = time.time() + days * 86400
+    expires = int(time.time() + days * 86400)  # whole seconds keep the signed JSON identical across languages
     db().execute("UPDATE threats SET block_status='global', block_scope=?, block_expires=? WHERE id=?", (kind, expires, tid))
     add_history(tid, {"event": "global_block", "by": actor["email"], "scope": kind, "value": value, "expiry_days": days, "note": note[:300]})
     return publish(actor["email"], f"Block {value} ({kind}) for {days} days: {tid}")

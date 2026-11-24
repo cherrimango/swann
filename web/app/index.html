@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14243A">
-<title>RAQEEB</title>
+<title>RAQEEB Protect</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/static/app/icon-192.png">
 <link rel="apple-touch-icon" href="/static/app/icon-192.png">
@@ -14,57 +14,181 @@
 </head>
 <body>
 <header class="bar">
-  <div class="mark"><span class="w-en">RAQEEB</span><span class="w-ar">رقيب</span></div>
+  <div class="mark"><span class="w-en">RAQEEB</span><span class="w-ar">رقيب</span><span class="w-sub" data-i="protect">Protect</span></div>
   <button id="lang" class="lang" aria-label="Switch language">عربي</button>
 </header>
 
 <div id="banner" class="banner" hidden role="alert"></div>
 
 <main>
-  <section id="t-check" class="tab on">
+  <!-- HOME -->
+  <section id="t-home" class="tab on">
+    <div id="shield" class="shield">
+      <p class="shield-state" id="shield-state" data-i="shieldOn">Protection is on</p>
+      <p class="shield-meta" id="shield-meta"></p>
+    </div>
     <h1 data-i="checkTitle">Check before you tap</h1>
-    <p class="lede" data-i="checkLede">Paste a link or a whole message. RAQEEB tells you if it’s a scam and why.</p>
     <form id="check-form">
       <label for="input" class="sr" data-i="inputLabel">Link or message</label>
-      <textarea id="input" rows="5" data-ph="inputPh" placeholder="Paste a link or a message you received"></textarea>
+      <textarea id="input" rows="4" data-ph="inputPh" placeholder="Paste a link or a message you received"></textarea>
       <button class="go" type="submit" data-i="checkBtn">Check it</button>
     </form>
-    <button id="qr-btn" class="soft" data-i="qrBtn">Scan a QR code</button>
+    <div class="two">
+      <button id="qr-btn" class="soft" data-i="qrBtn">Scan a QR code</button>
+      <button class="soft accent" data-goto="report" data-i="reportScam">Report a scam</button>
+    </div>
     <div id="qr-box" class="qr-box" hidden>
       <video id="qr-video" playsinline muted></video>
       <p class="hint" data-i="qrHint">Point the camera at the QR code</p>
-      <button id="qr-stop" class="soft" data-i="cancel">Cancel</button>
+      <button id="qr-stop" class="soft light" data-i="cancel">Cancel</button>
     </div>
-    <div class="tips">
-      <h2 data-i="tipsTitle">Remember</h2>
-      <ul>
-        <li data-i="tip1">No bank or government entity asks for your OTP or UAE PASS approval by phone.</li>
-        <li data-i="tip2">Fines, tolls and parcel fees are paid in the official app, not through a link.</li>
-        <li data-i="tip3">A price far below the official one is the most common ticket scam.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section id="t-alerts" class="tab">
-    <h1 data-i="alertsTitle">Scam alerts</h1>
-    <p class="lede" data-i="alertsLede">When police block a new scam, it reaches your phone here instantly.</p>
-    <button id="notify" class="soft" data-i="notifyBtn">Turn on alert notifications</button>
+    <h2 class="h2-gap" data-i="alertsTitle">Confirmed scams in the UAE</h2>
+    <p class="hint" data-i="alertsLede">Verified by analysts. New ones reach your phone the moment they’re approved.</p>
     <ol id="alerts" class="alerts"></ol>
+    <div class="card season" id="season-card" hidden>
+      <h2 data-i="seasonTitle">Watch out this season</h2>
+      <p class="hint" data-i="seasonNote">A forecast from seasonal patterns, not confirmed scams.</p>
+      <ul id="season-list"></ul>
+    </div>
   </section>
 
-  <section id="t-guard" class="tab">
-    <h1 data-i="guardTitle">UAE PASS guard</h1>
-    <p class="lede" data-i="guardLede">The most damaging scam in the UAE: a fake official calls and asks you to approve a login. On Android, RAQEEB sees the call and the approval request together, and stops you before you tap approve.</p>
-    <label class="switch"><input type="checkbox" id="oncall"><span data-i="onCall">Simulate: I’m on a call with an unknown number</span></label>
-    <button id="simulate" class="go" data-i="simulateBtn">Simulate a UAE PASS approval request</button>
-    <p class="hint" data-i="guardNote">This is a demo of the Android guard. It doesn’t connect to UAE PASS.</p>
+  <!-- PROTECT -->
+  <section id="t-protect" class="tab">
+    <h1 data-i="protectTitle">Your protection</h1>
+    <div class="card">
+      <h2 data-i="previewTitle">Where does this link really go?</h2>
+      <p class="hint" data-i="previewLede">RAQEEB opens it safely on its server, follows every redirect, and shows you the final address. Nothing runs on your phone.</p>
+      <form id="preview-form" class="row-form">
+        <input id="preview-url" type="url" inputmode="url" data-ph="previewPh" placeholder="https://bit.ly/…" required>
+        <button class="go small" type="submit" data-i="previewBtn">Preview</button>
+      </form>
+      <div id="preview-out" class="preview-out"></div>
+    </div>
+    <div class="card">
+      <h2 data-i="myBlocksTitle">Blocked for me</h2>
+      <p class="hint" data-i="myBlocksLede">Sites and numbers you blocked. This only affects your own phone.</p>
+      <form id="myblock-form" class="row-form">
+        <input id="myblock-value" data-ph="myBlockPh" placeholder="Website or phone number" required>
+        <button class="go small" type="submit" data-i="blockBtn">Block</button>
+      </form>
+      <ul id="myblocks" class="plain"></ul>
+    </div>
+    <div class="card">
+      <h2 data-i="brandsTitle">Is this really them?</h2>
+      <p class="hint" data-i="brandsLede">Official websites of UAE government entities, banks and services.</p>
+      <input id="brand-search" type="search" data-ph="brandPh" placeholder="Search: UAE PASS, Salik, ADCB…" aria-label="Search brands">
+      <ul id="brands" class="brands"></ul>
+    </div>
+    <div class="card">
+      <h2 data-i="guardTitle">UAE PASS guard</h2>
+      <p class="hint" data-i="guardLede">A fake official calls and asks you to approve a login. On Android, RAQEEB sees the call and the approval together and stops you before you tap approve.</p>
+      <label class="switch"><input type="checkbox" id="oncall"><span data-i="onCall">Simulate: I’m on a call with an unknown number</span></label>
+      <button id="simulate" class="soft" data-i="simulateBtn">Simulate a UAE PASS approval request</button>
+      <p class="hint" data-i="guardNote">This is a demonstration of the Android guard. It doesn’t connect to UAE PASS.</p>
+    </div>
+    <div class="card" id="family-card">
+      <h2 data-i="familyTitle">Family protection</h2>
+      <p class="hint" data-i="familyLede">Share scam warnings with your family group. RAQEEB never shows anyone your messages, browsing or location.</p>
+      <div id="family"></div>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section id="t-report" class="tab">
+    <h1 data-i="reportTitle">Report a scam</h1>
+    <p class="lede" data-i="reportLede">Paste it, attach a screenshot, or both. RAQEEB analyses it straight away and an analyst reviews it.</p>
+    <form id="report-form">
+      <fieldset class="types">
+        <legend data-i="whatKind">What did you receive?</legend>
+        <div id="types" class="type-grid"></div>
+      </fieldset>
+      <label for="r-text" class="lbl" data-i="pasteLabel">Paste the message, link or number</label>
+      <textarea id="r-text" rows="5" data-ph="pastePh" placeholder="You can paste a whole message. RAQEEB finds the links and numbers."></textarea>
+      <label for="r-file" class="file"><span data-i="attach">Attach a screenshot (optional)</span><input id="r-file" type="file" accept="image/png,image/jpeg,image/webp"></label>
+      <p id="r-file-name" class="hint"></p>
+      <label for="r-emirate" class="lbl" data-i="emirateLabel">Your emirate</label>
+      <select id="r-emirate"></select>
+      <fieldset class="impact">
+        <legend data-i="impactQ">What happened? (optional)</legend>
+        <label><input type="checkbox" value="clicked"> <span data-i="impClicked">I opened the link</span></label>
+        <label><input type="checkbox" value="shared_details"> <span data-i="impShared">I entered details or a code</span></label>
+        <label><input type="checkbox" value="paid"> <span data-i="impPaid">I paid</span></label>
+        <label><input type="checkbox" value="lost_money"> <span data-i="impLost">I lost money</span></label>
+      </fieldset>
+      <p id="lost-help" class="help" hidden data-i="lostHelp">Call your bank now to block your card, then report to the police. Speed matters.</p>
+      <button class="go" type="submit" data-i="submitReport">Send report to RAQEEB</button>
+      <p class="hint" id="anon-note" data-i="anonNote">You’re not signed in. Your report still helps, but you can’t track it or earn Guardian points.</p>
+    </form>
+    <div id="r-result" class="card result" hidden></div>
+    <h2 class="h2-gap" data-i="myReports">My reports</h2>
+    <ol id="my-reports" class="reports"></ol>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="t-community" class="tab">
+    <h1 data-i="communityTitle">RAQEEB Guardians</h1>
+    <p class="lede" data-i="communityLede">Residents who report scams that analysts verify. Points are only given for verified reports.</p>
+    <div class="seg" id="lb-period">
+      <button data-p="week" class="on" data-i="week">This week</button><button data-p="month" data-i="month">This month</button><button data-p="all" data-i="allTime">All time</button>
+    </div>
+    <select id="lb-emirate" aria-label="Emirate"></select>
+    <ol id="leaderboard" class="board"></ol>
+    <div class="card"><h2 data-i="emirateRank">Emirates</h2><ol id="emirate-board" class="board small"></ol></div>
+    <div class="card"><h2 data-i="safetyTitle">Public safety report (30 days)</h2><div id="safety"></div></div>
+    <div class="card"><h2 data-i="simTitle">Can you spot the scam?</h2><p class="hint" data-i="simLede">Practice scenarios. Links use the reserved .example address so they never open anything.</p><div id="sim"></div></div>
+    <div class="card"><h2 data-i="learnTitle">Learn</h2><div id="knowledge"></div></div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="t-profile" class="tab">
+    <div id="signed-out">
+      <h1 data-i="joinTitle">Become a RAQEEB Guardian</h1>
+      <p class="lede" data-i="joinLede">Track your reports, block scams for yourself, and earn recognition when your reports are verified.</p>
+      <div class="seg" id="auth-mode"><button data-m="register" class="on" data-i="register">Create account</button><button data-m="login" data-i="signIn">Sign in</button></div>
+      <form id="auth-form" class="stack">
+        <label for="a-email" data-i="email">Email</label><input id="a-email" type="email" autocomplete="email" required>
+        <label for="a-pass" data-i="password">Password (8+ characters)</label><input id="a-pass" type="password" minlength="8" autocomplete="current-password" required>
+        <div id="reg-only" class="stack">
+          <label for="a-name" data-i="displayName">Public name (optional)</label><input id="a-name" maxlength="40" data-ph="namePh" placeholder="Leave empty to stay anonymous">
+          <label for="a-emirate" data-i="emirateLabel">Your emirate</label><select id="a-emirate"></select>
+          <label class="check"><input id="a-public" type="checkbox" checked> <span data-i="showOnBoard">Show me on leaderboards (with my public name or an anonymous Guardian name)</span></label>
+        </div>
+        <p id="auth-error" class="error" role="alert"></p>
+        <button class="go" type="submit" id="auth-submit" data-i="register">Create account</button>
+      </form>
+    </div>
+    <div id="signed-in" hidden>
+      <div class="level-card">
+        <p class="lvl-name" id="lvl-name"></p>
+        <p class="lvl-pts" id="lvl-pts"></p>
+        <div class="meter"><i id="lvl-bar"></i></div>
+        <p class="lvl-next" id="lvl-next"></p>
+      </div>
+      <h2 class="h2-gap" data-i="badges">Badges</h2>
+      <ul id="badges" class="badges"></ul>
+      <h2 class="h2-gap" data-i="pointsHistory">Points history</h2>
+      <ul id="ledger" class="plain ledger"></ul>
+      <h2 class="h2-gap" data-i="notifications">Notifications</h2>
+      <ul id="notes" class="plain"></ul>
+      <h2 class="h2-gap" data-i="settings">Settings</h2>
+      <form id="settings" class="stack card">
+        <label for="s-name" data-i="displayName">Public name</label><input id="s-name" maxlength="40">
+        <label for="s-emirate" data-i="emirateLabel">Your emirate</label><select id="s-emirate"></select>
+        <label class="check"><input id="s-public" type="checkbox"> <span data-i="showOnBoard">Show me on leaderboards</span></label>
+        <button class="go small" type="submit" data-i="save">Save</button>
+      </form>
+      <button id="notify" class="soft" data-i="notifyBtn">Turn on alert notifications</button>
+      <button id="signout" class="soft" data-i="signOut">Sign out</button>
+    </div>
   </section>
 </main>
 
 <nav class="tabs" aria-label="Sections">
-  <button data-tab="check" class="on"><span data-i="tabCheck">Check</span></button>
-  <button data-tab="alerts"><span data-i="tabAlerts">Alerts</span><b id="alert-count" hidden></b></button>
-  <button data-tab="guard"><span data-i="tabGuard">Guard</span></button>
+  <button data-tab="home" class="on"><span data-i="tabHome">Home</span></button>
+  <button data-tab="protect"><span data-i="tabProtect">Protect</span></button>
+  <button data-tab="report" class="report-tab"><span data-i="tabReport">Report</span></button>
+  <button data-tab="community"><span data-i="tabCommunity">Community</span></button>
+  <button data-tab="profile"><span data-i="tabProfile">Profile</span><b id="note-count" hidden></b></button>
 </nav>
 
 <!-- verdict sheet -->
@@ -76,19 +200,12 @@
     <ul id="v-reasons" class="v-reasons"></ul>
     <p id="v-advice" class="v-advice"></p>
     <div class="v-actions">
-      <button id="v-report" class="go light" data-i="reportBtn">Report to Aman</button>
+      <button id="v-report" class="go light" data-i="reportToRaqeeb">Report to RAQEEB</button>
+      <button id="v-block" class="soft light" data-i="blockForMe">Block for me</button>
       <button id="v-close" class="soft light" data-i="close">Close</button>
     </div>
-    <div id="report-box" class="report-box" hidden>
-      <label for="emirate" data-i="emirateLabel">Your emirate</label>
-      <select id="emirate">
-        <option>Abu Dhabi</option><option>Dubai</option><option>Sharjah</option><option>Ajman</option>
-        <option>Umm Al Quwain</option><option>Ras Al Khaimah</option><option>Fujairah</option>
-      </select>
-      <button id="send-report" class="go light" data-i="sendReport">Send report</button>
-      <p class="aman"><span data-i="amanAlso">You can also contact Aman directly:</span> <a href="tel:8002626">8002626</a> · <a href="sms:2828">SMS 2828</a></p>
-      <p id="report-done" class="hint" hidden data-i="reportDone">Report sent. Thank you — it helps protect others.</p>
-    </div>
+    <p class="v-explain" data-i="blockVsReport">“Block for me” protects only your phone. “Report to RAQEEB” sends it to analysts, who can block it for everyone once it’s confirmed.</p>
+    <p class="aman"><span data-i="amanAlso">Lost money? Contact Aman (Abu Dhabi Police):</span> <a href="tel:8002626">8002626</a> · <a href="sms:2828">SMS 2828</a></p>
   </div>
 </section>
 
@@ -102,6 +219,7 @@
   <button id="to-allow" class="soft light" data-i="toAllow">It was me</button>
 </section>
 
+<script src="/static/app/i18n.js"></script>
 <script src="/static/app/app.js"></script>
 </body>
 </html>
