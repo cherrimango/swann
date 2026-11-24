@@ -13,6 +13,7 @@
   --text: 'Readex Pro', 'Segoe UI', Tahoma, sans-serif;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body { background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--text); min-height: 100vh; padding-bottom: 84px; }
 [dir="rtl"] body, [dir="rtl"] h1, [dir="rtl"] h2 { font-family: var(--display); }
