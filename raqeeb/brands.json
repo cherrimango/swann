@@ -1,0 +1,1044 @@
+{
+ "_note": "UAE brand profiles used for impersonation detection. 'official_domains' are allowlisted (the domain and all its subdomains). Entries with confidence 'check' must be verified against the entity's own website before the demo.",
+ "brands": [
+  {
+   "id": "uaepass",
+   "name": "UAE PASS",
+   "name_ar": "الهوية الرقمية - يو إيه إي باس",
+   "sector": "digital_identity",
+   "official_domains": [
+    {
+     "domain": "uaepass.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "uaepass",
+    "uae-pass",
+    "uaepas",
+    "passuae"
+   ],
+   "content_terms": [
+    "uae pass",
+    "uaepass",
+    "الهوية الرقمية"
+   ],
+   "scams": [
+    "account_suspension_reactivation",
+    "otp_harvest",
+    "official_impersonation_credentials"
+   ]
+  },
+  {
+   "id": "tamm",
+   "name": "TAMM (Abu Dhabi Government)",
+   "name_ar": "تم - حكومة أبوظبي",
+   "sector": "government_services",
+   "official_domains": [
+    {
+     "domain": "tamm.abudhabi",
+     "confidence": "high"
+    },
+    {
+     "domain": "abudhabi.gov.ae",
+     "confidence": "high"
+    },
+    {
+     "domain": "abudhabi.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "tamm",
+    "tammabudhabi",
+    "abudhabigov"
+   ],
+   "content_terms": [
+    "tamm abu dhabi",
+    "حكومة أبوظبي",
+    "abu dhabi government"
+   ],
+   "scams": [
+    "fake_gov_fee_payment",
+    "fast_track_service",
+    "fake_consumer_protection"
+   ]
+  },
+  {
+   "id": "adpolice",
+   "name": "Abu Dhabi Police",
+   "name_ar": "شرطة أبوظبي",
+   "sector": "police_traffic",
+   "official_domains": [
+    {
+     "domain": "adpolice.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "adpolice",
+    "abudhabipolice",
+    "adp"
+   ],
+   "content_terms": [
+    "abu dhabi police",
+    "شرطة أبوظبي"
+   ],
+   "scams": [
+    "fake_traffic_fine",
+    "fine_discount_offer",
+    "official_impersonation_credentials"
+   ]
+  },
+  {
+   "id": "dubaipolice",
+   "name": "Dubai Police",
+   "name_ar": "شرطة دبي",
+   "sector": "police_traffic",
+   "official_domains": [
+    {
+     "domain": "dubaipolice.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "dubaipolice",
+    "dxbpolice",
+    "dubai-police"
+   ],
+   "content_terms": [
+    "dubai police",
+    "شرطة دبي"
+   ],
+   "scams": [
+    "fake_traffic_fine",
+    "official_impersonation_credentials"
+   ]
+  },
+  {
+   "id": "moi",
+   "name": "Ministry of Interior",
+   "name_ar": "وزارة الداخلية",
+   "sector": "police_traffic",
+   "official_domains": [
+    {
+     "domain": "moi.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "moiuae",
+    "moi-uae",
+    "moigov"
+   ],
+   "content_terms": [
+    "ministry of interior",
+    "وزارة الداخلية"
+   ],
+   "scams": [
+    "fake_traffic_fine",
+    "fake_insurance_offer"
+   ]
+  },
+  {
+   "id": "rta",
+   "name": "RTA Dubai / nol",
+   "name_ar": "هيئة الطرق والمواصلات",
+   "sector": "transport_tolls",
+   "official_domains": [
+    {
+     "domain": "rta.ae",
+     "confidence": "high"
+    },
+    {
+     "domain": "nol.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "rtadubai",
+    "rta-dubai",
+    "rtauae",
+    "rta",
+    "nolcard",
+    "nol-card"
+   ],
+   "content_terms": [
+    "roads and transport authority",
+    "هيئة الطرق والمواصلات",
+    "nol card"
+   ],
+   "scams": [
+    "fake_traffic_fine",
+    "fine_discount_offer",
+    "nol_topup_clone"
+   ]
+  },
+  {
+   "id": "salik",
+   "name": "Salik",
+   "name_ar": "سالك",
+   "sector": "transport_tolls",
+   "official_domains": [
+    {
+     "domain": "salik.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "salik",
+    "salikae",
+    "salik-ae"
+   ],
+   "content_terms": [
+    "salik",
+    "سالك"
+   ],
+   "scams": [
+    "toll_overdue_payment",
+    "recharge_clone_site",
+    "fake_share_investment"
+   ]
+  },
+  {
+   "id": "darb",
+   "name": "Darb (Abu Dhabi tolls)",
+   "name_ar": "درب",
+   "sector": "transport_tolls",
+   "official_domains": [
+    {
+     "domain": "itc.gov.ae",
+     "confidence": "check"
+    },
+    {
+     "domain": "qmobility.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "darb",
+    "darbtoll",
+    "darb-toll",
+    "darbalert",
+    "darbpay"
+   ],
+   "content_terms": [
+    "darb toll",
+    "درب"
+   ],
+   "scams": [
+    "toll_overdue_payment"
+   ]
+  },
+  {
+   "id": "icp",
+   "name": "ICP (Identity, Citizenship, Customs & Port Security)",
+   "name_ar": "الهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ",
+   "sector": "identity_visa",
+   "official_domains": [
+    {
+     "domain": "icp.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "icpgov",
+    "icp-gov",
+    "icpuae",
+    "uaeicp",
+    "emiratesid",
+    "emirates-id",
+    "icp"
+   ],
+   "content_terms": [
+    "federal authority for identity",
+    "الهيئة الاتحادية للهوية",
+    "uae icp"
+   ],
+   "scams": [
+    "fake_gov_fee_payment",
+    "fast_track_service",
+    "otp_harvest"
+   ]
+  },
+  {
+   "id": "gdrfa",
+   "name": "GDRFA Dubai",
+   "name_ar": "الإدارة العامة للإقامة وشؤون الأجانب",
+   "sector": "identity_visa",
+   "official_domains": [
+    {
+     "domain": "gdrfad.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "gdrfa",
+    "gdrfad"
+   ],
+   "content_terms": [
+    "gdrfa",
+    "الإقامة وشؤون الأجانب"
+   ],
+   "scams": [
+    "passport_suspended"
+   ]
+  },
+  {
+   "id": "uaegov",
+   "name": "UAE Federal Government (u.ae / TDRA)",
+   "name_ar": "البوابة الرسمية لحكومة الإمارات",
+   "sector": "government_services",
+   "official_domains": [
+    {
+     "domain": "u.ae",
+     "confidence": "high"
+    },
+    {
+     "domain": "tdra.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "tdra",
+    "uaegov",
+    "uae-gov",
+    "govuae"
+   ],
+   "content_terms": [
+    "tdra",
+    "هيئة تنظيم الاتصالات"
+   ],
+   "scams": [
+    "fake_gov_fee_payment",
+    "locked_device_fine"
+   ]
+  },
+  {
+   "id": "adcustoms",
+   "name": "Abu Dhabi Customs",
+   "name_ar": "جمارك أبوظبي",
+   "sector": "customs",
+   "official_domains": [
+    {
+     "domain": "adcustoms.gov.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "adcustoms",
+    "abudhabicustoms",
+    "ad-customs"
+   ],
+   "content_terms": [
+    "abu dhabi customs",
+    "جمارك أبوظبي"
+   ],
+   "scams": [
+    "customs_hold_notice",
+    "seized_vehicle_sale"
+   ]
+  },
+  {
+   "id": "added",
+   "name": "Abu Dhabi Consumer Protection (ADDED)",
+   "name_ar": "حماية المستهلك - أبوظبي",
+   "sector": "government_services",
+   "official_domains": [
+    {
+     "domain": "added.gov.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "adconsumer",
+    "abudhabiconsumer",
+    "consumerprotection-ad",
+    "consumerprotectionad",
+    "adcp"
+   ],
+   "content_terms": [
+    "consumer protection",
+    "حماية المستهلك"
+   ],
+   "scams": [
+    "fake_consumer_protection"
+   ]
+  },
+  {
+   "id": "mohre",
+   "name": "MOHRE",
+   "name_ar": "وزارة الموارد البشرية والتوطين",
+   "sector": "employment",
+   "official_domains": [
+    {
+     "domain": "mohre.gov.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "mohre",
+    "mohreuae"
+   ],
+   "content_terms": [
+    "mohre",
+    "وزارة الموارد البشرية"
+   ],
+   "scams": [
+    "fake_job_offer",
+    "official_impersonation_credentials"
+   ]
+  },
+  {
+   "id": "emiratespost",
+   "name": "Emirates Post",
+   "name_ar": "بريد الإمارات",
+   "sector": "delivery",
+   "official_domains": [
+    {
+     "domain": "emiratespost.ae",
+     "confidence": "high"
+    },
+    {
+     "domain": "emiratesposthop.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "emiratespost",
+    "emirates-post",
+    "emiratepost",
+    "empost",
+    "emirates-pst"
+   ],
+   "content_terms": [
+    "emirates post",
+    "بريد الإمارات"
+   ],
+   "scams": [
+    "parcel_fee_payment",
+    "address_update"
+   ]
+  },
+  {
+   "id": "aramex",
+   "name": "Aramex",
+   "name_ar": "أرامكس",
+   "sector": "delivery",
+   "official_domains": [
+    {
+     "domain": "aramex.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "aramex",
+    "aramx",
+    "arammex"
+   ],
+   "content_terms": [
+    "aramex",
+    "أرامكس"
+   ],
+   "scams": [
+    "parcel_fee_payment",
+    "address_update"
+   ]
+  },
+  {
+   "id": "cbuae",
+   "name": "Central Bank of the UAE",
+   "name_ar": "مصرف الإمارات العربية المتحدة المركزي",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "centralbank.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "cbuae",
+    "centralbankuae",
+    "uaecentralbank",
+    "centralbank-uae",
+    "cb-uae"
+   ],
+   "content_terms": [
+    "central bank",
+    "المصرف المركزي"
+   ],
+   "scams": [
+    "account_blocked_update",
+    "official_impersonation_credentials"
+   ]
+  },
+  {
+   "id": "adcb",
+   "name": "ADCB",
+   "name_ar": "بنك أبوظبي التجاري",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "adcb.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "adcb",
+    "adcbank"
+   ],
+   "content_terms": [
+    "adcb",
+    "بنك أبوظبي التجاري"
+   ],
+   "scams": [
+    "account_blocked_update",
+    "fake_card_offer"
+   ]
+  },
+  {
+   "id": "fab",
+   "name": "First Abu Dhabi Bank",
+   "name_ar": "بنك أبوظبي الأول",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "bankfab.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "bankfab",
+    "fabbank",
+    "fab"
+   ],
+   "content_terms": [
+    "first abu dhabi bank",
+    "بنك أبوظبي الأول"
+   ],
+   "scams": [
+    "account_blocked_update"
+   ]
+  },
+  {
+   "id": "enbd",
+   "name": "Emirates NBD",
+   "name_ar": "بنك الإمارات دبي الوطني",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "emiratesnbd.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "emiratesnbd",
+    "enbd",
+    "emirates-nbd"
+   ],
+   "content_terms": [
+    "emirates nbd",
+    "الإمارات دبي الوطني"
+   ],
+   "scams": [
+    "account_blocked_update",
+    "app_auth_harvest"
+   ]
+  },
+  {
+   "id": "adib",
+   "name": "Abu Dhabi Islamic Bank",
+   "name_ar": "مصرف أبوظبي الإسلامي",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "adib.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "adib",
+    "adibank"
+   ],
+   "content_terms": [
+    "adib",
+    "مصرف أبوظبي الإسلامي"
+   ],
+   "scams": [
+    "account_blocked_update"
+   ]
+  },
+  {
+   "id": "dib",
+   "name": "Dubai Islamic Bank",
+   "name_ar": "بنك دبي الإسلامي",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "dib.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "dubaiislamic",
+    "dib"
+   ],
+   "content_terms": [
+    "dubai islamic bank",
+    "بنك دبي الإسلامي"
+   ],
+   "scams": [
+    "account_blocked_update",
+    "fake_prize"
+   ]
+  },
+  {
+   "id": "mashreq",
+   "name": "Mashreq",
+   "name_ar": "بنك المشرق",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "mashreq.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "mashreq",
+    "mashreqbank"
+   ],
+   "content_terms": [
+    "mashreq",
+    "المشرق"
+   ],
+   "scams": [
+    "account_blocked_update"
+   ]
+  },
+  {
+   "id": "fazaa",
+   "name": "Fazaa",
+   "name_ar": "فزعة",
+   "sector": "banking",
+   "official_domains": [
+    {
+     "domain": "fazaa.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "fazaa",
+    "fazza"
+   ],
+   "content_terms": [
+    "fazaa",
+    "فزعة"
+   ],
+   "scams": [
+    "fake_card_offer"
+   ]
+  },
+  {
+   "id": "etisalat",
+   "name": "e& (Etisalat)",
+   "name_ar": "اتصالات من إي آند",
+   "sector": "telecom",
+   "official_domains": [
+    {
+     "domain": "etisalat.ae",
+     "confidence": "high"
+    },
+    {
+     "domain": "eand.com",
+     "confidence": "high"
+    },
+    {
+     "domain": "eandmoney.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "etisalat",
+    "etisalaat",
+    "etisal",
+    "eand"
+   ],
+   "content_terms": [
+    "etisalat",
+    "اتصالات من إي آند"
+   ],
+   "scams": [
+    "points_expiry_redeem",
+    "fake_prize",
+    "free_data_offer"
+   ]
+  },
+  {
+   "id": "du",
+   "name": "du",
+   "name_ar": "دو",
+   "sector": "telecom",
+   "official_domains": [
+    {
+     "domain": "du.ae",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "du"
+   ],
+   "content_terms": [
+    "du telecom",
+    "du.ae"
+   ],
+   "scams": [
+    "points_expiry_redeem",
+    "fake_prize"
+   ]
+  },
+  {
+   "id": "yasisland",
+   "name": "Yas Island attractions",
+   "name_ar": "جزيرة ياس",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "yasisland.com",
+     "confidence": "check"
+    },
+    {
+     "domain": "yaswaterworld.com",
+     "confidence": "check"
+    },
+    {
+     "domain": "ferrariworldabudhabi.com",
+     "confidence": "check"
+    },
+    {
+     "domain": "seaworldabudhabi.com",
+     "confidence": "check"
+    },
+    {
+     "domain": "wbworldabudhabi.com",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "yaswaterworld",
+    "yasisland",
+    "ferrariworld",
+    "seaworldabudhabi",
+    "wbworldabudhabi",
+    "warnerbrosworld",
+    "yas-waterworld",
+    "ferrari-world"
+   ],
+   "content_terms": [
+    "yas waterworld",
+    "ferrari world",
+    "seaworld abu dhabi",
+    "warner bros. world",
+    "yas island"
+   ],
+   "scams": [
+    "fake_ticket_offer"
+   ]
+  },
+  {
+   "id": "aquaventure",
+   "name": "Aquaventure (Atlantis)",
+   "name_ar": "أكوافنتشر",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "atlantis.com",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "aquaventure",
+    "aquaventureworld",
+    "atlantisthepalm"
+   ],
+   "content_terms": [
+    "aquaventure",
+    "atlantis the palm"
+   ],
+   "scams": [
+    "fake_ticket_offer",
+    "fake_booking"
+   ]
+  },
+  {
+   "id": "wildwadi",
+   "name": "Wild Wadi",
+   "name_ar": "وايلد وادي",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "wildwadi.com",
+     "confidence": "check"
+    },
+    {
+     "domain": "jumeirah.com",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "wildwadi",
+    "wild-wadi"
+   ],
+   "content_terms": [
+    "wild wadi"
+   ],
+   "scams": [
+    "fake_ticket_offer"
+   ]
+  },
+  {
+   "id": "globalvillage",
+   "name": "Global Village",
+   "name_ar": "القرية العالمية",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "globalvillage.ae",
+     "confidence": "check"
+    },
+    {
+     "domain": "coca-cola-arena.com",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "globalvillage",
+    "global-village",
+    "gvvip",
+    "cocacolaarena"
+   ],
+   "content_terms": [
+    "global village",
+    "القرية العالمية",
+    "vip pack"
+   ],
+   "scams": [
+    "fake_vip_pack",
+    "fake_ticket_offer"
+   ]
+  },
+  {
+   "id": "louvreabudhabi",
+   "name": "Louvre Abu Dhabi",
+   "name_ar": "اللوفر أبوظبي",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "louvreabudhabi.ae",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "louvreabudhabi",
+    "louvre-abudhabi"
+   ],
+   "content_terms": [
+    "louvre abu dhabi"
+   ],
+   "scams": [
+    "fake_ticket_offer"
+   ]
+  },
+  {
+   "id": "dubaiopera",
+   "name": "Dubai Opera",
+   "name_ar": "دبي أوبرا",
+   "sector": "attractions",
+   "official_domains": [
+    {
+     "domain": "dubaiopera.com",
+     "confidence": "check"
+    }
+   ],
+   "keywords": [
+    "dubaiopera",
+    "dubai-opera"
+   ],
+   "content_terms": [
+    "dubai opera"
+   ],
+   "scams": [
+    "fake_ticket_offer"
+   ]
+  },
+  {
+   "id": "emiratesair",
+   "name": "Emirates (airline)",
+   "name_ar": "طيران الإمارات",
+   "sector": "travel",
+   "official_domains": [
+    {
+     "domain": "emirates.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "flyemirates",
+    "emiratesairline",
+    "emirates-airline",
+    "emiratesair"
+   ],
+   "content_terms": [
+    "emirates airline",
+    "skywards"
+   ],
+   "scams": [
+    "fake_booking",
+    "fake_prize"
+   ]
+  },
+  {
+   "id": "etihad",
+   "name": "Etihad Airways",
+   "name_ar": "الاتحاد للطيران",
+   "sector": "travel",
+   "official_domains": [
+    {
+     "domain": "etihad.com",
+     "confidence": "high"
+    }
+   ],
+   "keywords": [
+    "etihadairways",
+    "etihad-airways",
+    "flyetihad",
+    "etihadair"
+   ],
+   "content_terms": [
+    "etihad airways",
+    "etihad guest"
+   ],
+   "scams": [
+    "fake_booking",
+    "fake_prize"
+   ]
+  }
+ ],
+ "scam_types": {
+  "account_suspension_reactivation": {
+   "en": "Account will be suspended - click to reactivate",
+   "ar": "سيتم إيقاف حسابك - اضغط لإعادة التفعيل"
+  },
+  "otp_harvest": {
+   "en": "Asks for an OTP or verification code",
+   "ar": "يطلب رمز التحقق لمرة واحدة"
+  },
+  "official_impersonation_credentials": {
+   "en": "Fake official asks for login details or Emirates ID",
+   "ar": "منتحل صفة رسمية يطلب بيانات الدخول أو الهوية"
+  },
+  "fake_gov_fee_payment": {
+   "en": "Fake government page demanding a fee or fine",
+   "ar": "صفحة حكومية مزيفة تطلب رسوماً أو غرامة"
+  },
+  "fast_track_service": {
+   "en": "Paid 'fast-track' visa or government service",
+   "ar": "خدمة حكومية أو تأشيرة سريعة مدفوعة مزيفة"
+  },
+  "fake_consumer_protection": {
+   "en": "Fake consumer-protection complaint portal",
+   "ar": "بوابة شكاوى حماية مستهلك مزيفة"
+  },
+  "fake_traffic_fine": {
+   "en": "Fake traffic fine payment link",
+   "ar": "رابط مزيف لسداد مخالفة مرورية"
+  },
+  "fine_discount_offer": {
+   "en": "Fake discount on traffic fines or black points",
+   "ar": "خصم وهمي على المخالفات أو النقاط السوداء"
+  },
+  "fake_insurance_offer": {
+   "en": "Fake vehicle insurance offer",
+   "ar": "عرض تأمين مركبة مزيف"
+  },
+  "nol_topup_clone": {
+   "en": "Clone nol card top-up site",
+   "ar": "موقع شحن بطاقة نول مستنسخ"
+  },
+  "toll_overdue_payment": {
+   "en": "Overdue toll fee - pay now to avoid a fine",
+   "ar": "رسوم تعرفة مرورية متأخرة - ادفع الآن لتجنب الغرامة"
+  },
+  "recharge_clone_site": {
+   "en": "Clone recharge site",
+   "ar": "موقع شحن رصيد مستنسخ"
+  },
+  "fake_share_investment": {
+   "en": "Fake share or investment opportunity",
+   "ar": "فرصة استثمار أو أسهم وهمية"
+  },
+  "passport_suspended": {
+   "en": "Passport or residency 'suspended'",
+   "ar": "إيقاف الجواز أو الإقامة"
+  },
+  "locked_device_fine": {
+   "en": "'Your device is locked - pay a fine'",
+   "ar": "تم قفل جهازك - ادفع غرامة"
+  },
+  "customs_hold_notice": {
+   "en": "Customs hold / tariff classification notice",
+   "ar": "إشعار حجز جمركي أو تصنيف تعرفة"
+  },
+  "seized_vehicle_sale": {
+   "en": "'Seized' vehicles sold cheap",
+   "ar": "بيع مركبات محجوزة بأسعار منخفضة"
+  },
+  "fake_job_offer": {
+   "en": "Fake job offer with fees",
+   "ar": "عرض عمل وهمي مقابل رسوم"
+  },
+  "parcel_fee_payment": {
+   "en": "Small parcel delivery fee (Dh3-Dh10)",
+   "ar": "رسوم توصيل طرد صغيرة"
+  },
+  "address_update": {
+   "en": "Failed delivery - update your address",
+   "ar": "فشل التوصيل - حدّث عنوانك"
+  },
+  "account_blocked_update": {
+   "en": "Card/account blocked - update your details",
+   "ar": "تم حظر البطاقة أو الحساب - حدّث بياناتك"
+  },
+  "fake_card_offer": {
+   "en": "Fake premium card offer",
+   "ar": "عرض بطاقة مميزة مزيف"
+  },
+  "app_auth_harvest": {
+   "en": "Steals mobile-banking app approval",
+   "ar": "سرقة موافقة تطبيق البنك"
+  },
+  "fake_prize": {
+   "en": "Fake prize or lucky draw",
+   "ar": "جائزة أو سحب وهمي"
+  },
+  "points_expiry_redeem": {
+   "en": "Reward points expiring - redeem now",
+   "ar": "نقاط المكافآت ستنتهي - استبدلها الآن"
+  },
+  "free_data_offer": {
+   "en": "Fake free data offer on holidays",
+   "ar": "عرض بيانات مجانية مزيف"
+  },
+  "fake_ticket_offer": {
+   "en": "Discounted tickets on a fake booking site",
+   "ar": "تذاكر مخفضة على موقع حجز مزيف"
+  },
+  "fake_vip_pack": {
+   "en": "VIP packs sold outside the only official channel",
+   "ar": "باقات كبار الشخصيات تُباع خارج القناة الرسمية الوحيدة"
+  },
+  "fake_booking": {
+   "en": "Fake flight, hotel or package booking",
+   "ar": "حجز طيران أو فندق أو باقة مزيف"
+  }
+ }
+}

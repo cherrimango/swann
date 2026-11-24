@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Raqeeb" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#14243A</item>
+        <item name="android:statusBarColor">#14243A</item>
+    </style>
+    <style name="Theme.Raqeeb.Guard" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#9C3A14</item>
+        <item name="android:statusBarColor">#9C3A14</item>
+    </style>
+</resources>

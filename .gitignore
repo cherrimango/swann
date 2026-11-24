@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+data/raw/
+data/raqeeb.db
+evidence/
+predictions.csv
+hunt_results.csv
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+.idea/

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAQEEB Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500..800&family=Readex+Pro:wght@300..600&display=swap">
+<link rel="stylesheet" href="/static/command/command.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="word">RAQEEB</span><span class="word-ar" lang="ar">رقيب</span>
+    <span class="role">Command</span>
+  </div>
+  <dl class="counters" aria-label="Live totals">
+    <div><dt>Scam sites tracked</dt><dd id="c-feed">–</dd></div>
+    <div><dt>Kit campaigns</dt><dd id="c-camp">–</dd></div>
+    <div><dt>Blocked on phones</dt><dd id="c-block">–</dd></div>
+    <div><dt>Resident reports</dt><dd id="c-rep">–</dd></div>
+  </dl>
+  <div class="top-actions">
+    <span id="live" class="live off" role="status">Connecting</span>
+    <button id="btn-phones" class="ghost">Connect phones</button>
+  </div>
+</header>
+
+<nav class="rail" aria-label="Sections">
+  <button data-view="feed" class="on">Live feed</button>
+  <button data-view="scan">Check a link</button>
+  <button data-view="campaigns">Campaigns</button>
+  <button data-view="scamcast">ScamCast</button>
+  <button data-view="blocklist">Blocklist</button>
+  <button data-view="reports">Reports</button>
+</nav>
+
+<main>
+  <!-- LIVE FEED -->
+  <section id="v-feed" class="view on">
+    <div class="feed-col">
+      <div class="hunt-bar">
+        <p class="hint">Hunt now</p>
+        <div class="hunt-buttons">
+          <button data-hunt="scamcast">ScamCast watchlist</button>
+          <button data-hunt="permute">Look-alike domains</button>
+          <button data-hunt="crtsh">New certificates</button>
+          <button data-hunt="replay">Replay reported scams</button>
+        </div>
+        <p id="hunt-status" class="hunt-status" role="status"></p>
+      </div>
+      <div class="filters">
+        <input id="feed-search" type="search" placeholder="Filter by domain or brand" aria-label="Filter feed">
+        <div id="brand-chips" class="chips"></div>
+      </div>
+      <ol id="feed" class="feed" aria-label="Scam sites"></ol>
+    </div>
+    <div class="detail-col"><div id="detail" class="detail empty">
+      <p class="empty-title">Pick a site from the feed</p>
+      <p class="empty-text">You’ll see the look-alike next to the real domain, why it was flagged, and the actions to block it or build a takedown pack.</p>
+    </div></div>
+  </section>
+
+  <!-- CHECK A LINK -->
+  <section id="v-scan" class="view">
+    <form id="scan-form" class="scan-form">
+      <label for="scan-url" class="big-label">Check any link</label>
+      <div class="scan-row">
+        <input id="scan-url" type="text" placeholder="Paste a link, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" required>
+        <button type="submit" class="primary">Check link</button>
+      </div>
+      <label class="check"><input id="scan-live" type="checkbox"> Run live checks (redirects, domain age, page content). Needs internet.</label>
+    </form>
+    <div id="scan-result" class="detail"></div>
+  </section>
+
+  <!-- CAMPAIGNS -->
+  <section id="v-campaigns" class="view">
+    <div class="camp-wrap">
+      <div class="graph-box">
+        <canvas id="graph" aria-label="Campaign graph: domains linked to the phishing kits and brands they share"></canvas>
+        <div class="legend">
+          <span><i class="dot kit"></i>Phishing kit</span>
+          <span><i class="dot brand"></i>UAE brand</span>
+          <span><i class="dot domain"></i>Scam domain</span>
+        </div>
+      </div>
+      <div class="camp-list">
+        <h2>Kits reused across domains</h2>
+        <p class="sub">Scammers change domains every day but reuse the same kit. Same file names and folders = same operation.</p>
+        <ol id="camp-list"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCAMCAST -->
+  <section id="v-scamcast" class="view">
+    <h2>ScamCast</h2>
+    <p class="sub">Scams follow the calendar. These seasons are active now, so RAQEEB is already watching for the domains scammers are likely to register.</p>
+    <div id="seasons" class="seasons"></div>
+  </section>
+
+  <!-- BLOCKLIST -->
+  <section id="v-blocklist" class="view">
+    <h2>Blocked on every RAQEEB phone</h2>
+    <p class="sub">Each entry is pushed to phones instantly and served to the DNS shield as <a href="/api/blocklist.txt" target="_blank">blocklist.txt</a>.</p>
+    <table class="table"><thead><tr><th>Domain</th><th>Brand</th><th>Reason</th><th>Added</th><th></th></tr></thead><tbody id="block-rows"></tbody></table>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="v-reports" class="view">
+    <h2>Reports from residents</h2>
+    <p class="sub">Messages and links residents sent from the RAQEEB app, checked on arrival.</p>
+    <div id="emirates" class="emirates"></div>
+    <ol id="report-rows" class="reports"></ol>
+  </section>
+</main>
+
+<div id="phones" class="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="phones-title">
+    <h2 id="phones-title">Connect a phone</h2>
+    <p>Scan with a phone on the same Wi-Fi to open the RAQEEB app. Every block you push reaches it instantly.</p>
+    <img id="qr" alt="QR code to open the RAQEEB app" width="260" height="260">
+    <p id="join-url" class="join-url"></p>
+    <button class="primary" id="phones-close">Done</button>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<script src="/static/command/command.js"></script>
+</body>
+</html>

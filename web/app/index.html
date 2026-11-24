@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14243A">
+<title>RAQEEB</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/app/icon-192.png">
+<link rel="apple-touch-icon" href="/static/app/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500..800&family=Readex+Pro:wght@300..600&display=swap">
+<link rel="stylesheet" href="/static/app/app.css">
+</head>
+<body>
+<header class="bar">
+  <div class="mark"><span class="w-en">RAQEEB</span><span class="w-ar">رقيب</span></div>
+  <button id="lang" class="lang" aria-label="Switch language">عربي</button>
+</header>
+
+<div id="banner" class="banner" hidden role="alert"></div>
+
+<main>
+  <section id="t-check" class="tab on">
+    <h1 data-i="checkTitle">Check before you tap</h1>
+    <p class="lede" data-i="checkLede">Paste a link or a whole message. RAQEEB tells you if it’s a scam and why.</p>
+    <form id="check-form">
+      <label for="input" class="sr" data-i="inputLabel">Link or message</label>
+      <textarea id="input" rows="5" data-ph="inputPh" placeholder="Paste a link or a message you received"></textarea>
+      <button class="go" type="submit" data-i="checkBtn">Check it</button>
+    </form>
+    <button id="qr-btn" class="soft" data-i="qrBtn">Scan a QR code</button>
+    <div id="qr-box" class="qr-box" hidden>
+      <video id="qr-video" playsinline muted></video>
+      <p class="hint" data-i="qrHint">Point the camera at the QR code</p>
+      <button id="qr-stop" class="soft" data-i="cancel">Cancel</button>
+    </div>
+    <div class="tips">
+      <h2 data-i="tipsTitle">Remember</h2>
+      <ul>
+        <li data-i="tip1">No bank or government entity asks for your OTP or UAE PASS approval by phone.</li>
+        <li data-i="tip2">Fines, tolls and parcel fees are paid in the official app, not through a link.</li>
+        <li data-i="tip3">A price far below the official one is the most common ticket scam.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="t-alerts" class="tab">
+    <h1 data-i="alertsTitle">Scam alerts</h1>
+    <p class="lede" data-i="alertsLede">When police block a new scam, it reaches your phone here instantly.</p>
+    <button id="notify" class="soft" data-i="notifyBtn">Turn on alert notifications</button>
+    <ol id="alerts" class="alerts"></ol>
+  </section>
+
+  <section id="t-guard" class="tab">
+    <h1 data-i="guardTitle">UAE PASS guard</h1>
+    <p class="lede" data-i="guardLede">The most damaging scam in the UAE: a fake official calls and asks you to approve a login. On Android, RAQEEB sees the call and the approval request together, and stops you before you tap approve.</p>
+    <label class="switch"><input type="checkbox" id="oncall"><span data-i="onCall">Simulate: I’m on a call with an unknown number</span></label>
+    <button id="simulate" class="go" data-i="simulateBtn">Simulate a UAE PASS approval request</button>
+    <p class="hint" data-i="guardNote">This is a demo of the Android guard. It doesn’t connect to UAE PASS.</p>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sections">
+  <button data-tab="check" class="on"><span data-i="tabCheck">Check</span></button>
+  <button data-tab="alerts"><span data-i="tabAlerts">Alerts</span><b id="alert-count" hidden></b></button>
+  <button data-tab="guard"><span data-i="tabGuard">Guard</span></button>
+</nav>
+
+<!-- verdict sheet -->
+<section id="verdict" class="sheet" hidden aria-modal="true" role="dialog" aria-labelledby="v-word">
+  <div class="sheet-inner">
+    <p id="v-word" class="v-word"></p>
+    <p id="v-brand" class="v-brand"></p>
+    <div id="v-twin" class="v-twin"></div>
+    <ul id="v-reasons" class="v-reasons"></ul>
+    <p id="v-advice" class="v-advice"></p>
+    <div class="v-actions">
+      <button id="v-report" class="go light" data-i="reportBtn">Report to Aman</button>
+      <button id="v-close" class="soft light" data-i="close">Close</button>
+    </div>
+    <div id="report-box" class="report-box" hidden>
+      <label for="emirate" data-i="emirateLabel">Your emirate</label>
+      <select id="emirate">
+        <option>Abu Dhabi</option><option>Dubai</option><option>Sharjah</option><option>Ajman</option>
+        <option>Umm Al Quwain</option><option>Ras Al Khaimah</option><option>Fujairah</option>
+      </select>
+      <button id="send-report" class="go light" data-i="sendReport">Send report</button>
+      <p class="aman"><span data-i="amanAlso">You can also contact Aman directly:</span> <a href="tel:8002626">8002626</a> · <a href="sms:2828">SMS 2828</a></p>
+      <p id="report-done" class="hint" hidden data-i="reportDone">Report sent. Thank you — it helps protect others.</p>
+    </div>
+  </div>
+</section>
+
+<!-- UAE PASS guard takeover -->
+<section id="takeover" class="takeover" hidden role="alertdialog" aria-labelledby="to-title">
+  <p class="to-eyebrow" data-i="toEyebrow">RAQEEB stopped an approval</p>
+  <p id="to-title" class="to-title" data-i="toTitle">Someone is trying to log in as you.</p>
+  <p class="to-title ar-line" lang="ar">شخص ما يحاول تسجيل الدخول باسمك.</p>
+  <p class="to-body" data-i="toBody">You’re on a call with an unknown number and a UAE PASS approval just arrived. Real officials never ask you to approve a login. Hang up first.</p>
+  <button id="to-deny" class="go light" data-i="toDeny">I didn’t ask for this. Decline</button>
+  <button id="to-allow" class="soft light" data-i="toAllow">It was me</button>
+</section>
+
+<script src="/static/app/app.js"></script>
+</body>
+</html>
