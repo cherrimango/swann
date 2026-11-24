@@ -99,7 +99,7 @@ async def lifespan(_app):
 
 app = FastAPI(title="SAWNN API", version="3.0", lifespan=lifespan,
               description="SAWNN (صون) shared threat-intelligence backend for SAWNN Protect and SAWNN Command. "
-                          "See docs/API_GUIDE.md for configuration of every external service.")
+                          "See docs/SAWNN_API_SETUP.md for configuration of every external service.")
 _origins = [o for o in os.environ.get("SAWNN_CORS_ORIGINS", "").split(",") if o]
 if _origins:
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])

@@ -200,26 +200,30 @@
 
   <!-- AGENTS -->
   <section id="v-agents" class="view">
-    <h2>AI agents</h2>
-    <p class="sub">Fourteen agents share one engine and one result format: task, result, evidence, confidence, source, time, limitations and recommended action. Agents analyse and recommend; they cannot approve threats, block globally or publish alerts.</p>
+    <div class="view-head"><div><h2>AI agents</h2>
+      <p class="sub">Sixteen agents on one orchestrator. Every task is a database record with its status, timing, inputs, findings, evidence, confidence, sources, errors and hand-offs to other agents. Agents analyse and recommend; they cannot approve threats, block globally or publish alerts.</p></div>
+      <span class="live-pill" id="ag-worker"></span></div>
     <div id="ag14" class="ag14"></div>
     <div id="ag-out" class="ag-out" aria-live="polite"></div>
-    <h3 class="section-h">Agent activity (earlier agent framework)</h3>
-    <div id="a-list" class="agents"></div>
-    <h3 class="section-h">Latest findings</h3>
-    <table class="table"><thead><tr><th>Agent</th><th>Subject</th><th>Confidence</th><th>Reasoning</th><th>Next action</th><th>When</th></tr></thead><tbody id="a-rows"></tbody></table>
+    <article class="panel"><div class="panel-head"><h3>Agent performance</h3><span class="note">From agent_tasks</span></div>
+      <table class="table sortable"><thead><tr><th>Agent</th><th>Tasks</th><th>Completed</th><th>Failed</th><th>Open</th><th>Avg time</th><th>Last finished</th></tr></thead><tbody id="ag-stats"></tbody></table></article>
+    <article class="panel"><div class="panel-head"><h3>Recent workflows</h3><span class="note">Select one to see its task chain and hand-offs</span></div>
+      <table class="table"><thead><tr><th>Workflow</th><th>Kind</th><th>Origin</th><th>Status</th><th>Tasks</th><th>Started</th></tr></thead><tbody id="ag-wf"></tbody></table></article>
+    <div id="ag-chain"></div>
   </section>
 
 
   <!-- THREAT DISCOVERY ENGINE -->
   <section id="v-discovery" class="view">
-    <div class="view-head"><div><h2>Threat discovery engine</h2>
-      <p class="sub">Scheduled collection from permitted public threat feeds. New indicators are unverified leads: they inform deep scans and analyst review and never block anything on their own. Times are shown in your local time.</p></div>
-      <button id="d-run" class="primary" data-perm="run_hunt">Collect now</button></div>
+    <div class="view-head"><div><h2>Global Threat Discovery Engine</h2>
+      <p class="sub">Scheduled collection from permitted threat feeds, then automatic analysis by the agents. New indicators are unverified leads; suspicious ones open a "Newly discovered" threat record for analysts. Nothing is blocked or published without people. Times are shown in your local time.</p></div>
+      <div class="actions-inline"><span id="d-state" class="live-pill"></span><button id="d-run" class="primary" data-perm="run_hunt">Collect and analyse now</button></div></div>
     <dl id="d-kpis" class="kpis"></dl>
-    <article class="panel"><div class="panel-head"><h3>Sources</h3><span class="note" id="d-sched"></span></div>
+    <article class="panel"><div class="panel-head"><h3>Monitoring schedule</h3><span class="note" id="d-sched"></span></div>
+      <table class="table"><thead><tr><th>Job</th><th>Every</th><th>Status</th><th>Last run</th><th>Next run</th><th>Runs / failures</th><th>Duration</th><th>Last error</th><th></th></tr></thead><tbody id="d-jobs"></tbody></table></article>
+    <article class="panel"><div class="panel-head"><h3>Sources</h3><span class="note">Per-source result of the last collection</span></div>
       <table class="table sortable"><thead><tr><th>Source</th><th>Health</th><th>Last success</th><th>Last run</th><th>Collected</th><th>New</th><th>Duplicates</th><th>Stored</th><th>Terms</th></tr></thead><tbody id="d-rows"></tbody></table></article>
-    <article class="panel"><h3>Recent runs and errors</h3><table class="table"><thead><tr><th>When</th><th>Source</th><th>Status</th><th>New</th><th>Error</th></tr></thead><tbody id="d-runs"></tbody></table></article>
+    <article class="panel"><h3>Discovery history</h3><table class="table"><thead><tr><th>When</th><th>Source</th><th>Status</th><th>New</th><th>Duplicates</th><th>Error</th></tr></thead><tbody id="d-runs"></tbody></table></article>
   </section>
 
   <!-- SANDBOX CONFIGURATION -->

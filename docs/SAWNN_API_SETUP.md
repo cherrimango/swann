@@ -1,4 +1,14 @@
-# SAWNN API Integration & Configuration Guide
+# SAWNN API setup — integration and configuration guide
+
+**Where keys go:** copy `.env.example` to `.env` in the project folder, fill in the values, and start the server with
+`set -a; source .env; set +a; SAWNN_DEMO=1 uvicorn server.app:app --port 8000`. Keys are read only on the server
+(`os.environ`); no key is ever sent to a browser, and `.env` is git-ignored. Older `MIRA_*` and `RAQEEB_*` names
+are still accepted and mapped to `SAWNN_*` in `raqeeb/__init__.py`.
+
+**Quick test of every integration:** start the server, sign in to Command as an administrator, open Intelligence →
+*Global Threat Discovery Engine* and press *Run now* on `source_health`: each source shows ok / failed / needs key.
+For scan-time services, run a **Deep** scan in *Link & domain analysis*; the *Threat intelligence* panel lists every
+source as checked, not checked (with the missing env var) or errored.
 
 SAWNN runs fully offline with no keys at all: the URL model, the brand registry, the bundled feed snapshot, the sandbox (when
 the server has internet access) and OCR. Every external service below is **optional**. When one is not configured or fails,
@@ -17,6 +27,8 @@ Interactive API docs: start the server and open `http://localhost:8000/docs` (Sw
 | Phishing.Database | training data, discovery, signatures | optional | free (MIT) | none | IMPLEMENTED; snapshot bundled in `models/` |
 | URLhaus (abuse.ch) | deep-scan lookups, discovery | optional | free account | `SAWNN_URLHAUS_AUTH_KEY` | BLOCKED BY MISSING API ACCESS (needs your key) |
 | PhishTank | discovery | optional | free developer key | `SAWNN_PHISHTANK_APP_KEY` | BLOCKED BY MISSING API ACCESS |
+| Phishing.Database last-hour list | discovery (15 min) | optional | free (MIT) | none | IMPLEMENTED; needs internet |
+| Spamhaus | – | – | data-use agreement | – | NOT CONNECTED (licence) |
 | Google Web Risk | deep-scan URL reputation | optional | free ≤100k lookups/month, then paid | `SAWNN_GOOGLE_THREAT_API_KEY` | BLOCKED BY MISSING API ACCESS |
 | VirusTotal | deep-scan multi-engine reputation | optional | free public API, non-commercial | `SAWNN_VIRUSTOTAL_API_KEY` | BLOCKED BY MISSING API ACCESS |
 | RDAP (rdap.org) | domain age, registrar | built in | free, rate-limited | none | IMPLEMENTED |
@@ -159,3 +171,16 @@ curl -s -X POST localhost:8000/api/v1/scan -H 'content-type: application/json' \
      -d '{"url":"https://login.uaepass.example.com/auth","mode":"quick"}' | jq '{verdict,risk_score,registered_domain,explanation}'
 curl -s -F file=@qr.png localhost:8000/api/v1/attachments/analyze | jq '{verdict,qr,indicators}'
 ```
+
+
+## Scheduler and orchestrator settings
+
+| Variable | Default | Effect |
+|---|---|---|
+| `SAWNN_SCHEDULER_ENABLED` | `1` | `0` stops all monitoring jobs (Command shows "stopped") |
+| `SAWNN_ORCHESTRATOR` | `1` | `0` stops agent workflows from citizen reports |
+| `SAWNN_SCHED_<JOB>_MIN` | per job | interval in minutes, see `docs/SAWNN_THREAT_DISCOVERY.md` |
+| `SAWNN_DISCOVERY_BATCH` | `100` | indicators analysed per batch |
+| `SAWNN_DISCOVERY_SANDBOX` | off | `1` lets agents deep-scan discovered URLs; only on an isolated sandbox host |
+| `SAWNN_HUNT_DNS` | `1` | `0` disables the look-alike DNS sweep |
+| `SAWNN_MALICIOUS_FLOOR` | from `models/meta.json` | override the model-probability floor for MALICIOUS (advanced) |

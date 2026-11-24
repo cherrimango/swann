@@ -1,7 +1,7 @@
 # SAWNN صون — UAE scam intelligence and citizen protection
 
-ScamShield AI Hackathon · Abu Dhabi Police × 42 Abu Dhabi. (Formerly RAQEEB; the Python package keeps the module name
-`raqeeb` for import stability, everything users see is SAWNN.)
+ScamShield AI Hackathon · Abu Dhabi Police × 42 Abu Dhabi. (Formerly RAQEEB, then MIRA; the Python package keeps the module
+name `raqeeb` for import stability, everything users see is SAWNN / صون.)
 
 ## What it is
 One shared threat-intelligence backend with two applications:
@@ -25,27 +25,23 @@ the pairing named by the UAE Design System, both SIL OFL, self-hosted. Logo: the
 Verdicts: **SAFE · SUSPICIOUS · MALICIOUS · INCONCLUSIVE**. Each comes with its risk score, confidence, analysis completeness
 and analysis status. SAFE needs positive evidence; unknown or partly analysed sites are INCONCLUSIVE.
 
-## Run it (macOS / Linux, Python 3.10+, 3.12 recommended)
+## Run it (macOS / Linux, Python 3.10+ — use 3.12; Apple's built-in 3.9 will not work)
 ```bash
-cd sawnn                                   # the folder that contains requirements.txt
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt            # on a Mac also: brew install libomp tesseract tesseract-lang
+cd ~/Desktop/sawnn                          # the folder that contains requirements.txt
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt             # on a Mac also: brew install libomp tesseract tesseract-lang
 SAWNN_DEMO=1 uvicorn server.app:app --host 0.0.0.0 --port 8000
 ```
-Open **http://localhost:8000/**. Optional: `pip install playwright && python -m playwright install chromium` for deep
-scans in a real browser. Phones on the same Wi-Fi: `http://<laptop-ip>:8000/app` (Command → *Connect phones* shows a QR).
+Open **http://localhost:8000/**. The scheduler (feed monitoring) and the agent orchestrator start with the server.
+Demo accounts, the presenter walkthrough and what is simulated are in **[`docs/SAWNN_DEMO_GUIDE.md`](docs/SAWNN_DEMO_GUIDE.md)**
+(not in the website).
 
-| Demo account (demo mode only — never reuse) | Password | App |
-|---|---|---|
-| admin@sawnn.demo | SawnnDemo2026! | Command (Super Administrator) |
-| analyst@sawnn.demo | AnalystDemo2026! | Command (Cybercrime Analyst) |
-| citizen@sawnn.demo | CitizenDemo2026! | Protect |
+## Precision target (measured — `docs/SAWNN_MODEL_EVALUATION.md`)
+High-confidence MALICIOUS on 15,000 + 15,000 held-out URLs from unseen domains: **99.923% precision** (7,783 / 7,789),
+Wilson 95% CI **99.83–99.97%**. The point estimate meets 99.9%; the confidence interval does not yet prove it.
+Other high-risk URLs are reported as SUSPICIOUS (still a warning); only 0.21% of phishing test URLs came out SAFE.
 
-Command → Operations → *Demo scenario* → *Run steps 1–5* seeds the winter-camping scenario. It also seeds a synthetic
-redirect-chain sample (`SCAN-DEMO-REDIRECT1`) and two citizen alerts waiting in the workflow. All seeded data is marked
-**Demo** and *Remove demo data* deletes it.
-
-## Detection results (measured — see `docs/MODEL_REPORT.md`)
+## Detection results (measured — see `docs/SAWNN_MODEL_EVALUATION.md`)
 Domain-grouped held-out test split: 154,596 URLs, none of whose registered domains appear in training.
 
 | | Precision | Recall | F1 | False-positive rate |
@@ -57,10 +53,11 @@ End-to-end verdicts on 2,500 phishing + 2,500 legitimate test URLs (feeds off):
 
 | | Phishing marked SAFE | Legitimate wrongly flagged |
 |---|---|---|
-| RAQEEB 2.1 | 25.0% | 15.5% |
+| RAQEEB 2.1 | 25.5% | 15.0% |
 | SAWNN | **0.12%** | **2.3%** |
 
-On an unseen OpenPhish snapshot the model catches 83.3%. This is **not** the 99.9% target. The report explains the errors
+On an unseen OpenPhish snapshot the model catches 83.3%. Overall recall is far from 99.9%; the 99.9% goal applies to the
+precision of high-confidence MALICIOUS verdicts (above). The report explains the errors
 and the next steps.
 
 ## Data and training
@@ -75,18 +72,20 @@ Place `url_dataset.csv` in `data/raw/` (not committed). Dataset `sawnn-ds-946b39
 
 ## Tests
 ```bash
-pytest -q        # 96 tests
+pytest -q                                   # unit + API tests
+python tests/e2e/clipboard_e2e.py --chrome /path/to/chrome   # real-browser clipboard test (server on :8011)
 ```
 
 ## Configuration
 Copy `.env.example` to `.env`. Every external service is optional and documented in
-[`docs/API_GUIDE.md`](docs/API_GUIDE.md): what it does, where to get access, cost, env var, file, how to test, what happens
+[`docs/SAWNN_API_SETUP.md`](docs/SAWNN_API_SETUP.md): what it does, where to get access, cost, env var, file, how to test, what happens
 without it. Swagger UI: `/docs`.
 
 ## Documentation
+- [`docs/SAWNN_DEMO_GUIDE.md`](docs/SAWNN_DEMO_GUIDE.md), [`docs/SAWNN_ARCHITECTURE.md`](docs/SAWNN_ARCHITECTURE.md), [`docs/SAWNN_AI_AGENTS.md`](docs/SAWNN_AI_AGENTS.md), [`docs/SAWNN_THREAT_DISCOVERY.md`](docs/SAWNN_THREAT_DISCOVERY.md), [`docs/SAWNN_MODEL_EVALUATION.md`](docs/SAWNN_MODEL_EVALUATION.md), [`docs/SAWNN_API_SETUP.md`](docs/SAWNN_API_SETUP.md)
 - [`docs/STATUS.md`](docs/STATUS.md): every feature labelled IMPLEMENTED AND TESTED / NOT FULLY TESTED / PARTIAL / SIMULATED / NOT IMPLEMENTED / BLOCKED BY MISSING ACCESS, with the test commands.
-- [`docs/MODEL_REPORT.md`](docs/MODEL_REPORT.md): root causes of the SAFE bug, dataset report, metrics, error analysis.
-- [`docs/API_GUIDE.md`](docs/API_GUIDE.md): SAWNN API Integration & Configuration Guide.
+- [`docs/SAWNN_MODEL_EVALUATION.md`](docs/SAWNN_MODEL_EVALUATION.md): root causes of the SAFE bug, dataset report, metrics, error analysis.
+- [`docs/SAWNN_API_SETUP.md`](docs/SAWNN_API_SETUP.md): SAWNN API Integration & Configuration Guide.
 - [`docs/UAE_PASS_INTEGRATION.md`](docs/UAE_PASS_INTEGRATION.md): what the prototype simulates and the real path.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/SOURCES.md`](docs/SOURCES.md), [`android/README.md`](android/README.md), [`docs/ios.md`](docs/ios.md).
 

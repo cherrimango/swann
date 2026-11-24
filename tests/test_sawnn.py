@@ -240,8 +240,8 @@ def test_discovery_pipeline_creates_investigations_and_notifies(c, monkeypatch):
     assert discovery.collect("openphish")["new_indicators"] >= 1
     q = orchestrator.process_discoveries(10)
     orchestrator.drain()
-    w = orchestrator.workflow(q["workflow_id"])
-    assert w["tasks"][0]["agent"] == "global_threat_hunter"
+    w = orchestrator.workflow(q["hunter_workflow"])
+    assert w["tasks"][0]["agent"] == "global_threat_hunter" and w["tasks"][0]["handoffs"]
     st = discovery.status()
     assert st["processing"]["by_status"].get("processed", 0) >= 2 and st["processing"]["investigations_created"] >= 1
     from raqeeb.db import db, one

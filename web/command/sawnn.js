@@ -27,22 +27,35 @@ document.addEventListener('click', e => {
   [...tb.rows].sort((a, b) => (val(a) > val(b) ? 1 : -1) * (dir === 'asc' ? 1 : -1)).forEach(r => tb.append(r));
 });
 
-/* ---------------- threat discovery engine ---------------- */
+/* ---------------- Global Threat Discovery Engine ---------------- */
+const dot = st => h('span', { class: `status-dot ${st === 'ok' || st === 'healthy' ? 'ok' : st === 'partial' ? 'warn' : st === 'never run' || st === 'never_run' ? '' : 'bad'}` });
 loaders.discovery = async () => {
   const d = (await api('/api/v1/intelligence/sources/status')).discovery;
-  const k = d.indicators;
-  $('#d-kpis').replaceChildren(...[[L('Indicators stored', 'المؤشرات المخزنة'), k.total], [L('New in 24 h', 'جديدة خلال 24 ساعة'), k.new_24h],
-    [L('Unverified leads', 'خيوط غير موثقة'), k.unverified], [L('Analyst-verified', 'موثقة من محلل'), k.verified],
-    [L('Failed sources', 'مصادر فاشلة'), d.sources.filter(s => s.last_run && s.last_run.status !== 'ok').length]]
+  const k = d.indicators, pr = d.processing || {}, sc = d.scheduler;
+  const bs = pr.by_status || {}, bv = pr.by_verdict || {};
+  const healthy = d.sources.filter(s => s.health === 'healthy').length;
+  $('#d-state').replaceChildren(dot(sc.running ? 'ok' : 'stopped'),
+    sc.running ? L('Scheduler running', 'الجدولة تعمل') : sc.enabled ? L('Scheduler enabled but not running in this process', 'الجدولة مفعلة لكنها لا تعمل') : L('Scheduler stopped (SAWNN_SCHEDULER_ENABLED=0)', 'الجدولة متوقفة'));
+  $('#d-kpis').replaceChildren(...[[L('Sources connected', 'مصادر متصلة'), `${healthy}/${d.sources.length}`], [L('Indicators stored', 'المؤشرات المخزنة'), k.total],
+    [L('New in 24 h', 'جديدة خلال 24 ساعة'), k.new_24h], [L('New domains in 24 h', 'نطاقات جديدة'), pr.new_domains_24h ?? 0],
+    [L('Analysed', 'تم تحليلها'), bs.processed || 0], [L('Waiting for agents', 'بانتظار الوكلاء'), (bs.unprocessed || 0) + (bs.queued || 0)],
+    [L('Malicious', 'خبيثة'), bv.MALICIOUS || 0], [L('Suspicious', 'مشبوهة'), bv.SUSPICIOUS || 0], [L('Inconclusive', 'غير حاسمة'), bv.INCONCLUSIVE || 0],
+    [L('Investigations opened', 'تحقيقات فُتحت'), pr.investigations_created || 0], [L('Analyst-verified', 'موثقة من محلل'), k.verified],
+    [L('Avg discovery → analysis', 'متوسط زمن التحليل'), pr.avg_latency_s != null ? `${pr.avg_latency_s}s` : '–']]
     .map(([a, b]) => h('div', {}, h('dt', {}, a), h('dd', {}, b))));
-  const sc = d.scheduler;
-  $('#d-sched').textContent = sc.enabled ? L(`Scheduled every ${sc.interval_min} min · next run ${localTime(sc.next_run)}`, `مجدول كل ${sc.interval_min} دقيقة · التشغيل التالي ${localTime(sc.next_run)}`)
-    : L('Scheduler off (set SAWNN_DISCOVERY_ENABLED=1). Collections run when you press Collect now.', 'الجدولة متوقفة (اضبط SAWNN_DISCOVERY_ENABLED=1).');
-  $('#d-rows').replaceChildren(...d.sources.map(s => h('tr', {}, h('td', {}, s.name), h('td', {}, h('span', { class: `health ${s.health.replace(/\s/g, '_')}` }, s.health === 'blocked_missing_key' ? L(`needs ${s.requires_key}`, `يتطلب ${s.requires_key}`) : s.health)),
+  $('#d-sched').textContent = L('Intervals are configurable with SAWNN_SCHED_<JOB>_MIN and respect each source’s limits.', 'الفترات قابلة للضبط وتحترم حدود كل مصدر.');
+  $('#d-jobs').replaceChildren(...sc.jobs.map(j => h('tr', {}, h('td', {}, h('b', {}, j.name.replaceAll('_', ' ')), h('div', { class: 'meta' }, j.description)),
+    h('td', {}, `${j.interval_min >= 60 ? (j.interval_min / 60) + ' h' : j.interval_min + ' min'}`), h('td', {}, dot(j.last_status), j.last_status),
+    h('td', {}, localTime(j.last_run)), h('td', {}, sc.running ? localTime(j.next_run) : L('not scheduled (stopped)', 'غير مجدول')), h('td', {}, `${j.runs} / ${j.failures}`),
+    h('td', {}, j.last_duration_ms != null ? `${Math.round(j.last_duration_ms)} ms` : '–'), h('td', { class: 'meta' }, j.last_error || ''),
+    h('td', {}, can('run_hunt') ? h('button', { class: 'ghost small', onclick: e => busy(e.currentTarget, async () => {
+      const r = await api(`/api/v1/scheduler/${j.name}/run`, {}); toast(`${j.name}: ${r.status}`, r.error || ''); loaders.discovery();
+    }) }, L('Run now', 'تشغيل الآن')) : null))));
+  $('#d-rows').replaceChildren(...d.sources.map(s => h('tr', {}, h('td', {}, s.name), h('td', {}, dot(s.health), s.health === 'blocked_missing_key' ? L(`needs ${s.requires_key}`, `يتطلب ${s.requires_key}`) : s.health),
     h('td', { 'data-v': s.last_success || 0 }, localTime(s.last_success)), h('td', { 'data-v': s.last_run?.finished || 0 }, localTime(s.last_run?.finished)),
     h('td', {}, s.last_run?.collected ?? '–'), h('td', {}, s.last_run?.new_indicators ?? '–'), h('td', {}, s.last_run?.duplicates ?? '–'), h('td', {}, s.indicators_stored), h('td', { class: 'meta' }, s.terms))));
-  $('#d-runs').replaceChildren(...(d.recent_runs.length ? d.recent_runs.map(r => h('tr', {}, h('td', {}, localTime(r.finished)), h('td', {}, r.source), h('td', {}, r.status),
-    h('td', {}, r.new_indicators), h('td', { class: 'meta' }, r.error || ''))) : [h('tr', {}, h('td', { colspan: 5, class: 'meta' }, L('No collections yet.', 'لا توجد عمليات جمع بعد.')))]));
+  $('#d-runs').replaceChildren(...(d.recent_runs.length ? d.recent_runs.map(r => h('tr', {}, h('td', {}, localTime(r.finished)), h('td', {}, r.source), h('td', {}, dot(r.status), r.status),
+    h('td', {}, r.new_indicators), h('td', {}, r.duplicates), h('td', { class: 'meta' }, r.error || ''))) : [h('tr', {}, h('td', { colspan: 6, class: 'meta' }, L('No collections yet.', 'لا توجد عمليات جمع بعد.')))]));
 };
 $('#d-run').addEventListener('click', e => busy(e.currentTarget, async () => {
   const r = await api('/api/v1/intelligence/discovery/run', {});
@@ -169,6 +182,16 @@ loaders.models = async () => {
   $('#m-body').replaceChildren(
     h('dl', { class: 'kpis' }, [[L('Deployed model', 'النموذج المنشور'), m.deployed.model_version], [L('Dataset', 'مجموعة البيانات'), m.deployed.dataset_version],
       [L('Trained', 'تاريخ التدريب'), m.deployed.trained_at], [L('Decision threshold', 'عتبة القرار'), m.deployed.threshold]].map(([a, b]) => h('div', {}, h('dt', {}, a), h('dd', { class: 'small-dd' }, b ?? '–')))),
+    m.evaluation_precision ? (() => {
+      const P = m.evaluation_precision, rowP = (k, v) => h('tr', {}, h('td', {}, k), h('td', {}, v.n), h('td', {}, v.flagged), h('td', {}, v.tp), h('td', { class: v.fp ? 'warn-t' : '' }, v.fp),
+        h('td', {}, v.precision != null ? pct(v.precision) : '–'), h('td', {}, v.precision_ci95 ? `${pct(v.precision_ci95[0])} – ${pct(v.precision_ci95[1])}` : '–'), h('td', {}, v.recall ?? '–'),
+        h('td', {}, v.meets_99_9 ? L('yes (CI ≥ 99.9%)', 'نعم') : v.precision >= 0.999 ? L('point estimate only', 'التقدير فقط') : L('no', 'لا')));
+      return h('article', { class: 'panel glow-border' }, h('h3', {}, L('Precision target: ≥ 99.9% for high-confidence MALICIOUS', 'هدف الدقة: 99.9% لنتائج "خبيث" عالية الثقة')),
+        h('p', { class: 'meta' }, `${P.definition}. ${L('Held-out test split, unseen domains, feeds off.', 'مجموعة اختبار معزولة، نطاقات غير مرئية.')} ${L('Model-probability floor', 'حد الاحتمال')} ${m.deployed.threshold_malicious} ${L('(tuned on validation).', '(تم ضبطه على مجموعة التحقق).')}`),
+        h('table', { class: 'table' }, h('thead', {}, h('tr', {}, [L('Segment', 'الفئة'), 'n', L('Flagged', 'مرصود'), 'TP', 'FP', L('Precision', 'الدقة'), '95% CI', L('Recall', 'الاستدعاء'), L('Meets 99.9%', 'يحقق 99.9%')].map(x => h('th', {}, x)))),
+          h('tbody', {}, Object.entries(P.high_confidence_malicious).map(([k, v]) => rowP(k, v)), rowP(L('UAE hand-labelled set', 'مجموعة الإمارات'), P.uae_hand_labelled_set.high_confidence_malicious))),
+        h('p', { class: 'meta' }, `${L('Precision at 1% / 10% phishing prevalence', 'الدقة عند انتشار 1% / 10%')}: ${pct(P.precision_at_prevalence['1%'])} / ${pct(P.precision_at_prevalence['10%'])}. ${L('Other high-risk URLs are SUSPICIOUS, which still warns the user.', 'الروابط الخطرة الأخرى تُصنف مشبوهة وتُحذّر المستخدم.')}`));
+    })() : null,
     vd ? h('article', { class: 'panel' }, h('h3', {}, L('End-to-end verdicts, before and after', 'النتائج الكاملة قبل وبعد')),
       h('p', { class: 'meta' }, `${vd.n_per_class} ${L('phishing and', 'تصيد و')} ${vd.n_per_class} ${L('legitimate URLs from the held-out test split; threat feeds off so detection is measured, not list look-ups.', 'رابطاً مشروعاً من مجموعة الاختبار المعزولة.')}`),
       h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['', L('Phishing marked SAFE', 'تصيد صُنّف آمناً'), L('Phishing flagged', 'تصيد تم رصده'), L('Legitimate flagged', 'مشروع تم رصده خطأً'), L('Legitimate marked SAFE', 'مشروع صُنّف آمناً')].map(x => h('th', {}, x)))),
@@ -183,22 +206,41 @@ loaders.models = async () => {
     h('article', { class: 'panel' }, h('h3', {}, L('Limitations', 'القيود')), h('ul', { class: 'limits' }, (m.evaluation_sawnn?.limitations || []).map(x => h('li', {}, x)))));
 };
 
-/* ---------------- fourteen agents ---------------- */
-const _agentsLoader = loaders.agents;
+/* ---------------- sixteen agents on the orchestrator ---------------- */
+function taskRow(t) {
+  return h('li', { class: `task ${t.status}` }, h('div', { class: 'task-h' }, dot(t.status === 'completed' ? 'ok' : t.status === 'failed' ? 'bad' : 'partial'),
+    h('b', {}, t.agent.replaceAll('_', ' ')), h('span', { class: 'meta' }, ` ${t.id} · ${t.status} · ${t.duration_ms != null ? Math.round(t.duration_ms) + ' ms' : '…'}${t.confidence != null ? ' · confidence ' + t.confidence : ''}`)),
+    t.input_refs?.length ? h('div', { class: 'meta mono' }, t.input_refs.join(', ')) : null,
+    t.findings ? h('pre', { class: 'text small-pre' }, JSON.stringify(t.findings, null, 1).slice(0, 900)) : null,
+    t.recommended_action ? h('p', { class: 'meta' }, `→ ${t.recommended_action}`) : null,
+    t.errors?.length ? h('p', { class: 'warn-t' }, t.errors[0]) : null,
+    t.handoffs?.length ? h('p', { class: 'meta' }, `${L('Handed off to', 'سُلّم إلى')}: ${t.handoffs.map(x => x.agent.replaceAll('_', ' ')).join(', ')}`) : null);
+}
+function chain(w) {
+  const kids = {}; w.tasks.forEach(t => { (kids[t.parent_id || 'root'] ||= []).push(t); });
+  const tree = pid => h('ol', { class: 'task-tree' }, (kids[pid] || []).map(t => { const li = taskRow(t); if (kids[t.id]) li.append(tree(t.id)); return li; }));
+  return h('article', { class: 'panel' }, h('div', { class: 'panel-head' }, h('h3', {}, `${w.id} · ${w.kind} · ${w.status}`),
+    h('span', { class: 'note' }, `${w.tasks.length} ${L('tasks', 'مهام')} · ${w.origin || ''}`)), tree('root'));
+}
+async function openWorkflow(id) { $('#ag-chain').replaceChildren(chain(await api(`/api/v1/agents/workflows/${id}`))); $('#ag-chain').scrollIntoView({ behavior: 'smooth' }); }
 loaders.agents = async () => {
-  const list = await api('/api/v1/agents');
+  const [list, act] = await Promise.all([api('/api/v1/agents'), api('/api/v1/agents/activity')]);
+  $('#ag-worker').replaceChildren(dot(act.worker_running ? 'ok' : 'stopped'), act.worker_running ? L(`Orchestrator running · ${act.queue.queued} queued · ${act.queue.running} running`, 'المنسق يعمل')
+    : L(`Orchestrator worker not running · ${act.queue.queued} queued`, 'المنسق متوقف'));
   $('#ag14').replaceChildren(...list.map(a => {
     const inp = a.input ? h('input', { placeholder: a.input, 'aria-label': `${a.name} input` }) : null;
     const b = h('button', { class: 'ghost small', onclick: () => busy(b, async () => {
-      const r = await api(`/api/v1/agents/${a.id}/run`, { input: inp?.value || null });
-      $('#ag-out').replaceChildren(h('article', { class: 'panel' }, h('div', { class: 'panel-head' }, h('h3', {}, `${r.agent} — ${r.task}`), h('span', { class: 'note' }, `${localTime(Date.parse(r.timestamp) / 1000)} · ${r.duration_seconds}s`)),
-        h('dl', { class: 'kv' }, [[L('Result', 'النتيجة'), JSON.stringify(r.result)], [L('Confidence', 'الثقة'), r.confidence ?? L('not applicable', 'غير منطبق')], [L('Source', 'المصدر'), r.source],
-          [L('Recommended action', 'الإجراء الموصى به'), r.recommended_action], [L('Limitations', 'القيود'), r.limitations.join(' ')]].map(([k, v]) => h('div', {}, h('dt', {}, k), h('dd', {}, String(v))))),
-        h('details', {}, h('summary', {}, L('Evidence', 'الأدلة')), h('pre', { class: 'text' }, JSON.stringify(r.evidence, null, 2)))));
+      const w = await api(`/api/v1/agents/${a.id}/run`, { input: inp?.value || null });
+      $('#ag-out').replaceChildren(chain(w)); loaders.agents();
     }) }, L('Run', 'تشغيل'));
-    return h('div', { class: 'ag-card' }, h('b', {}, a.name), h('span', { class: 'meta' }, `${a.runs} ${L('runs', 'تشغيل')}${a.last_run ? ' · ' + localTime(a.last_run) : ''}`), h('div', { class: 'ag-row' }, inp, b));
+    return h('div', { class: 'ag-card' }, h('b', {}, a.name), h('span', { class: 'meta' }, `${a.runs} ${L('tasks', 'مهام')}${a.last_run ? ' · ' + localTime(a.last_run) : ''}`), h('div', { class: 'ag-row' }, inp, b));
   }));
-  await _agentsLoader?.().catch(() => {});
+  $('#ag-stats').replaceChildren(...(act.agents.length ? act.agents.map(r => h('tr', {}, h('td', {}, r.agent.replaceAll('_', ' ')), h('td', {}, r.total), h('td', {}, r.completed),
+    h('td', { class: r.failed ? 'warn-t' : '' }, r.failed), h('td', {}, r.open), h('td', { 'data-v': r.avg_ms || 0 }, r.avg_ms != null ? `${Math.round(r.avg_ms)} ms` : '–'), h('td', {}, localTime(r.last))))
+    : [h('tr', {}, h('td', { colspan: 7, class: 'meta' }, L('No agent tasks yet.', 'لا توجد مهام بعد.')))]));
+  $('#ag-wf').replaceChildren(...act.workflows.map(w => h('tr', { class: 'clickable', tabindex: 0, onclick: () => openWorkflow(w.id), onkeydown: e => e.key === 'Enter' && openWorkflow(w.id) },
+    h('td', { class: 'mono' }, w.id), h('td', {}, w.kind), h('td', {}, w.origin || ''), h('td', {}, dot(w.status === 'completed' ? 'ok' : w.status === 'running' ? 'partial' : 'bad'), w.status),
+    h('td', {}, Object.entries(w.summary || {}).map(([k2, v]) => `${k2} ${v}`).join(' · ')), h('td', {}, localTime(w.created)))));
 };
 
 /* ---------------- overview: engine, sources and sandbox health from the backend ---------------- */

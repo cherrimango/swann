@@ -1,0 +1,363 @@
+{
+  "generated": "2026-11-24 23:52",
+  "seconds": 430.7,
+  "test_split": "domain-grouped held-out (train_sawnn.sample_and_split)",
+  "threat_feeds": "off",
+  "definition": "high-confidence MALICIOUS = verdict MALICIOUS and assessment_confidence HIGH",
+  "high_confidence_malicious": {
+    "all (global, unseen domains)": {
+      "n": 30000,
+      "n_phishing": 15000,
+      "n_legitimate": 15000,
+      "flagged": 7789,
+      "tp": 7783,
+      "fp": 6,
+      "fn": 7217,
+      "tn": 14994,
+      "precision": 0.99923,
+      "precision_ci95": [
+        0.99832,
+        0.99965
+      ],
+      "recall": 0.5189,
+      "fpr": 0.0004,
+      "meets_99_9": false
+    },
+    "UAE-related URLs": {
+      "n": 83,
+      "n_phishing": 61,
+      "n_legitimate": 22,
+      "flagged": 42,
+      "tp": 42,
+      "fp": 0,
+      "fn": 19,
+      "tn": 22,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.9162,
+        1.0
+      ],
+      "recall": 0.6885,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "Arabic / IDN URLs": {
+      "n": 27,
+      "n_phishing": 20,
+      "n_legitimate": 7,
+      "flagged": 10,
+      "tp": 10,
+      "fp": 0,
+      "fn": 10,
+      "tn": 7,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.72246,
+        1.0
+      ],
+      "recall": 0.5,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "English / Latin-script URLs": {
+      "n": 29973,
+      "n_phishing": 14980,
+      "n_legitimate": 14993,
+      "flagged": 7779,
+      "tp": 7773,
+      "fp": 6,
+      "fn": 7207,
+      "tn": 14987,
+      "precision": 0.99923,
+      "precision_ci95": [
+        0.99832,
+        0.99965
+      ],
+      "recall": 0.5189,
+      "fpr": 0.0004,
+      "meets_99_9": false
+    },
+    "brand impersonation detected": {
+      "n": 17,
+      "n_phishing": 14,
+      "n_legitimate": 3,
+      "flagged": 11,
+      "tp": 11,
+      "fp": 0,
+      "fn": 3,
+      "tn": 3,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.74116,
+        1.0
+      ],
+      "recall": 0.7857,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "with path or query": {
+      "n": 17952,
+      "n_phishing": 8577,
+      "n_legitimate": 9375,
+      "flagged": 5926,
+      "tp": 5922,
+      "fp": 4,
+      "fn": 2655,
+      "tn": 9371,
+      "precision": 0.99933,
+      "precision_ci95": [
+        0.99827,
+        0.99974
+      ],
+      "recall": 0.6905,
+      "fpr": 0.00043,
+      "meets_99_9": false
+    },
+    "hostname only": {
+      "n": 12048,
+      "n_phishing": 6423,
+      "n_legitimate": 5625,
+      "flagged": 1863,
+      "tp": 1861,
+      "fp": 2,
+      "fn": 4562,
+      "tn": 5623,
+      "precision": 0.99893,
+      "precision_ci95": [
+        0.99609,
+        0.99971
+      ],
+      "recall": 0.2897,
+      "fpr": 0.00036,
+      "meets_99_9": false
+    }
+  },
+  "any_malicious": {
+    "all (global, unseen domains)": {
+      "n": 30000,
+      "n_phishing": 15000,
+      "n_legitimate": 15000,
+      "flagged": 7789,
+      "tp": 7783,
+      "fp": 6,
+      "fn": 7217,
+      "tn": 14994,
+      "precision": 0.99923,
+      "precision_ci95": [
+        0.99832,
+        0.99965
+      ],
+      "recall": 0.5189,
+      "fpr": 0.0004,
+      "meets_99_9": false
+    },
+    "UAE-related URLs": {
+      "n": 83,
+      "n_phishing": 61,
+      "n_legitimate": 22,
+      "flagged": 42,
+      "tp": 42,
+      "fp": 0,
+      "fn": 19,
+      "tn": 22,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.9162,
+        1.0
+      ],
+      "recall": 0.6885,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "Arabic / IDN URLs": {
+      "n": 27,
+      "n_phishing": 20,
+      "n_legitimate": 7,
+      "flagged": 10,
+      "tp": 10,
+      "fp": 0,
+      "fn": 10,
+      "tn": 7,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.72246,
+        1.0
+      ],
+      "recall": 0.5,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "English / Latin-script URLs": {
+      "n": 29973,
+      "n_phishing": 14980,
+      "n_legitimate": 14993,
+      "flagged": 7779,
+      "tp": 7773,
+      "fp": 6,
+      "fn": 7207,
+      "tn": 14987,
+      "precision": 0.99923,
+      "precision_ci95": [
+        0.99832,
+        0.99965
+      ],
+      "recall": 0.5189,
+      "fpr": 0.0004,
+      "meets_99_9": false
+    },
+    "brand impersonation detected": {
+      "n": 17,
+      "n_phishing": 14,
+      "n_legitimate": 3,
+      "flagged": 11,
+      "tp": 11,
+      "fp": 0,
+      "fn": 3,
+      "tn": 3,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.74116,
+        1.0
+      ],
+      "recall": 0.7857,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "with path or query": {
+      "n": 17952,
+      "n_phishing": 8577,
+      "n_legitimate": 9375,
+      "flagged": 5926,
+      "tp": 5922,
+      "fp": 4,
+      "fn": 2655,
+      "tn": 9371,
+      "precision": 0.99933,
+      "precision_ci95": [
+        0.99827,
+        0.99974
+      ],
+      "recall": 0.6905,
+      "fpr": 0.00043,
+      "meets_99_9": false
+    },
+    "hostname only": {
+      "n": 12048,
+      "n_phishing": 6423,
+      "n_legitimate": 5625,
+      "flagged": 1863,
+      "tp": 1861,
+      "fp": 2,
+      "fn": 4562,
+      "tn": 5623,
+      "precision": 0.99893,
+      "precision_ci95": [
+        0.99609,
+        0.99971
+      ],
+      "recall": 0.2897,
+      "fpr": 0.00036,
+      "meets_99_9": false
+    }
+  },
+  "verdict_counts": {
+    "phishing": {
+      "MALICIOUS": 7783,
+      "SUSPICIOUS": 5157,
+      "INCONCLUSIVE": 2028,
+      "SAFE": 32,
+      "ERROR": 0
+    },
+    "legitimate": {
+      "MALICIOUS": 6,
+      "SUSPICIOUS": 298,
+      "INCONCLUSIVE": 11334,
+      "SAFE": 3362,
+      "ERROR": 0
+    }
+  },
+  "precision_at_prevalence": {
+    "1%": 0.9291,
+    "10%": 0.99311,
+    "50%": 0.99923
+  },
+  "uae_hand_labelled_set": {
+    "high_confidence_malicious": {
+      "n": 113,
+      "n_phishing": 53,
+      "n_legitimate": 60,
+      "flagged": 42,
+      "tp": 42,
+      "fp": 0,
+      "fn": 11,
+      "tn": 60,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.9162,
+        1.0
+      ],
+      "recall": 0.7925,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "any_malicious": {
+      "n": 113,
+      "n_phishing": 53,
+      "n_legitimate": 60,
+      "flagged": 51,
+      "tp": 51,
+      "fp": 0,
+      "fn": 2,
+      "tn": 60,
+      "precision": 1.0,
+      "precision_ci95": [
+        0.92995,
+        1.0
+      ],
+      "recall": 0.9623,
+      "fpr": 0.0,
+      "meets_99_9": false
+    },
+    "note": "113 URLs; 53 phishing are synthetic UAE look-alikes. Far too small to prove 99.9%."
+  },
+  "false_positives_high_confidence": [
+    "scoutdocs.ca/Documents/Cub_Jungle_Open-Close.php",
+    "system-administrators.info",
+    "ytpak-clone.ga",
+    "cursos.ead.senac.br/moodle18/q/lmn/1800170440.php",
+    "homeincomeschool.secureweboffer.com/offer/3/",
+    "tu-chemnitz.de/informatik/RA/cchp/"
+  ],
+  "false_negatives_sample": [
+    "mandrillapp.com",
+    "article.wn.com",
+    "tusfiles.net/r6x1zxux9w72",
+    "googlegroups.com",
+    "s.yam.com/v7i1n",
+    "roger.pierrieau.perso.sfr.fr",
+    "acer.pk",
+    "giga.com.hk/nabb/2",
+    "s.yam.com/xaywe",
+    "l.e.expansion.com",
+    "channel9.msdn.com/Shows/TechNet+Radio/TechNet-Radio-IT-Time-The-Risk-of-Running-Windows-XP-After-Support-Ends",
+    "cc.bingj.com",
+    "m.tabloidpulsa.co.id",
+    "tabloidpulsa.co.id",
+    "linkis.com/www.rollingstone.com/outbc",
+    "giga.com.hk/nabb/1/nabsmscode.htm",
+    "s.yam.com/GwTmj",
+    "onhubclip-ums.rhcloud.com",
+    "plex.com.ua",
+    "s.yam.com/oxw4p",
+    "href.li?http://turtletours.org?DBX",
+    "ia601500.us.archive.org/3/items/brown.mail/yy.htm",
+    "sofort.de",
+    "na3.docusign.net/Member/SessionTimeout.aspx?fi=b50ccefa-2ec7-42fe-8dfd-996b8becf873",
+    "phoenixads.co.in/delivery/1495.asp",
+    "eharmony.com",
+    "optus.com.au/shop/privacy-and-security?SID=con:hme:gblftr:othr:foot:othr:privcy",
+    "plex.ir",
+    "optimum.com.bd",
+    "ia601303.us.archive.org/33/items/TANKO_201509/TANKO.html"
+  ]
+}

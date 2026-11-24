@@ -5,50 +5,50 @@
   "mode": "quick scan (link analysis only)",
   "mira": {
     "phishing": {
-      "MALICIOUS": 0.7216,
-      "SUSPICIOUS": 0.1464,
-      "INCONCLUSIVE": 0.1308,
+      "MALICIOUS": 0.5196,
+      "SUSPICIOUS": 0.338,
+      "INCONCLUSIVE": 0.1412,
       "SAFE": 0.0012,
       "n": 2500
     },
     "legitimate": {
-      "MALICIOUS": 0.0012,
-      "SUSPICIOUS": 0.022,
-      "INCONCLUSIVE": 0.7512,
-      "SAFE": 0.2256,
+      "MALICIOUS": 0.0004,
+      "SUSPICIOUS": 0.0224,
+      "INCONCLUSIVE": 0.754,
+      "SAFE": 0.2232,
       "n": 2500
     },
     "phishing_marked_safe": 0.0012,
-    "phishing_flagged_malicious_or_suspicious": 0.868,
-    "legitimate_flagged_malicious_or_suspicious": 0.0232,
-    "legitimate_marked_safe": 0.2256,
-    "seconds": 47.9
+    "phishing_flagged_malicious_or_suspicious": 0.8576,
+    "legitimate_flagged_malicious_or_suspicious": 0.0228,
+    "legitimate_marked_safe": 0.2232,
+    "seconds": 60.5
   },
   "raqeeb_2_1": {
     "phishing": {
-      "MALICIOUS": 0.4932,
-      "SUSPICIOUS": 0.2552,
-      "INCONCLUSIVE": 0.002,
-      "SAFE": 0.2496,
+      "MALICIOUS": 0.4792,
+      "SUSPICIOUS": 0.2616,
+      "INCONCLUSIVE": 0.0044,
+      "SAFE": 0.2548,
       "n": 2500
     },
     "legitimate": {
-      "MALICIOUS": 0.0076,
-      "SUSPICIOUS": 0.1472,
+      "MALICIOUS": 0.0044,
+      "SUSPICIOUS": 0.1452,
       "INCONCLUSIVE": 0.0,
-      "SAFE": 0.8452,
+      "SAFE": 0.8504,
       "n": 2500
     },
-    "phishing_marked_safe": 0.2496,
-    "phishing_flagged_malicious_or_suspicious": 0.7484,
-    "legitimate_flagged_malicious_or_suspicious": 0.1548,
-    "legitimate_marked_safe": 0.8452,
-    "seconds": 41.0
+    "phishing_marked_safe": 0.2548,
+    "phishing_flagged_malicious_or_suspicious": 0.7408,
+    "legitimate_flagged_malicious_or_suspicious": 0.1496,
+    "legitimate_marked_safe": 0.8504,
+    "seconds": 38.9
   },
   "uae_eval_mira": {
     "phishing": {
-      "MALICIOUS": 0.9811,
-      "SUSPICIOUS": 0.0189,
+      "MALICIOUS": 0.9623,
+      "SUSPICIOUS": 0.0377,
       "INCONCLUSIVE": 0.0,
       "SAFE": 0.0,
       "n": 53

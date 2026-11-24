@@ -15,6 +15,26 @@ STAGE_WEIGHTS = {"validation": 0.05, "static": 0.10, "registry": 0.10, "signatur
                  "domain": 0.15, "sandbox": 0.20, "visual": 0.10}
 
 
+STRONG_SIGNALS = {"brand_impersonation", "typosquat", "brand_credential_page", "visual_clone", "ip_with_lures"}
+_FLOOR = {}
+
+
+def _malicious_floor():
+    env = os.environ.get("SAWNN_MALICIOUS_FLOOR")
+    if env == "0":
+        return None
+    if env:
+        return float(env)
+    if "v" not in _FLOOR:
+        import json
+        from ..model import MODEL_DIR
+        try:
+            _FLOOR["v"] = json.loads((MODEL_DIR / "meta.json").read_text()).get("threshold_malicious")
+        except (OSError, ValueError):
+            _FLOOR["v"] = None
+    return _FLOOR["v"]
+
+
 def level(score: float | None) -> str:
     if score is None:
         return "UNKNOWN"
@@ -158,8 +178,24 @@ def aggregate(r: dict) -> dict:
 
     lvl = level(score)
     shortener_unresolved = r["validation"]["flags"]["shortener"] and not (sb.get("available") and sb.get("final_url"))
-    if any(m["source"] != "sawnn_discovery" for m in sig["matches"]) or lvl == "CRITICAL":
+    # High-precision tier: MALICIOUS needs a strong independent signal or a model probability at or above
+    # threshold_malicious (tuned on validation for >= 99.9% precision, see tune_malicious_threshold.py).
+    # A CRITICAL score without either is reported as SUSPICIOUS: the user is still warned.
+    strong_signal = any(e["signal"] in STRONG_SIGNALS for e in evidence if e["direction"] == "risk")
+    floor = _malicious_floor()
+    prob_ok = floor is None or (ml["available"] and ml.get("probability") is not None and ml["probability"] >= floor)
+    # On platforms where anyone can publish (blogs, shops, site builders, hosting providers) the address alone cannot
+    # separate a customer's page from a phishing page reliably, so MALICIOUS there needs a strong independent signal.
+    from ..engine import user_content
+    from ..urlparse import FREE_HOSTING, parse as _parse, under_any
+    _p = _parse(r["validation"]["normalised_url"])
+    if (user_content(_p) or under_any(_p.host, FREE_HOSTING)) and floor is not None:
+        prob_ok = False
+    if any(m["source"] != "sawnn_discovery" for m in sig["matches"]) or (lvl == "CRITICAL" and (strong_signal or prob_ok)):
         verdict = "MALICIOUS"
+    elif lvl == "CRITICAL":
+        verdict = "SUSPICIOUS"
+        limitations.append("High risk, but without the strong evidence SAWNN requires for a MALICIOUS verdict; treat it as dangerous until checked.")
     elif lvl == "HIGH":
         verdict = "SUSPICIOUS"
     elif shortener_unresolved:

@@ -59,10 +59,12 @@ def global_threat_hunter(inp):
                 "recommended_action": "Review resolving look-alikes in Link & domain analysis." if found else "",
                 "handoffs": [("url_analysis", {"url": "http://" + d, "origin": "lookalike_sweep"}, [f"domain:{d}"]) for d in found[:20]]}
     items = inp.get("indicators", [])
-    return {"findings": {"indicators_received": len(items)}, "evidence": {"sources": sorted({i["source"] for i in items})},
+    by_src = {}
+    for i in items:
+        by_src[i["source"]] = by_src.get(i["source"], 0) + 1
+    return {"findings": {"indicators_received": len(items), "by_source": by_src}, "evidence": {"sample": [i["value"] for i in items[:10]]},
             "sources": ["SAWNN Global Threat Discovery Engine"], "confidence": None,
-            "recommended_action": "Automatic: each indicator is analysed before any analyst sees it.",
-            "handoffs": [("url_analysis", {"url": i["value"], "indicator": i["value"], "feed": i["source"]}, [f"indicator:{i['value']}"]) for i in items]}
+            "recommended_action": "Automatic: each indicator gets its own analysis workflow before any analyst sees it."}
 
 
 # 2

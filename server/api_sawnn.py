@@ -89,11 +89,12 @@ def sandbox_result(scan_id: str, user=Depends(require("view_evidence"))):
 @router.get("/models/metrics")
 def models_metrics():
     out = {}
-    for name in ("evaluation_sawnn.json", "evaluation_verdicts.json"):
+    for name in ("evaluation_sawnn.json", "evaluation_verdicts.json", "evaluation_precision.json"):
         f = MODELS / name
         out[name.removesuffix(".json")] = json.loads(f.read_text()) if f.exists() else None
     meta = json.loads((MODELS / "meta.json").read_text())
-    out["deployed"] = {k: meta.get(k) for k in ("model_version", "dataset_version", "trained_at", "threshold", "threshold_strict", "rows", "mode")}
+    out["deployed"] = {k: meta.get(k) for k in ("model_version", "dataset_version", "trained_at", "threshold", "threshold_strict", "threshold_malicious", "rows", "mode")}
+    out["continuous"] = [json.loads(r["result"]) | {"created": r["created"]} for r in rows(db().execute("SELECT * FROM model_evals ORDER BY id DESC LIMIT 10"))]
     return out
 
 

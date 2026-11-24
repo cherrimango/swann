@@ -100,6 +100,8 @@ def run_task(t: dict):
         status, errors = "completed", out.get("errors") or []
     except Exception as e:  # noqa: BLE001 - a failing agent is recorded, the workflow continues
         out, status, errors = {}, "failed", [f"{e.__class__.__name__}: {str(e)[:300]}", traceback.format_exc(limit=2)[-600:]]
+        if payload.get("indicator"):
+            db().execute("UPDATE indicators SET status='failed', processed=? WHERE value=?", (time.time(), payload["indicator"]))
     handoffs = []
     for h in out.get("handoffs", []):
         agent, inp, refs = h[0], h[1], (h[2] if len(h) > 2 else [])
@@ -197,17 +199,27 @@ def on_citizen_report(report: dict, text: str):
 
 
 def process_discoveries(batch: int = 50) -> dict:
-    """Global Threat Hunter: queue analysis for indicators collected by the discovery engine but not yet processed."""
+    """Global Threat Hunter: one hunter task records the batch, then each new indicator gets its own analysis
+    workflow (URL Analysis → Phishing Intelligence → …), so one bad indicator can't stall the others."""
+    stale = time.time() - 1800
+    db().execute("""UPDATE indicators SET status='unprocessed' WHERE status='queued' AND workflow_id IN
+        (SELECT id FROM workflows WHERE status != 'running' OR created < ?)""", (stale,))
     pending = rows(db().execute("SELECT value, source FROM indicators WHERE status='unprocessed' ORDER BY first_seen LIMIT ?", (batch,)))
     if not pending:
+        db().commit()
         return {"queued": 0}
-    wid = start_workflow("discovery_batch", {"count": len(pending)}, "SAWNN Global Threat Discovery Engine", "global_threat_hunter",
-                         [f"indicator:{p['value']}" for p in pending[:20]])
-    db().executemany("UPDATE indicators SET status='queued', workflow_id=? WHERE value=?", [(wid, p["value"]) for p in pending])
-    db().execute("UPDATE agent_tasks SET input=? WHERE workflow_id=? AND agent='global_threat_hunter'",
-                 (json.dumps({"indicators": pending}), wid))
+    hunter = run_sync("discovery_batch", {"indicators": pending}, "SAWNN Global Threat Discovery Engine", "global_threat_hunter",
+                      [f"indicator:{p['value']}" for p in pending[:20]])
+    wids = []
+    for p in pending:
+        wid = start_workflow("discovery", {"url": p["value"], "indicator": p["value"], "feed": p["source"]},
+                             f"discovery: {p['source']}", "url_analysis", [f"indicator:{p['value']}"])
+        db().execute("UPDATE indicators SET status='queued', workflow_id=? WHERE value=?", (wid, p["value"]))
+        wids.append(wid)
+    db().execute("UPDATE agent_tasks SET handoffs=? WHERE workflow_id=? AND agent='global_threat_hunter'",
+                 (json.dumps([{"workflow_id": w, "agent": "url_analysis"} for w in wids[:200]]), hunter["id"]))
     db().commit()
-    return {"queued": len(pending), "workflow_id": wid}
+    return {"queued": len(pending), "hunter_workflow": hunter["id"], "workflows": len(wids)}
 
 
 # ---------------------------------------------------------------- scheduler
@@ -220,7 +232,7 @@ def job_specs() -> dict:
     spec = {
         "feeds_high_priority": (15, "OpenPhish, URLhaus recent, Phishing.Database last hour"),
         "feeds_other": (60, "Phishing.Database today, PhishTank"),
-        "process_discoveries": (10, "Global Threat Hunter: analyse newly collected indicators"),
+        "process_discoveries": (5, "Global Threat Hunter: analyse newly collected indicators"),
         "uae_brand_discovery": (120, "UAE brand impersonation sweep over new indicators and look-alike candidates"),
         "suspicious_domain_discovery": (120, "Look-alike domains for UAE brands that resolve in DNS"),
         "campaign_correlation": (30, "Group related indicators into campaigns"),
@@ -241,7 +253,7 @@ def _job(name) -> dict:
         res = [discovery.collect(s) for s in ("phishing_database_today", "phishtank")]
         return {"runs": [{k: r[k] for k in ("source", "status", "new_indicators", "duplicates", "error")} for r in res]}
     if name == "process_discoveries":
-        return process_discoveries(_m("SAWNN_DISCOVERY_BATCH", 50))
+        return process_discoveries(_m("SAWNN_DISCOVERY_BATCH", 100))
     if name == "uae_brand_discovery":
         return {"workflow_id": start_workflow("uae_brand_sweep", {}, "scheduler", "uae_brand_impersonation")}
     if name == "suspicious_domain_discovery":

@@ -1,4 +1,59 @@
-# SAWNN model and detection evaluation report
+# SAWNN model evaluation
+
+## 0. Precision target: ≥ 99.9% for high-confidence MALICIOUS
+
+**Result on independent data: 99.923% point precision (7,783 of 7,789 correct), 95% confidence interval 99.83–99.97%.**
+The point estimate meets the 99.9% target; the lower end of the confidence interval does not yet, so the target is
+**not proven**. We do not claim it is met.
+
+*High-confidence MALICIOUS* = verdict MALICIOUS with assessment confidence HIGH. Produced by `evaluate_precision.py`
+on 15,000 phishing + 15,000 legitimate URLs from the domain-grouped held-out test split (no registered domain in the
+test split appears in training or validation). Threat-feed look-ups off (the phishing URLs come from those feeds).
+Stored in `models/evaluation_precision.json`.
+
+| Segment | n | Flagged MALICIOUS | TP | FP | Precision | Wilson 95% CI | Recall of MALICIOUS |
+|---|---|---|---|---|---|---|---|
+| all (global, unseen domains) | 30,000 | 7,789 | 7,783 | 6 | 99.923% | 99.83–99.97% | 0.5189 |
+| UAE-related URLs | 83 | 42 | 42 | 0 | 100.000% | 91.62–100.00% | 0.6885 |
+| Arabic / IDN URLs | 27 | 10 | 10 | 0 | 100.000% | 72.25–100.00% | 0.5 |
+| English / Latin-script URLs | 29,973 | 7,779 | 7,773 | 6 | 99.923% | 99.83–99.97% | 0.5189 |
+| brand impersonation detected | 17 | 11 | 11 | 0 | 100.000% | 74.12–100.00% | 0.7857 |
+| with path or query | 17,952 | 5,926 | 5,922 | 4 | 99.933% | 99.83–99.97% | 0.6905 |
+| hostname only | 12,048 | 1,863 | 1,861 | 2 | 99.893% | 99.61–99.97% | 0.2897 |
+| UAE hand-labelled set (113) | 113 | 42 | 42 | 0 | 100.000% | 91.62–100.00% | 0.7925 |
+
+False positives (6): `scoutdocs.ca/Documents/Cub_Jungle_Open-Close.php`, `system-administrators.info`, `ytpak-clone.ga`,
+`cursos.ead.senac.br/moodle18/q/lmn/1800170440.php`, `homeincomeschool.secureweboffer.com/offer/3/`,
+`tu-chemnitz.de/informatik/RA/cchp/`. Several sit in the legitimate class only because they appear in the top-1M
+popularity list (label noise is possible; popularity is not proof of safety).
+False negatives: phishing URLs are never silently dropped. Of 15,000 phishing URLs, 7,783 are MALICIOUS,
+5,157 SUSPICIOUS (still a warning), 2,028 INCONCLUSIVE and 32 SAFE (0.21%).
+
+Precision depends on how common phishing is. Re-weighting the measured rates: 99.31% at 10% phishing prevalence, 92.9%
+at 1%. At realistic low prevalence, the high-precision tier needs fewer false positives than this data can show.
+
+**How the target is pursued (engineering, not relabelling):**
+1. **Independent-evidence rule.** MALICIOUS requires a strong signal (signature match, brand impersonation in the host,
+   typosquat, brand credential page, visual clone, IP address with login wording) or a calibrated model probability
+   ≥ **0.947**. Other high-risk URLs become SUSPICIOUS. (`raqeeb/link/risk.py`)
+2. **User-content platforms** (blogs, shops, site builders, hosting providers): the address alone cannot separate a
+   customer's page from phishing there, so MALICIOUS needs a strong signal. Found during tuning: validation contained
+   all of `blogspot.com` and `myshopify.com` (domain-grouped splits put a whole platform in one split); this rule removed
+   57 of its 68 MALICIOUS false positives.
+3. **Threshold tuned on validation only** (`tune_malicious_threshold.py`, 15,000 + 15,000 validation URLs): lowest floor
+   with validation precision ≥ 99.9% → 0.947 (validation: 8,636 TP, 7 FP, precision 99.919%).
+   The test split was measured twice: once before these changes (99.816%, 20 FP) and once after (above). No choice was
+   made on test results.
+4. **Continuous evaluation:** the `model_evaluation` job re-scores the UAE set and every analyst decision daily
+   (`model_evals` table, shown in Command → System → Models & evaluation).
+
+**What would establish 99.9% with confidence:** about 3× more independent legitimate URLs (so the CI narrows below
+0.1%), legitimate full URLs with modern paths (Common Crawl samples, licence permitting), a verified UAE legitimate and
+phishing set of thousands rather than 113, and per-row timestamps for a real temporal test.
+
+---
+
+# Model and detection evaluation (first SAWNN model release)
 
 Every number in this report was produced by the scripts named next to it, on 24 November 2026, and is stored in
 `models/evaluation_sawnn.json` (URL model) and `models/evaluation_verdicts.json` (end-to-end verdicts).
@@ -108,11 +163,11 @@ Breakdown:
 
 | | Phishing → SAFE | Phishing → MALICIOUS/SUSPICIOUS | Legitimate → MALICIOUS/SUSPICIOUS | Legitimate → SAFE |
 |---|---|---|---|---|
-| RAQEEB 2.1 | **24.96%** | 74.8% | 15.5% | 84.5% |
-| **SAWNN** | **0.12%** | 86.8% | 2.3% | 22.6% |
+| RAQEEB 2.1 | **25.48%** | 74.1% | 15.0% | 85.0% |
+| **SAWNN** | **0.12%** | 85.8% | 2.3% | 22.3% |
 | SAWNN, UAE set (53 phishing / 60 legitimate) | 0.0% | 100% | 5.0% | 73.3% |
 
-The rest is INCONCLUSIVE: 13.1% of phishing and 75.1% of legitimate URLs in a quick scan. That is the intended behaviour
+The rest is INCONCLUSIVE: 14.1% of phishing and 75.4% of legitimate URLs in a quick scan. That is the intended behaviour
 of the SAWNN rule (unknown sites are not SAFE). A deep scan or an analyst resolves them.
 
 ## 7. Error analysis
@@ -127,7 +182,7 @@ of the SAWNN rule (unknown sites are not SAFE). A deep scan or an analyst resolv
 
 ## 8. Limitations and next steps
 
-1. **Not 99.9%.** Measured recall at the operating point is 76.6% (URL model) and 86.8% flagged end-to-end on unseen domains.
+1. **Not 99.9%.** Measured recall at the operating point is 76.6% (URL model) and 85.8% flagged end-to-end on unseen domains.
 2. Labels are from public feeds and the attached file; they were not manually re-verified.
 3. No per-row timestamps, so no true temporal split; the OpenPhish snapshot is the closest fresh-threat check.
 4. UAE coverage is thin (113-URL hand-labelled set). Next: collect verified UAE phishing from SAWNN analyst decisions
@@ -136,3 +191,8 @@ of the SAWNN rule (unknown sites are not SAFE). A deep scan or an analyst resolv
    legitimate full URLs with modern paths, PhishTank and URLhaus exports (free keys). Each needs licence review first.
 6. Arabic vs English performance cannot be separated meaningfully: only 113 Arabic/IDN URLs exist in the data.
 7. Visual and sandbox completion rates are not measured here: the build environment has no outbound network.
+
+Note on reproducibility: the SAWNN update strips invisible formatting characters during canonicalisation. This changes
+the canonical form of a handful of rows, so re-running `evaluate_sawnn.py` now draws a slightly different 2,500 + 2,500
+sample than the first MIRA run (RAQEEB 2.1 then measured 24.96% phishing → SAFE; now 25.48%). The model itself was not
+retrained.
