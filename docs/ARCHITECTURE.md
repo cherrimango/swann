@@ -1,13 +1,13 @@
-# RAQEEB architecture
+# MIRA architecture
 
 ```
-                 ┌──────────────── RAQEEB COMMAND (/command) ───────────────┐
+                 ┌──────────────── MIRA COMMAND (/command) ───────────────┐
                  │ officials: overview · live intelligence · domain intel │
                  │ campaigns · AI investigation · reports · verification  │
                  │ seasonal · Guardians · distribution · reports · admin  │
                  └───────────────▲───────────────────────────┬──────────────┘
                                  │ REST + WebSocket (role-scoped events)
-┌────────── RAQEEB PROTECT (/app) ─────────┐         ┌────────┴───────── shared FastAPI server ──────────┐
+┌────────── MIRA PROTECT (/app) ─────────┐         ┌────────┴───────── shared FastAPI server ──────────┐
 │ citizens: check link/payment/QR/message/  │  REST   │ server/api_v1.py  Link Intelligence Engine API      │
 │ phone/advert/app · report · Quick Alert   ├────────▶│ server/v2.py      threats, reports, protection,      │
 │ assistant (EN/AR/UR) · Guardians · family │◀────────┤                   citizens, assistant, public       │
@@ -62,7 +62,7 @@ The modules stay importable on their own: `from raqeeb.link import analyse` runs
 ```
 
 **How the verdict is reached**
-- Risk levels: LOW is under 25, MODERATE 25–49, HIGH 50–74 and CRITICAL 75 and over (configurable with `RAQEEB_RISK_LEVELS`).
+- Risk levels: LOW is under 25, MODERATE 25–49, HIGH 50–74 and CRITICAL 75 and over (configurable with `MIRA_RISK_LEVELS`).
 - MALICIOUS means CRITICAL, or a confirmed signature match.
 - SUSPICIOUS means HIGH, or MODERATE with at least medium confidence.
 - SAFE requires LOW plus available evidence.

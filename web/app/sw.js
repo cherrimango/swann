@@ -1,6 +1,6 @@
-// Caches the app shell so RAQEEB Protect opens offline. The signed protection package is cached by the app itself
+// Caches the app shell so MIRA Protect opens offline. The signed protection package is cached by the app itself
 // (localStorage), so blocked sites and numbers are still caught without a connection.
-const CACHE = 'raqeeb-v3';
+const CACHE = 'mira-v3';
 const SHELL = ['/app', '/static/shared/tokens.css', '/static/app/app.css', '/static/app/i18n.js', '/static/app/app.js', '/static/app/icon-192.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys()

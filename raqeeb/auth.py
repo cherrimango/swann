@@ -143,19 +143,19 @@ def list_users() -> list[dict]:
 
 
 def bootstrap() -> list[tuple[str, str, str]] | None:
-    """First run: create one official account per role with random passwords (or RAQEEB_ADMIN_PASSWORD for the
+    """First run: create one official account per role with random passwords (or MIRA_ADMIN_PASSWORD for the
     super admin) and write them to data/first_run_credentials.txt. Returns the created accounts."""
     if one(db().execute("SELECT id FROM users WHERE role = 'super_admin'")):
         return None
     created = []
     for role in ["super_admin", "police_admin", "cyber_analyst", "investigation_officer", "intel_analyst", "supervisor"]:
-        email = os.environ.get("RAQEEB_ADMIN_EMAIL", "admin@raqeeb.local") if role == "super_admin" else f"{role.replace('_', '.')}@raqeeb.local"
-        pw = os.environ.get("RAQEEB_ADMIN_PASSWORD") if role == "super_admin" and os.environ.get("RAQEEB_ADMIN_PASSWORD") else secrets.token_urlsafe(9)
+        email = os.environ.get("MIRA_ADMIN_EMAIL", "admin@mira.local") if role == "super_admin" else f"{role.replace('_', '.')}@mira.local"
+        pw = os.environ.get("MIRA_ADMIN_PASSWORD") if role == "super_admin" and os.environ.get("MIRA_ADMIN_PASSWORD") else secrets.token_urlsafe(9)
         create_user(email, pw, role=role, display_name=ROLES[role])
         created.append((ROLES[role], email, pw))
     from . import db as _dbm
     f = _dbm.DB_PATH.parent / "first_run_credentials.txt"
-    f.write_text("RAQEEB Command accounts created on first run. Change these passwords before any real use.\n\n" +
+    f.write_text("MIRA Command accounts created on first run. Change these passwords before any real use.\n\n" +
                  "\n".join(f"{r:<24} {e:<40} {p}" for r, e, p in created) + "\n", encoding="utf-8")
     try:
         os.chmod(f, 0o600)

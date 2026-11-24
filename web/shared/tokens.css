@@ -1,29 +1,54 @@
-/* RAQEEB design tokens, shared by the entry screen, COMMAND and PROTECT. */
+/* MIRA (ميرا) design tokens, shared by the entry screen, MIRA Command and MIRA Protect.
+   Palette: deep navy ground; white for structure; red = danger, green = safe, used only for meaning and never
+   placed together as stripes (no flag motifs). Glass panels sit over a slow, dim aurora.
+   Type: Roboto (EN) and Noto Kufi Arabic (AR) — the pairing named by the UAE Design System
+   (designsystem.gov.ae/guidelines/typography). Both SIL Open Font License 1.1, self-hosted in /static/shared/fonts. */
+@font-face { font-family: "Roboto"; font-weight: 400; font-display: swap; src: url(/static/shared/fonts/roboto-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Roboto"; font-weight: 500; font-display: swap; src: url(/static/shared/fonts/roboto-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Roboto"; font-weight: 700 900; font-display: swap; src: url(/static/shared/fonts/roboto-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Noto Kufi Arabic"; font-weight: 400; font-display: swap; src: url(/static/shared/fonts/noto-kufi-arabic-arabic-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Noto Kufi Arabic"; font-weight: 500 600; font-display: swap; src: url(/static/shared/fonts/noto-kufi-arabic-arabic-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Noto Kufi Arabic"; font-weight: 700 900; font-display: swap; src: url(/static/shared/fonts/noto-kufi-arabic-arabic-700-normal.woff2) format("woff2"); }
+
 :root {
-  --navy-950: #071426;
-  --navy-900: #0B1F3A;
-  --blue-800: #123B68;
-  --blue-500: #2878C8;
-  --blue-300: #75B8EA;
-  --uae-green: #00843D;
-  --uae-red: #EF3340;
+  --ink-black: #000000;
+  --navy-990: #030A1A;
+  --navy-950: #06122B;
+  --navy-900: #0A1C3F;
+  --navy-800: #13295A;
+  --steel-400: #7F93B8;
   --white: #FFFFFF;
-  --bg-light: #F5F7FA;
+  --red: #E63946;
+  --red-deep: #9E1B26;
+  --green: #22B573;
+  --green-deep: #0F7A4B;
+  --amber: #F2B544;
 
-  --ok: #1FA463;          /* legible green on navy, derived from UAE green */
-  --danger: #FF5A66;      /* legible red on navy, derived from UAE red */
-  --warn: #F2B544;
+  /* older names kept so existing rules keep working */
+  --blue-800: var(--navy-800);
+  --blue-500: #3D6FD6;
+  --blue-300: #B9C8E6;
+  --bg-light: #F3F5FA;
+  --ok: var(--green);
+  --danger: var(--red);
+  --warn: var(--amber);
 
-  --font-ui: 'Inter', 'Noto Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-tech: 'Roboto', 'Inter', 'Noto Sans Arabic', system-ui, sans-serif;
-  --font-ar: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+  --glass: rgba(255, 255, 255, .055);
+  --glass-strong: rgba(255, 255, 255, .09);
+  --glass-line: rgba(255, 255, 255, .12);
+  --glass-line-strong: rgba(255, 255, 255, .22);
+  --blur: saturate(140%) blur(18px);
+
+  --font-en: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-ar: "Noto Kufi Arabic", "Roboto", "Geeza Pro", "Segoe UI", Tahoma, sans-serif;
+  --font-ui: "Roboto", "Noto Kufi Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-tech: "Roboto", "Noto Kufi Arabic", system-ui, sans-serif;
   --radius-s: 8px;
   --radius-m: 12px;
-  --radius-l: 18px;
+  --radius-l: 20px;
   --ease: cubic-bezier(.2, .7, .2, 1);
-  --flag-line: linear-gradient(90deg, var(--uae-red) 0 9%, var(--uae-green) 9% 40%, rgba(255, 255, 255, .85) 40% 71%, #000 71% 100%);
 }
-[lang="ar"], [lang="ur"] { --font-ui: var(--font-ar); }
+[lang="ar"], [dir="rtl"] { --font-ui: var(--font-ar); --font-tech: var(--font-ar); }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
@@ -31,21 +56,28 @@ body { margin: 0; font-family: var(--font-ui); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
 
-/* wordmark: the one place the flag colours appear as a mark */
+/* Aurora: two dim colour fields drifting slowly behind glass. Off when the user asks for reduced motion. */
+.aurora { position: fixed; inset: -20vmax; z-index: -1; pointer-events: none; background:
+  radial-gradient(38vmax 30vmax at 18% 22%, rgba(61, 111, 214, .22), transparent 70%),
+  radial-gradient(30vmax 24vmax at 82% 12%, rgba(230, 57, 70, .10), transparent 70%),
+  radial-gradient(34vmax 28vmax at 70% 88%, rgba(34, 181, 115, .08), transparent 70%),
+  var(--navy-950);
+  animation: aurora 38s ease-in-out infinite alternate; }
+@keyframes aurora { 0% { transform: translate3d(0, 0, 0) rotate(0deg); } 100% { transform: translate3d(-3vmax, 2vmax, 0) rotate(8deg); } }
+
+/* wordmark: the MIRA logo exactly as supplied (transparent margins trimmed), then the name */
 .mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
-.mark-flag { width: 22px; height: 16px; border-radius: 3px; overflow: hidden; display: grid; grid-template-columns: 6px 1fr; grid-template-rows: repeat(3, 1fr); flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
-.mark-flag i:first-child { grid-row: 1 / 4; background: var(--uae-red); }
-.mark-flag i:nth-child(2) { background: var(--uae-green); }
-.mark-flag i:nth-child(3) { background: #fff; }
-.mark-flag i:nth-child(4) { background: #000; }
-.mark-en { font: 800 19px/1 var(--font-tech); letter-spacing: 3px; }
-.mark-ar { font: 700 19px/1 var(--font-ar); color: var(--blue-300); }
+.mark-logo { height: 34px; width: auto; display: block; flex: none; }
+.mark-en { font: 700 19px/1 var(--font-en); letter-spacing: 4px; }
+.mark-ar { font: 700 18px/1 var(--font-ar); color: var(--blue-300); }
 
-/* glassy headings: luminous, still crisp */
-.glass-h {
-  background: linear-gradient(180deg, #FFFFFF 0%, #DCEBFA 55%, #9CCBF0 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  text-shadow: 0 0 28px rgba(117, 184, 234, .18);
-}
+.glass-h { color: #fff; }
+.glass { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+
+/* language switch, shared by every screen */
+.langs { display: inline-flex; background: rgba(255, 255, 255, .08); border: 1px solid var(--glass-line); border-radius: 999px; padding: 3px; }
+.langs button { background: none; border: 0; color: #C9D4EA; padding: 4px 12px; border-radius: 999px; font-size: 13.5px; font-weight: 600; }
+.langs button[aria-pressed="true"] { background: #fff; color: var(--navy-950); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

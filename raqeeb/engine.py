@@ -1,4 +1,4 @@
-"""RAQEEB scoring engine: allowlist + brand impersonation rules + ML model -> risk score with reasons (EN/AR)."""
+"""MIRA scoring engine: allowlist + brand impersonation rules + ML model -> risk score with reasons (EN/AR)."""
 import gzip
 from pathlib import Path
 
@@ -28,6 +28,32 @@ READABLE_AR = {
     "has_at": "خدعة '@' في الرابط", "embedded_url": "رابط آخر مضمّن داخل الرابط",
     "shortener": "رابط مختصر يخفي الوجهة", "url_len": "رابط طويل جداً",
 }
+
+# Popular registered domains where anyone can publish pages or files. Popularity of the domain says nothing about the
+# page, so these never receive the popular-domain cap (Google Docs/Sites/Forms, SharePoint, Dropbox, cloud storage...).
+USER_CONTENT_HOSTS = {
+    "docs.google.com", "sites.google.com", "drive.google.com", "forms.gle", "storage.googleapis.com", "firebasestorage.googleapis.com",
+    "script.google.com", "googleusercontent.com", "onedrive.live.com", "1drv.ms", "sharepoint.com", "dropbox.com",
+    "dl.dropboxusercontent.com", "blob.core.windows.net", "web.core.windows.net", "github.io", "gitlab.io", "notion.site",
+    "linktr.ee", "t.me", "telegra.ph", "medium.com", "wordpress.com", "blogspot.com", "box.com", "wetransfer.com",
+    "mediafire.com", "s3.amazonaws.com", "cloudfront.net", "workers.dev", "pages.dev", "web.app", "firebaseapp.com",
+    "translate.goog", "ipfs.io", "adnxs.com", "doubleclick.net", "app.link", "page.link", "typeform.com", "jotform.com",
+    "forms.office.com", "forms.microsoft.com", "wpengine.com", "inmotionhosting.com", "secureserver.net", "myftpupload.com",
+    "esy.es", "hol.es", "16mb.com", "pe.hu", "hostingersite.com", "altervista.org", "webcindario.com", "weebly.com",
+    "wixsite.com", "wix.com", "yolasite.com", "godaddysites.com", "000webhostapp.com", "squarespace.com", "webflow.io",
+}
+
+
+# .ae restricted zones: registration requires documents proving the entity is a government body, the armed forces, an
+# accredited academic institution or a school (.aeDA Domain Name Eligibility Policy AEDA-POL-007, sections 14-16).
+RESTRICTED_ZONES = {"gov.ae", "mil.ae", "ac.ae", "sch.ae"}
+
+
+def user_content(p) -> bool:
+    h = p.host.removeprefix("www.")
+    return (any(h == d or h.endswith("." + d) for d in USER_CONTENT_HOSTS) or p.registered_domain in USER_CONTENT_HOSTS
+            or p.registered_domain.startswith("blogspot."))
+
 
 _model = None
 _threat = None
@@ -78,9 +104,15 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
         hits = [] if off else detect(p)
         on_hosting = under_any(p.host, FREE_HOSTING)
         is_short = p.registered_domain in SHORTENERS or p.host in SHORTENERS
-        top_legit = p.registered_domain in TOP_LEGIT and not on_hosting and not is_short
+        ugc = user_content(p)
+        model_flags = prob >= m.threshold
+        # popular domains get the stricter operating point (validation FPR <= 0.1%) before their page is questioned
+        model_flags_strict = prob >= m.meta.get("threshold_strict", m.threshold)
+        restricted = p.suffix in RESTRICTED_ZONES and not ugc
+        has_path = bool((p.path or "").strip("/") or p.query)
+        top_legit = p.registered_domain in TOP_LEGIT and not on_hosting and not is_short and not ugc
         cc = p.suffix.split(".")[-1] if p.suffix else ""
-        regional_brand = (not top_legit and not on_hosting and len(cc) == 2 and p.domain in TOP_LABELS
+        regional_brand = (not top_legit and not on_hosting and not ugc and len(cc) == 2 and p.domain in TOP_LABELS
                           and not p.subdomain.replace("www", "").strip(".") and not lure_tokens(p.url))
         if top_legit:  # a brand word in a search query or article path on a major site is not impersonation
             hits = [h for h in hits if not (h.kind == "path_keyword" and h.strength < 0.8)]
@@ -89,11 +121,20 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
             risk = min(risk, 5.0)
             reasons.append(_reason("official_domain", f"Official {off['name']} domain",
                                    f"نطاق رسمي لـ {off['name_ar']}", -1))
-        elif top_legit and not hits:
+        elif top_legit and not hits and not (model_flags_strict and has_path):
             risk = min(risk, 20.0)
             reasons.append(_reason("popular_domain", "Well-established popular domain",
                                    "نطاق معروف وواسع الاستخدام", -0.5))
-        elif regional_brand and not hits:
+        elif top_legit and not hits:
+            # A popular domain does not make every page on it safe: hacked sites and open redirects host phishing.
+            risk = min(max(risk, 40.0), 49.0)
+            reasons.append(_reason("popular_domain_risky_path", "Popular domain, but this page's address looks like known phishing pages "
+                                   "(possible compromised page or open redirect)", "نطاق معروف لكن مسار الصفحة يشبه صفحات تصيد معروفة", 1))
+        elif restricted and not hits and not (lures and model_flags):
+            risk = min(risk, 25.0)
+            reasons.append(_reason("restricted_registry", f"Registered in the restricted .{p.suffix} zone, which requires proof of "
+                                   "a government, academic or school entity", "مسجّل في نطاق إماراتي مقيّد يتطلب إثبات صفة الجهة", -0.4))
+        elif regional_brand and not hits and not model_flags:
             risk = min(risk, 30.0)
             reasons.append(_reason("regional_brand", f"Regional site of a well-known brand ({p.domain}.{p.suffix})",
                                    "موقع إقليمي لعلامة تجارية معروفة", -0.4))
@@ -126,6 +167,11 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
                 if top_legit and h.kind != "path_keyword":
                     floor = min(floor, 60)
                 risk = max(risk, floor)
+            if ugc and (lures or model_flags):
+                risk = max(risk, 45.0)
+                reasons.append(_reason("user_content_host", "Hosted on a platform where anyone can publish pages or files "
+                                       f"({p.registered_domain}); the domain's popularity says nothing about this page",
+                                       "مستضاف على منصة يمكن لأي شخص النشر عليها؛ شهرة النطاق لا تعني أن الصفحة آمنة", 1.2))
             if p.is_ip and lures:
                 risk = max(risk, 70)
                 reasons.append(_reason("ip_with_lures", "Raw IP address with login/payment wording",
@@ -157,7 +203,10 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
                                    "كلمات استدراج: " + ", ".join(lures[:6]), 0.5))
 
         risk = float(np.clip(risk, 0, 100))
-        verdict = "phishing" if risk >= 50 else ("suspicious" if risk >= 35 else "safe")
+        trusted = bool(off) or any(r["code"] in ("popular_domain", "regional_brand", "restricted_registry") for r in reasons)
+        # "safe" only for official or well-established domains; everything else low-risk is "inconclusive":
+        # absence of warning signs in the address alone is not evidence of safety (MIRA rule).
+        verdict = "phishing" if risk >= 50 else ("suspicious" if risk >= 35 else ("safe" if trusted else "inconclusive"))
         out.append({
             "url": raw, "label": int(risk >= 50), "verdict": verdict, "risk_score": round(risk, 1),
             "model_probability": round(prob, 4), "host": p.host, "registered_domain": p.registered_domain,

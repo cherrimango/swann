@@ -9,9 +9,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 
 /**
- * Rejects incoming calls from numbers that RAQEEB analysts confirmed as scam numbers (from the signed protection
+ * Rejects incoming calls from numbers that MIRA analysts confirmed as scam numbers (from the signed protection
  * package stored on the phone), and tells the user why. Works offline. Only the incoming number is compared with the
- * local list; it is never sent anywhere. Requires the user to make RAQEEB the call-screening app (Android 10+).
+ * local list; it is never sent anywhere. Requires the user to make MIRA the call-screening app (Android 10+).
  */
 @RequiresApi(Build.VERSION_CODES.Q)
 class ScamCallScreening : CallScreeningService() {
@@ -33,8 +33,8 @@ class ScamCallScreening : CallScreeningService() {
             number.hashCode(),
             NotificationCompat.Builder(this, RaqeebListener.CHANNEL)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle("RAQEEB blocked a scam call")
-                .setContentText("$number is a confirmed scam number. حظر رقيب مكالمة احتيالية.")
+                .setContentTitle("MIRA blocked a scam call")
+                .setContentText("$number is a confirmed scam number. حظر ميرا مكالمة احتيالية.")
                 .setAutoCancel(true)
                 .build(),
         )

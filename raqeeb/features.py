@@ -3,6 +3,7 @@ import math
 import re
 from collections import Counter
 
+from .urlparse import parse as parse_url
 from .urlparse import FREE_HOSTING, LURE_WORDS, RISKY_TLDS, SHORTENERS, ParsedURL, under_any
 
 FEATURE_NAMES = [
@@ -86,6 +87,20 @@ def extract(p: ParsedURL, include_path: bool = True) -> list[float]:
     else:
         f += [0.0] * 14
     return f
+
+
+def canonical(raw: str) -> str:
+    """Form used by the full-URL model in training and inference: no scheme, no leading www., host lower-cased,
+    repeated slashes collapsed, fragment dropped. Removing the scheme stops the model learning "HTTPS = safe"
+    (an artefact of the attached url_dataset.csv, where every legitimate row is https://www.)."""
+    p = parse_url((raw or "").strip().replace("&amp;", "&"))
+    if not p.host:
+        return (raw or "").strip()
+    host = p.host.removeprefix("www.")
+    if p.port not in (None, 80, 443):
+        host += f":{p.port}"
+    path = re.sub(r"/{2,}", "/", p.path or "")
+    return (host + (path if path not in ("", "/") else "") + (("?" + p.query) if p.query else ""))[:2000]
 
 
 def text_for_ngrams(p: ParsedURL, include_path: bool = True) -> str:

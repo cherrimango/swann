@@ -74,7 +74,7 @@ def _browser(url: str, shot: Path | None) -> dict:
     t0 = time.time()
     chain, blocked, downloads = [], [], []
     with sync_playwright() as pw:
-        exe = os.environ.get("RAQEEB_CHROMIUM")
+        exe = os.environ.get("MIRA_CHROMIUM")
         b = pw.chromium.launch(executable_path=exe or None, args=["--no-sandbox"] if exe else [])
         try:
             ctx = b.new_context(user_agent=UA, viewport={"width": 390, "height": 844}, accept_downloads=False,

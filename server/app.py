@@ -1,8 +1,8 @@
-"""RAQEEB server: RAQEEB Command (officials), RAQEEB Protect (citizens) and the intelligence API, with live updates.
+"""MIRA server: MIRA Command (officials), MIRA Protect (citizens) and the intelligence API, with live updates.
 
     uvicorn server.app:app --host 0.0.0.0 --port 8000
-    open http://localhost:8000/          RAQEEB Command (sign in with an account from data/first_run_credentials.txt)
-    open http://<laptop-ip>:8000/app     RAQEEB Protect, the citizen app (same Wi-Fi)
+    open http://localhost:8000/          MIRA Command (sign in with an account from data/first_run_credentials.txt)
+    open http://<laptop-ip>:8000/app     MIRA Protect, the citizen app (same Wi-Fi)
 """
 import asyncio
 import csv
@@ -80,11 +80,11 @@ async def lifespan(_app):
     model()
     created = auth.bootstrap()
     if created:
-        print("RAQEEB Command accounts created. Credentials: data/first_run_credentials.txt")
+        print("MIRA Command accounts created. Credentials: data/first_run_credentials.txt")
     from raqeeb import demo_scenario
     if demo_scenario.enabled():
         demo_scenario.ensure_accounts()
-        print("DEMO MODE: demo accounts are active (admin@raqeeb.demo, analyst@raqeeb.demo, citizen@raqeeb.demo)")
+        print("DEMO MODE: demo accounts are active (admin@mira.demo, analyst@mira.demo, citizen@mira.demo)")
     seed()
     protection.latest()
     task = asyncio.create_task(_expiry_loop())
@@ -92,8 +92,8 @@ async def lifespan(_app):
     task.cancel()
 
 
-app = FastAPI(title="RAQEEB 2.0: UAE scam intelligence", lifespan=lifespan)
-_origins = [o for o in os.environ.get("RAQEEB_CORS_ORIGINS", "").split(",") if o]
+app = FastAPI(title="MIRA 2.0: UAE scam intelligence", lifespan=lifespan)
+_origins = [o for o in os.environ.get("MIRA_CORS_ORIGINS", "").split(",") if o]
 if _origins:
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=WEB), name="static")
@@ -101,8 +101,8 @@ app.include_router(v2_router)
 app.include_router(v1_router)
 app.include_router(demo_router)
 
-CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-       "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
 
 
@@ -213,7 +213,7 @@ def api_batch(body: BatchIn, user=Depends(current_user)):
 
 @app.post("/api/check-message", dependencies=[Depends(rate("check"))])
 async def api_message(body: MessageIn, user=Depends(current_user)):
-    """Check a message. With report=true it is filed through the RAQEEB 2.0 citizen-report pipeline."""
+    """Check a message. With report=true it is filed through the MIRA 2.0 citizen-report pipeline."""
     from raqeeb import community
     content.bump("checks")
     _demo_note(body.text)
@@ -438,7 +438,7 @@ def api_join_url():
         ip = "127.0.0.1"
     finally:
         s.close()
-    return {"url": f"http://{ip}:{os.environ.get('RAQEEB_PORT', '8000')}/app"}
+    return {"url": f"http://{ip}:{os.environ.get('MIRA_PORT', '8000')}/app"}
 
 
 # ---------- live updates ----------

@@ -1,4 +1,4 @@
-// RAQEEB PROTECT (installable web app). All text from the network is inserted with textContent, never as HTML.
+// MIRA PROTECT (installable web app). All text from the network is inserted with textContent, never as HTML.
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
@@ -17,8 +17,9 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 
-const LANGS = ['en', 'ar', 'ur'];
-let lang = LANGS.includes(localStorage.getItem('raqeeb-lang')) ? localStorage.getItem('raqeeb-lang') : 'en';
+// MIRA ships English and Arabic. Urdu strings stay in i18n.js (inactive) so another language can be switched on by adding it here.
+const LANGS = ['en', 'ar'];
+let lang = LANGS.includes(localStorage.getItem('mira-lang')) ? localStorage.getItem('mira-lang') : 'en';
 let TOKEN = localStorage.getItem('raqeeb_token');
 let ME = null, META = null, PROFILE = null, DEMO = { enabled: false, accounts: [] };
 const t = (k, ...a) => { const v = T[lang][k] ?? T.en[k]; return typeof v === 'function' ? v(...a) : v; };
@@ -86,7 +87,7 @@ function applyLang() {
   syncAuthForm(); renderSuggest(); renderQuickKinds(); renderHello();
   for (const fn of [loadSeason, loadMyReports, loadBlocks, loadFamily, loadCommunity, loadProfile, loadEmergency]) fn().catch(() => {});
 }
-$$('.langs button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('raqeeb-lang', lang); applyLang(); }));
+$$('.langs button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('mira-lang', lang); applyLang(); }));
 
 /* ---------------- tabs and sheets ---------------- */
 function go(tab, scrollId) {
@@ -186,7 +187,7 @@ async function check(raw) {
     else {
       const m = await api('/api/check-message', { body: { text } });
       const worst = [...m.links].sort((a, b) => b.risk_score - a.risk_score)[0];
-      const v = m.links.some(l => l.blocked) || localRule(text) ? 'blocked' : m.verdict === 'scam' ? 'MALICIOUS' : m.verdict === 'suspicious' ? 'SUSPICIOUS' : 'SAFE';
+      const v = m.links.some(l => l.blocked) || localRule(text) ? 'blocked' : m.verdict === 'scam' ? 'MALICIOUS' : m.verdict === 'suspicious' ? 'SUSPICIOUS' : m.verdict === 'inconclusive' ? 'INCONCLUSIVE' : 'SAFE';
       r = { kind: 'message', verdict: v, msg: m, twin: worst?.impersonated_brand?.twin, brand: worst?.impersonated_brand?.name,
             brand_ar: worst?.impersonated_brand?.name_ar, host: worst?.host,
             reasons: [...m.script_signals.map(s => s[lang === 'ar' ? 'ar' : 'en']), ...(worst ? worst.reasons.map(x => x[lang === 'ar' ? 'ar' : 'en']) : [])] };
@@ -323,14 +324,14 @@ async function runChecker() {
         t('confidence', r.assessment_confidence), t('completeness', Math.round(r.analysis_completeness * 100)),
         r.final_url && r.final_url !== r.normalised_url ? `${t('goesTo')}: ${r.final_url}` : null, ckType === 'payment' ? t('payWarn') : null];
       out.replaceChildren(resultCard(tone, v === 'blocked' ? t('blocked') : t(v), lines,
-        h('div', { class: 'two' }, h('button', { class: 'soft', onclick: () => { $('#r-text').value = val; selectType(ckType === 'qr' ? 'qr' : 'website'); go('report'); } }, t('reportToRaqeeb')),
+        h('div', { class: 'two' }, h('button', { class: 'soft', onclick: () => { $('#r-text').value = val; selectType(ckType === 'qr' ? 'qr' : 'website'); go('report'); } }, t('reportToMIRA')),
           h('button', { class: 'soft', onclick: () => preview(val, out) }, t('preview')))));
     } else if (ckType === 'message') {
       const m = await api('/api/check-message', { body: { text: val } });
-      const v = m.links.some(l => l.blocked) ? 'blocked' : m.verdict === 'scam' ? 'MALICIOUS' : m.verdict === 'suspicious' ? 'SUSPICIOUS' : 'SAFE';
+      const v = m.links.some(l => l.blocked) ? 'blocked' : m.verdict === 'scam' ? 'MALICIOUS' : m.verdict === 'suspicious' ? 'SUSPICIOUS' : m.verdict === 'inconclusive' ? 'INCONCLUSIVE' : 'SAFE';
       remember('message', val, v);
       out.replaceChildren(resultCard(TONE[v], v === 'blocked' ? t('blocked') : t(v),
-        [...m.script_signals.map(s => s[lang === 'ar' ? 'ar' : 'en']), ...m.links.map(l => `${l.host}: ${t(l.verdict === 'phishing' ? 'MALICIOUS' : l.verdict === 'suspicious' ? 'SUSPICIOUS' : 'SAFE')}`), m[`advice_${lang === 'ar' ? 'ar' : 'en'}`]]));
+        [...m.script_signals.map(s => s[lang === 'ar' ? 'ar' : 'en']), ...m.links.map(l => `${l.host}: ${t(l.verdict === 'phishing' ? 'MALICIOUS' : l.verdict === 'suspicious' ? 'SUSPICIOUS' : l.verdict === 'inconclusive' ? 'INCONCLUSIVE' : 'SAFE')}`), m[`advice_${lang === 'ar' ? 'ar' : 'en'}`]]));
     } else if (ckType === 'phone') {
       const p = await api(`/api/public/check-phone?number=${encodeURIComponent(val)}`);
       remember('phone', p.number, p.verdict);
@@ -347,7 +348,7 @@ async function runChecker() {
       out.replaceChildren(resultCard(a.verdict === 'scam' ? 'scam' : a.verdict === 'suspicious' ? 'suspicious' : 'unclear', av[a.verdict],
         [...a.signals.map(s => s.en), ...a.script_signals.map(s => s[lang === 'ar' ? 'ar' : 'en']), ...a.links.map(l => `${l.url}: ${Math.round(l.risk)}/100`),
           a.phones.length ? a.phones.join(', ') : null, f ? t('ocrNote', a.ocr) : null],
-        h('button', { class: 'soft', onclick: () => { $('#r-text').value = val || a.extracted_text; selectType('ad'); go('report'); } }, t('reportToRaqeeb'))));
+        h('button', { class: 'soft', onclick: () => { $('#r-text').value = val || a.extracted_text; selectType('ad'); go('report'); } }, t('reportToMIRA'))));
     } else if (ckType === 'app') {
       const host = hostOf(val);
       const store = { 'play.google.com': 'Google Play', 'apps.apple.com': 'the App Store', 'appgallery.huawei.com': 'Huawei AppGallery' }[host];
@@ -592,7 +593,7 @@ function syncAuthForm() {
 }
 async function signIn(body, register) {
   const r = await api(`/api/auth/${register ? 'register' : 'login'}`, { body });
-  if (r.user.role !== 'citizen') throw new Error('Officials sign in to RAQEEB COMMAND.');
+  if (r.user.role !== 'citizen') throw new Error('Officials sign in to MIRA COMMAND.');
   setToken(r.token); ME = r.user; PROFILE = null;
   reconnect(); loadProfile(); loadMyReports(); renderHello();
 }

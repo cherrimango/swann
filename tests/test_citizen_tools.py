@@ -51,7 +51,7 @@ def test_translation_never_changes_evidence(monkeypatch):
     masked, kept = mask(text)
     assert "https://" not in masked and "+971" not in masked and "482193" not in masked
     assert unmask(masked, kept) == text
-    monkeypatch.delenv("RAQEEB_LLM_URL", raising=False)
+    monkeypatch.delenv("MIRA_LLM_URL", raising=False)
     assert translate(text, "ar")["available"] is False  # no model: say so, never guess
 
 
@@ -83,6 +83,6 @@ def test_report_details_can_be_added_later(c):
 
 
 def test_entry_screen_and_apps_are_served(c):
-    assert "RAQEEB COMMAND" in c.get("/").text and "RAQEEB PROTECT" in c.get("/").text
+    assert "MIRA Command" in c.get("/").text and "MIRA Protect" in c.get("/").text and "mira-mark.png" in c.get("/").text
     assert c.get("/command").status_code == 200 and c.get("/app").status_code == 200
     assert c.get("/api/public/emergency").json()["ur"]

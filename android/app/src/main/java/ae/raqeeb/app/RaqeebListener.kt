@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
 
 /**
  * Watches incoming notifications.
- *  1. Messages (SMS, WhatsApp, Telegram) that contain a link are checked by RAQEEB; scams raise an alert.
+ *  1. Messages (SMS, WhatsApp, Telegram) that contain a link are checked by MIRA; scams raise an alert.
  *  2. UAE PASS or bank approval notifications that arrive DURING A CALL open the full-screen guard.
  */
 class RaqeebListener : NotificationListenerService() {
@@ -69,13 +69,13 @@ class RaqeebListener : NotificationListenerService() {
 
     private fun check(text: String) {
         Protection.sync(this)
-        // 1. Published RAQEEB rules on the phone: works offline and needs no server round trip.
+        // 1. Published MIRA rules on the phone: works offline and needs no server round trip.
         LINK.findAll(text).map { it.value }.firstNotNullOfOrNull { Protection.matchLink(this, it) }?.let { rule ->
             alert("Blocked scam link", "This message links to ${rule.value}, a confirmed scam" +
                 (if (rule.brand.isNotEmpty()) " pretending to be ${rule.brand}" else "") + ". Don’t open it.")
             return
         }
-        // 2. Online analysis for links RAQEEB hasn't seen yet.
+        // 2. Online analysis for links MIRA hasn't seen yet.
         val r = Api.checkMessage(this, text) ?: return
         val verdict = r.optString("verdict")
         if (verdict != "scam" && verdict != "suspicious") return

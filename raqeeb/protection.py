@@ -21,7 +21,7 @@ from .intel import add_history, get
 from .urlparse import FREE_HOSTING, SHORTENERS, parse, under_any
 
 KEY_FILE = ROOT / "data" / "keys" / "protection_ed25519.pem"
-DEFAULT_EXPIRY_DAYS = int(os.environ.get("RAQEEB_BLOCK_EXPIRY_DAYS", "30"))
+DEFAULT_EXPIRY_DAYS = int(os.environ.get("MIRA_BLOCK_EXPIRY_DAYS", "30"))
 
 
 class PolicyError(Exception):

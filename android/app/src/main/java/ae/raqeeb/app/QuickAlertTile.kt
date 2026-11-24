@@ -7,7 +7,7 @@ import android.service.quicksettings.TileService
 import androidx.annotation.RequiresApi
 
 /**
- * Quick Settings tile: "RAQEEB Quick Alert". After a suspicious call, the user swipes down and taps the tile to open
+ * Quick Settings tile: "MIRA Quick Alert". After a suspicious call, the user swipes down and taps the tile to open
  * the Quick Alert report straight away. The tile reads nothing from the phone; the user types what they know.
  */
 @RequiresApi(Build.VERSION_CODES.N)

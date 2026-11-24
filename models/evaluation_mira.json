@@ -1,0 +1,354 @@
+{
+  "model_version": "mira-url-202611242052",
+  "dataset_version": "mira-ds-946b39760a",
+  "dataset_manifest": "data/processed/manifest.json",
+  "split": "GroupShuffleSplit by registered domain: 70% train / 10% validation / 20% test",
+  "evaluation": {
+    "main": {
+      "threshold": 0.8497,
+      "accuracy": 0.8791,
+      "precision": 0.9969,
+      "recall": 0.7659,
+      "f1": 0.8663,
+      "fpr": 0.0025,
+      "fnr": 0.2341,
+      "confusion": {
+        "tn": 75382,
+        "fp": 190,
+        "fn": 18499,
+        "tp": 60525
+      },
+      "n": 154596,
+      "n_phish": 79024,
+      "roc_auc": 0.9787,
+      "pr_auc": 0.981
+    },
+    "strict_0.1pct_fpr": {
+      "threshold": 0.9726,
+      "accuracy": 0.7857,
+      "precision": 0.9997,
+      "recall": 0.5809,
+      "f1": 0.7348,
+      "fpr": 0.0002,
+      "fnr": 0.4191,
+      "confusion": {
+        "tn": 75558,
+        "fp": 14,
+        "fn": 33122,
+        "tp": 45902
+      },
+      "n": 154596,
+      "n_phish": 79024,
+      "roc_auc": 0.9787,
+      "pr_auc": 0.981
+    },
+    "at_0.5": {
+      "threshold": 0.5,
+      "accuracy": 0.921,
+      "precision": 0.9786,
+      "recall": 0.8643,
+      "f1": 0.9179,
+      "fpr": 0.0197,
+      "fnr": 0.1357,
+      "confusion": {
+        "tn": 74080,
+        "fp": 1492,
+        "fn": 10727,
+        "tp": 68297
+      },
+      "n": 154596,
+      "n_phish": 79024,
+      "roc_auc": 0.9787,
+      "pr_auc": 0.981
+    },
+    "by_source": {
+      "Phishing.Database": {
+        "threshold": 0.8497,
+        "accuracy": 0.8879,
+        "precision": 1.0,
+        "recall": 0.8879,
+        "f1": 0.9406,
+        "fpr": 0.0,
+        "fnr": 0.1121,
+        "confusion": {
+          "tn": 0,
+          "fp": 0,
+          "fn": 4338,
+          "tp": 34370
+        },
+        "n": 38708,
+        "n_phish": 38708
+      },
+      "url_dataset.csv": {
+        "threshold": 0.8497,
+        "accuracy": 0.9414,
+        "precision": 0.9921,
+        "recall": 0.7769,
+        "f1": 0.8714,
+        "fpr": 0.0021,
+        "fnr": 0.2231,
+        "confusion": {
+          "tn": 55637,
+          "fp": 118,
+          "fn": 4276,
+          "tp": 14893
+        },
+        "n": 74924,
+        "n_phish": 19169,
+        "roc_auc": 0.9886,
+        "pr_auc": 0.9752
+      },
+      "Phishing.Database (hostname)": {
+        "threshold": 0.8497,
+        "accuracy": 0.5326,
+        "precision": 1.0,
+        "recall": 0.5326,
+        "f1": 0.695,
+        "fpr": 0.0,
+        "fnr": 0.4674,
+        "confusion": {
+          "tn": 0,
+          "fp": 0,
+          "fn": 9885,
+          "tp": 11262
+        },
+        "n": 21147,
+        "n_phish": 21147
+      },
+      "top1m (hostname)": {
+        "threshold": 0.8497,
+        "accuracy": 0.9964,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0036,
+        "fnr": 0.0,
+        "confusion": {
+          "tn": 19745,
+          "fp": 72,
+          "fn": 0,
+          "tp": 0
+        },
+        "n": 19817,
+        "n_phish": 0
+      }
+    },
+    "with_path_vs_hostname_only": {
+      "with_path": {
+        "threshold": 0.8497,
+        "accuracy": 0.9359,
+        "precision": 0.9977,
+        "recall": 0.8707,
+        "f1": 0.9299,
+        "fpr": 0.0019,
+        "fnr": 0.1293,
+        "confusion": {
+          "tn": 46972,
+          "fp": 90,
+          "fn": 5806,
+          "tp": 39102
+        },
+        "n": 91970,
+        "n_phish": 44908,
+        "roc_auc": 0.9962,
+        "pr_auc": 0.9961
+      },
+      "hostname_only": {
+        "threshold": 0.8497,
+        "accuracy": 0.7957,
+        "precision": 0.9954,
+        "recall": 0.6279,
+        "f1": 0.7701,
+        "fpr": 0.0035,
+        "fnr": 0.3721,
+        "confusion": {
+          "tn": 28410,
+          "fp": 100,
+          "fn": 12693,
+          "tp": 21423
+        },
+        "n": 62626,
+        "n_phish": 34116,
+        "roc_auc": 0.9185,
+        "pr_auc": 0.9427
+      }
+    },
+    "baselines_same_test_set": {
+      "char_lr_only": {
+        "threshold": 0.7849,
+        "accuracy": 0.8769,
+        "precision": 0.9871,
+        "recall": 0.7692,
+        "f1": 0.8647,
+        "fpr": 0.0105,
+        "fnr": 0.2308,
+        "confusion": {
+          "tn": 74777,
+          "fp": 795,
+          "fn": 18235,
+          "tp": 60789
+        },
+        "n": 154596,
+        "n_phish": 79024,
+        "roc_auc": 0.9721,
+        "pr_auc": 0.9765
+      },
+      "xgboost_handcrafted": {
+        "threshold": 0.9945,
+        "accuracy": 0.6673,
+        "precision": 0.9986,
+        "recall": 0.3497,
+        "f1": 0.5179,
+        "fpr": 0.0005,
+        "fnr": 0.6503,
+        "confusion": {
+          "tn": 75532,
+          "fp": 40,
+          "fn": 51393,
+          "tp": 27631
+        },
+        "n": 154596,
+        "n_phish": 79024,
+        "roc_auc": 0.92,
+        "pr_auc": 0.9374
+      },
+      "random_forest_handcrafted": {
+        "threshold": 0.9219,
+        "accuracy": 0.7083,
+        "precision": 0.9924,
+        "recall": 0.4327,
+        "f1": 0.6026,
+        "fpr": 0.0035,
+        "fnr": 0.5673,
+        "confusion": {
+          "tn": 75309,
+          "fp": 263,
+          "fn": 44831,
+          "tp": 34193
+        },
+        "n": 154596,
+        "n_phish": 79024,
+        "roc_auc": 0.9055,
+        "pr_auc": 0.9274
+      },
+      "raqeeb_2_1_hostname_model": {
+        "threshold": 0.9167,
+        "accuracy": 0.7497,
+        "precision": 0.9676,
+        "recall": 0.5279,
+        "f1": 0.6831,
+        "fpr": 0.0185,
+        "fnr": 0.4721,
+        "confusion": {
+          "tn": 74177,
+          "fp": 1395,
+          "fn": 37308,
+          "tp": 41716
+        },
+        "n": 154596,
+        "n_phish": 79024,
+        "roc_auc": 0.8572,
+        "pr_auc": 0.8892
+      }
+    },
+    "openphish_fresh_unseen": {
+      "n": 299,
+      "recall_at_threshold": 0.8328,
+      "recall_at_0.5": 0.9599,
+      "latency_ms_per_url": 0.786
+    },
+    "uae_eval_model_only": {
+      "threshold": 0.8497,
+      "accuracy": 0.885,
+      "precision": 0.9167,
+      "recall": 0.8302,
+      "f1": 0.8713,
+      "fpr": 0.0667,
+      "fnr": 0.1698,
+      "confusion": {
+        "tn": 56,
+        "fp": 4,
+        "fn": 9,
+        "tp": 44
+      },
+      "n": 113,
+      "n_phish": 53,
+      "roc_auc": 0.9736,
+      "pr_auc": 0.965,
+      "misclassified": [
+        {
+          "url": "https://www.tamm.abudhabi/",
+          "label": 0,
+          "p": 0.877
+        },
+        {
+          "url": "https://www.du.ae/personal",
+          "label": 0,
+          "p": 0.918
+        },
+        {
+          "url": "https://visitabudhabi.ae/en",
+          "label": 0,
+          "p": 0.918
+        },
+        {
+          "url": "https://www.paypal.com/ae/home",
+          "label": 0,
+          "p": 0.968
+        },
+        {
+          "url": "https://ad-police-gov.com/fines",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://darbtoll-ae.com/overdue",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://salik-recharge.info/",
+          "label": 1,
+          "p": 0.62
+        },
+        {
+          "url": "https://sallk-ae.com/recharge",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://icpuae-services.com/visa",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://gdrfa-passport-suspended.com/",
+          "label": 1,
+          "p": 0.592
+        },
+        {
+          "url": "https://adcustoms-hold.com/release",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://mohre-job-offer.com/apply",
+          "label": 1,
+          "p": 0.606
+        },
+        {
+          "url": "https://adconsumer-complaint.com/",
+          "label": 1,
+          "p": 0.592
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Labels come from public feeds and the attached dataset; they were not manually re-verified.",
+    "Legitimate full URLs come from a single source (url_dataset.csv) whose style differs from the phishing feeds; some separation may reflect source style.",
+    "No timestamps in the attached dataset, so a true temporal split is not possible; the OpenPhish snapshot is the closest fresh-threat check.",
+    "UAE evaluation set is small (113 URLs) and hand-labelled.",
+    "These are URL-only metrics. Deep scans add DNS, TLS, sandbox and visual evidence that this table does not measure."
+  ]
+}

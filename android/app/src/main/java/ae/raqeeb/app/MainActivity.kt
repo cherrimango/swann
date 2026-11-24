@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 
-/** Hosts the RAQEEB resident app and asks once for the two permissions the native guard needs. */
+/** Hosts the MIRA resident app and asks once for the two permissions the native guard needs. */
 class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
 
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= 33) perms += Manifest.permission.POST_NOTIFICATIONS
         ActivityCompat.requestPermissions(this, perms.toTypedArray(), 1)
 
-        // Android 10+: let RAQEEB reject calls from confirmed scam numbers (the user approves this in a system dialog).
+        // Android 10+: let MIRA reject calls from confirmed scam numbers (the user approves this in a system dialog).
         if (Build.VERSION.SDK_INT >= 29) {
             val roles = getSystemService(RoleManager::class.java)
             if (roles.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) && !roles.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         if (!enabled) {
             AlertDialog.Builder(this)
                 .setTitle("Turn on scam scanning")
-                .setMessage("RAQEEB reads the text of new message notifications to spot scam links, and watches for UAE PASS approvals during calls. Nothing else is read, and only message text is checked.")
+                .setMessage("MIRA reads the text of new message notifications to spot scam links, and watches for UAE PASS approvals during calls. Nothing else is read, and only message text is checked.")
                 .setPositiveButton("Open settings") { _, _ -> startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
                 .setNeutralButton("Server address") { _, _ -> editServer() }
                 .setNegativeButton("Later", null)
@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     private fun editServer() {
         val input = EditText(this).apply { setText(Api.server(this@MainActivity)) }
         AlertDialog.Builder(this)
-            .setTitle("RAQEEB server")
+            .setTitle("MIRA server")
             .setView(input)
             .setPositiveButton("Save") { _, _ -> Api.setServer(this, input.text.toString()); load(null) }
             .show()

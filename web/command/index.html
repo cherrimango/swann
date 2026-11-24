@@ -3,35 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RAQEEB Command</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&family=Noto+Sans+Arabic:wght@400;600;700&display=swap">
+<title>MIRA Command · ميرا</title>
 <link rel="stylesheet" href="/static/shared/tokens.css">
 <link rel="stylesheet" href="/static/command/command.css">
 </head>
 <body class="signed-out">
+<div class="aurora" aria-hidden="true"></div>
 
 <!-- SIGN IN -->
 <section id="login" class="login">
   <form id="login-form" class="login-card">
-    <a class="mark" href="/"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></a>
-    <h1 class="login-title glass-h">COMMAND</h1>
-    <p class="login-sub">For authorised officials and analysts. Every action is recorded in the audit log.</p>
-    <label for="l-email">Email</label>
+    <a class="mark" href="/"><img class="mark-logo" src="/static/shared/mira-mark.png" alt="" width="201" height="211"><span class="mark-en">MIRA</span><span class="mark-ar" lang="ar">ميرا</span></a>
+    <div class="langs login-langs" role="group" aria-label="Language / اللغة"><button type="button" data-lang="en">English</button><button type="button" data-lang="ar">العربية</button></div>
+    <h1 class="login-title" data-t="loginTitle">Command</h1>
+    <p class="login-sub" data-t="loginSub">For authorised officials and analysts. Every action is recorded in the audit log.</p>
+    <label for="l-email" data-t="email">Email</label>
     <input id="l-email" type="email" autocomplete="username" required>
-    <label for="l-pass">Password</label>
+    <label for="l-pass" data-t="password">Password</label>
     <input id="l-pass" type="password" autocomplete="current-password" required>
     <p id="login-error" class="form-error" role="alert"></p>
-    <button class="primary" type="submit">Sign in</button>
+    <button class="primary" type="submit" data-t="signIn">Sign in</button>
     <p class="login-hint">First run? The accounts and passwords are in <code>data/first_run_credentials.txt</code> on the server.</p>
     <div id="demo-logins" class="demo-logins" hidden><p>Demo accounts (demonstration only)</p></div>
   </form>
 </section>
 
 <header class="top">
-  <button id="nav-toggle" class="ghost nav-toggle" aria-label="Show or hide navigation" aria-expanded="true">☰</button>
-  <a class="mark" href="/"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></a>
-  <span class="role">COMMAND</span>
+  <a class="mark" href="/"><img class="mark-logo" src="/static/shared/mira-mark.png" alt="" width="201" height="211"><span class="mark-en">MIRA</span><span class="mark-ar" lang="ar">ميرا</span></a>
+  <span class="role">Command</span>
+  <nav class="ws" aria-label="Workspaces">
+    <button data-ws="ops" class="on" data-t="wsOps">Operations</button>
+    <button data-ws="intel" data-t="wsIntel">Intelligence</button>
+    <button data-ws="inv" data-t="wsInv">Investigations</button>
+    <button data-ws="resp" data-t="wsResp">Response</button>
+    <button data-ws="sys" data-t="wsSys">System</button>
+  </nav>
   <span id="demo-flag" class="demo-flag" hidden>Demo mode</span>
   <dl class="counters" aria-label="Live totals">
     <div><dt>Review queue</dt><dd id="c-review">–</dd></div>
@@ -40,34 +46,40 @@
     <div><dt>Reports today</dt><dd id="c-rep">–</dd></div>
   </dl>
   <div class="top-actions">
+    <div class="langs" role="group" aria-label="Language / اللغة"><button data-lang="en">EN</button><button data-lang="ar">ع</button></div>
+    <button id="btn-full" class="ghost small" data-t="full" title="Full-screen workspace">Full screen</button>
     <span id="live" class="live off" role="status">Connecting</span>
     <button id="btn-phones" class="ghost">Connect phones</button>
     <div class="who"><b id="who-name"></b><span id="who-role"></span></div>
-    <button id="btn-logout" class="ghost">Sign out</button>
+    <button id="btn-logout" class="ghost" data-t="signOut">Sign out</button>
   </div>
 </header>
 
-<nav class="rail" aria-label="Sections">
-  <button data-view="overview" class="on">Overview</button>
-  <button data-view="feed" data-perm="view_investigations">Live Threat Intelligence</button>
-  <button data-view="domain">Domain Intelligence</button>
-  <button data-view="campaigns" data-perm="view_investigations">Scam Campaigns</button>
-  <button data-view="agents">AI Investigation</button>
-  <button data-view="reports" data-perm="view_investigations">Citizen Reports</button>
-  <button data-view="threats" data-perm="view_investigations">Threat Verification<b id="n-review" class="count" hidden></b></button>
-  <button data-view="forecast">Seasonal Intelligence</button>
-  <button data-view="community" data-perm="review_community">Guardians &amp; Community</button>
-  <button data-view="protection">Alerts &amp; Distribution</button>
-  <button data-view="briefing">Intelligence Reports</button>
-  <button data-view="users" data-perm="manage_registry">Administration</button>
-  <button data-view="audit" data-perm="view_audit">Audit Logs</button>
-  <button data-view="demo" id="nav-demo" hidden>Demo scenario</button>
+<nav class="rail" aria-label="Sections in this workspace">
+  <button data-ws="ops" data-view="overview" class="on" data-t="nOverview">Overview</button>
+  <button data-ws="ops" data-view="briefing" data-t="nBriefing">Intelligence reports</button>
+  <button data-ws="ops" data-view="demo" id="nav-demo" hidden data-t="nDemo">Demo scenario</button>
+  <button data-ws="intel" data-view="feed" data-perm="view_investigations" data-t="nFeed">Live threat intelligence</button>
+  <button data-ws="intel" data-view="discovery" data-t="nDiscovery">Threat discovery engine</button>
+  <button data-ws="intel" data-view="campaigns" data-perm="view_investigations" data-t="nCampaigns">Scam campaigns</button>
+  <button data-ws="intel" data-view="forecast" data-t="nForecast">Seasonal intelligence</button>
+  <button data-ws="inv" data-view="domain" data-t="nDomain">Link &amp; domain analysis</button>
+  <button data-ws="inv" data-view="threats" data-perm="view_investigations" data-t="nThreats">Threat verification<b id="n-review" class="count" hidden></b></button>
+  <button data-ws="inv" data-view="reports" data-perm="view_investigations" data-t="nReports">Citizen reports</button>
+  <button data-ws="inv" data-view="agents" data-t="nAgents">AI agents</button>
+  <button data-ws="inv" data-view="sandbox" data-perm="view_investigations" data-t="nSandbox">Sandbox configuration</button>
+  <button data-ws="resp" data-view="alerts" data-t="nAlerts">Citizen alerts</button>
+  <button data-ws="resp" data-view="protection" data-t="nProtection">Blocking &amp; distribution</button>
+  <button data-ws="resp" data-view="community" data-perm="review_community" data-t="nCommunity">Guardians &amp; community</button>
+  <button data-ws="sys" data-view="models" data-t="nModels">Models &amp; evaluation</button>
+  <button data-ws="sys" data-view="users" data-perm="manage_registry" data-t="nUsers">Administration</button>
+  <button data-ws="sys" data-view="audit" data-perm="view_audit" data-t="nAudit">Audit logs</button>
 </nav>
 
 <main>
   <!-- OVERVIEW -->
   <section id="v-overview" class="view on">
-    <div class="view-head"><div><h2 class="glass-h">Overview</h2><p class="sub" id="ov-sub">Live state of RAQEEB across the UAE.</p></div>
+    <div class="view-head"><div><h2 class="glass-h">Overview</h2><p class="sub" id="ov-sub">Live state of MIRA across the UAE.</p></div>
       <span class="live-pill" id="ov-season"></span></div>
     <dl id="ov-kpis" class="kpis"></dl>
     <div class="ov-grid">
@@ -100,7 +112,7 @@
   <!-- CITIZEN REPORTS -->
   <section id="v-reports" class="view">
     <h2>Citizen reports</h2>
-    <p class="sub">Reports from RAQEEB Protect, analysed on arrival. Open the linked threat to review it. Reporter identities are not shown here.</p>
+    <p class="sub">Reports from MIRA Protect, analysed on arrival. Open the linked threat to review it. Reporter identities are not shown here.</p>
     <div class="chips" id="r-filter"></div>
     <ol id="r-list" class="reports"></ol>
   </section>
@@ -207,7 +219,7 @@
   <!-- COMMUNITY -->
   <section id="v-community" class="view">
     <h2>Community</h2>
-    <p class="sub">RAQEEB Guardians. Points are paid only for verified reports and reversed for false positives. Accounts with unusual patterns are listed for review.</p>
+    <p class="sub">MIRA Guardians. Points are paid only for verified reports and reversed for false positives. Accounts with unusual patterns are listed for review.</p>
     <div class="ov-grid">
       <article class="panel"><h3>Accounts to review</h3><table class="table"><thead><tr><th>Guardian</th><th>Emirate</th><th>Reputation</th><th>Reports 24h</th><th>Rejected</th></tr></thead><tbody id="cm-abuse"></tbody></table></article>
       <article class="panel"><h3>This week’s leaderboard</h3><ol id="cm-board" class="board"></ol></article>
@@ -249,7 +261,7 @@
   <!-- DEMO SCENARIO -->
   <section id="v-demo" class="view">
     <div class="view-head"><div><h2 class="glass-h">Demo scenario: fake winter camping promotion</h2>
-      <p class="sub">Clearly labelled demonstration data. Step 1 is a simulated discovery; every later step runs RAQEEB’s real engine and workflow, and the checklist below is read from the database.</p></div>
+      <p class="sub">Clearly labelled demonstration data. Step 1 is a simulated discovery; every later step runs MIRA’s real engine and workflow, and the checklist below is read from the database.</p></div>
       <div class="actions-inline"><button id="demo-seed" class="primary" data-perm="approve_threat">Run steps 1–5</button><button id="demo-reset" class="ghost danger" data-perm="approve_threat">Remove demo data</button></div></div>
     <ol id="demo-steps" class="steps"></ol>
     <article class="panel" id="demo-kit"></article>
@@ -259,8 +271,8 @@
 <div id="phones" class="modal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="phones-title">
     <h2 id="phones-title">Connect a phone</h2>
-    <p>Scan with a phone on the same Wi-Fi to open RAQEEB Protect.</p>
-    <img id="qr" alt="QR code to open RAQEEB Protect" width="260" height="260">
+    <p>Scan with a phone on the same Wi-Fi to open MIRA Protect.</p>
+    <img id="qr" alt="QR code to open MIRA Protect" width="260" height="260">
     <p id="join-url" class="join-url"></p>
     <button class="primary" id="phones-close">Done</button>
   </div>
@@ -280,6 +292,8 @@
 </div>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
+<script src="/static/shared/lang.js"></script>
 <script src="/static/command/command.js"></script>
+<script src="/static/command/mira.js"></script>
 </body>
 </html>

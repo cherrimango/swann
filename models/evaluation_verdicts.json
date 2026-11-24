@@ -1,0 +1,88 @@
+{
+  "test_split": "domain-grouped held-out test split from train_mira.py (no registered domain seen in training)",
+  "n_per_class": 2500,
+  "threat_feeds": "off (see module docstring)",
+  "mode": "quick scan (link analysis only)",
+  "mira": {
+    "phishing": {
+      "MALICIOUS": 0.7192,
+      "SUSPICIOUS": 0.1424,
+      "INCONCLUSIVE": 0.1332,
+      "SAFE": 0.0052,
+      "n": 2500
+    },
+    "legitimate": {
+      "MALICIOUS": 0.0012,
+      "SUSPICIOUS": 0.022,
+      "INCONCLUSIVE": 0.7512,
+      "SAFE": 0.2256,
+      "n": 2500
+    },
+    "phishing_marked_safe": 0.0052,
+    "phishing_flagged_malicious_or_suspicious": 0.8616,
+    "legitimate_flagged_malicious_or_suspicious": 0.0232,
+    "legitimate_marked_safe": 0.2256,
+    "seconds": 42.3
+  },
+  "raqeeb_2_1": {
+    "phishing": {
+      "MALICIOUS": 0.4932,
+      "SUSPICIOUS": 0.2552,
+      "INCONCLUSIVE": 0.002,
+      "SAFE": 0.2496,
+      "n": 2500
+    },
+    "legitimate": {
+      "MALICIOUS": 0.0076,
+      "SUSPICIOUS": 0.1472,
+      "INCONCLUSIVE": 0.0,
+      "SAFE": 0.8452,
+      "n": 2500
+    },
+    "phishing_marked_safe": 0.2496,
+    "phishing_flagged_malicious_or_suspicious": 0.7484,
+    "legitimate_flagged_malicious_or_suspicious": 0.1548,
+    "legitimate_marked_safe": 0.8452,
+    "seconds": 40.6
+  },
+  "uae_eval_mira": {
+    "phishing": {
+      "MALICIOUS": 0.9811,
+      "SUSPICIOUS": 0.0189,
+      "INCONCLUSIVE": 0.0,
+      "SAFE": 0.0,
+      "n": 53
+    },
+    "legitimate": {
+      "MALICIOUS": 0.0,
+      "SUSPICIOUS": 0.05,
+      "INCONCLUSIVE": 0.2833,
+      "SAFE": 0.6667,
+      "n": 60
+    },
+    "phishing_marked_safe": 0.0,
+    "phishing_flagged_malicious_or_suspicious": 1.0,
+    "legitimate_flagged_malicious_or_suspicious": 0.05,
+    "legitimate_marked_safe": 0.6667
+  },
+  "uae_eval_raqeeb_2_1": {
+    "phishing": {
+      "MALICIOUS": 0.9811,
+      "SUSPICIOUS": 0.0189,
+      "INCONCLUSIVE": 0.0,
+      "SAFE": 0.0,
+      "n": 53
+    },
+    "legitimate": {
+      "MALICIOUS": 0.0,
+      "SUSPICIOUS": 0.0167,
+      "INCONCLUSIVE": 0.0167,
+      "SAFE": 0.9667,
+      "n": 60
+    },
+    "phishing_marked_safe": 0.0,
+    "phishing_flagged_malicious_or_suspicious": 1.0,
+    "legitimate_flagged_malicious_or_suspicious": 0.0167,
+    "legitimate_marked_safe": 0.9667
+  }
+}

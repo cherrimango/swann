@@ -32,7 +32,7 @@ class GuardActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
             setBackgroundColor(Color.parseColor("#9C3A14"))
             setPadding(pad, pad * 2, pad, pad)
-            addView(text("RAQEEB stopped an approval", 16f))
+            addView(text("MIRA stopped an approval", 16f))
             addView(text("Someone is trying to log in as you.", 34f, bold = true))
             addView(text("شخص ما يحاول تسجيل الدخول باسمك.", 28f, bold = true, rtl = true))
             addView(text("You’re on a call and an approval request just arrived. Real officials never ask you to approve a login. Hang up first.", 18f))

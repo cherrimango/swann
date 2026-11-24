@@ -3,46 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#071426">
-<title>RAQEEB · See the threat. Stop the scam. Protect everyone.</title>
+<meta name="theme-color" content="#06122B">
+<title>MIRA · ميرا</title>
 <link rel="icon" href="/static/app/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@500;700;900&family=Noto+Sans+Arabic:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="/static/shared/tokens.css">
 <link rel="stylesheet" href="/static/entry.css">
 </head>
 <body>
-<div class="flag-line" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"></div>
 <main class="entry">
   <header class="entry-head">
-    <span class="mark"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></span>
+    <span class="mark"><span class="mark-en">MIRA</span><span class="mark-ar" lang="ar">ميرا</span></span>
+    <div class="langs" role="group" aria-label="Language / اللغة"><button data-lang="en">English</button><button data-lang="ar">العربية</button></div>
   </header>
   <section class="hero">
-    <h1 class="glass-h">See the threat. Stop the scam. Protect everyone.</h1>
-    <p class="lede">One intelligence system for the UAE: it finds look-alike sites and scam campaigns, lets officials verify and approve them, and pushes signed protection to every citizen’s phone.</p>
-    <p class="lede-ar" lang="ar" dir="rtl">منظومة واحدة لاستخبارات الاحتيال في الإمارات: تكتشف المواقع المزيفة وحملات الاحتيال، ويتحقق منها المسؤولون ويعتمدونها، ثم تصل الحماية إلى هاتف كل مواطن.</p>
+    <div class="emblem" aria-hidden="true"><img src="/static/shared/mira-mark.png" alt="" width="201" height="211"><i class="sweep"></i></div>
+    <div class="hero-text">
+      <h1 data-t="h1">See the threat before it reaches people.</h1>
+      <p class="lede" data-t="lede">MIRA finds look-alike sites and scam campaigns across the UAE, lets authorised officials verify them, and sends approved warnings and protection to every citizen.</p>
+    </div>
   </section>
-  <section class="doors" aria-label="Choose an application">
+  <section class="doors" aria-label="Applications">
     <a class="door command" href="/command">
-      <span class="door-k">For officials and authorised analysts</span>
-      <span class="door-t">RAQEEB COMMAND</span>
-      <span class="door-d">Investigate threats, verify and approve them, follow campaigns, publish protection.</span>
-      <span class="door-go">Sign in to Command</span>
+      <span class="door-t">MIRA Command</span>
+      <span class="door-k" data-t="cmdK">For authorised officials and analysts</span>
+      <span class="door-d" data-t="cmdD">Investigate links and campaigns, review sandbox evidence, approve threats and publish citizen alerts.</span>
+      <span class="door-go" data-t="cmdGo">Sign in to Command</span>
     </a>
     <a class="door protect" href="/app">
-      <span class="door-k">For citizens and residents</span>
-      <span class="door-t">RAQEEB PROTECT</span>
-      <span class="door-d">Check links, messages, QR codes and numbers. Report scams. Get verified alerts.</span>
-      <span class="door-go">Open Protect</span>
+      <span class="door-t">MIRA Protect</span>
+      <span class="door-k" data-t="proK">For citizens and residents</span>
+      <span class="door-d" data-t="proD">Check links, messages, screenshots, QR codes and phone numbers. Report scams and follow your reports.</span>
+      <span class="door-go" data-t="proGo">Open Protect</span>
+    </a>
+    <a class="door pass" href="/signin">
+      <span class="door-t" data-t="passT">Sign-in prototype</span>
+      <span class="door-k" data-t="passK">Demonstration only</span>
+      <span class="door-d" data-t="passD">A simulated national-identity style sign-in and a security simulator that teaches people to spot fake login pages. It never asks for real credentials.</span>
+      <span class="door-go" data-t="passGo">Open the prototype</span>
     </a>
   </section>
   <section id="demo" class="demo" hidden aria-labelledby="demo-h">
-    <h2 id="demo-h">Hackathon demo accounts</h2>
-    <p class="demo-note">Demonstration-only credentials, active because this server runs in demo mode. Never reuse these passwords.</p>
+    <h2 id="demo-h" data-t="demoH">Demo accounts</h2>
+    <p class="demo-note" data-t="demoNote">Demonstration-only credentials, shown because this server runs in demo mode. Never reuse these passwords.</p>
     <ul id="demo-list"></ul>
   </section>
-  <footer class="foot">ScamShield AI Hackathon · Abu Dhabi Police × 42 Abu Dhabi</footer>
+  <footer class="foot" data-t="foot">ScamShield AI Hackathon — Abu Dhabi Police × 42 Abu Dhabi</footer>
 </main>
+<script src="/static/shared/lang.js"></script>
 <script src="/static/entry.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# RAQEEB: implementation status
+# MIRA: implementation status
 
 Updated 24 November 2026. Every "tested" claim below is covered by `pytest -q` (75 tests, all passing) or was checked by hand in a browser, as stated.
 
@@ -31,20 +31,20 @@ Updated 24 November 2026. Every "tested" claim below is covered by `pytest -q` (
 | **Domain intelligence** | RDAP, DNS (A, AAAA, MX, TXT, NS with dnspython), certificate details including SANs and fingerprint | Needs internet. Passive DNS is not integrated (it needs a licence) |
 | **Domain Hunter** | Look-alike permutations that resolve, crt.sh certificates, seasonal watchlists, replay of real feed URLs | Not scheduled continuously; hunts run when an analyst starts them |
 | **Screenshot OCR in reports** | Runs if `pytesseract` and the Tesseract binary are installed | Without them the screenshot is stored as evidence but not read |
-| **Translation service** | URLs, numbers, amounts, codes and dates are masked and restored exactly (tested) | Needs an OpenAI-compatible model (`RAQEEB_LLM_URL`); without one it says it is unavailable |
-| **Assistant wording** | Reviewed guidance plus live tool results, no model needed | Natural rephrasing only with `RAQEEB_LLM_URL` |
+| **Translation service** | URLs, numbers, amounts, codes and dates are masked and restored exactly (tested) | Needs an OpenAI-compatible model (`MIRA_LLM_URL`); without one it says it is unavailable |
+| **Assistant wording** | Reviewed guidance plus live tool results, no model needed | Natural rephrasing only with `MIRA_LLM_URL` |
 | **Database** | SQLite with versioned migrations and WAL; one connection per thread | Not PostgreSQL or Redis. Chosen so the demo runs with no setup; the schema is plain SQL and can be ported |
 | **Interactive UAE map** | Clickable emirate-level breakdown (reports, threats, categories, campaigns) | A schematic layout, not a geographic map |
 
 ## Demonstration-only
 - The **seeded winter-camping scenario**: step 1 is a simulated discovery. Its domains, phone number and messages are invented and marked as demo data. Steps 2–11 run the real engine and workflow.
-- The **demo accounts** (`*@raqeeb.demo`) exist only with `RAQEEB_DEMO=1`.
+- The **demo accounts** (`*@mira.demo`) exist only with `MIRA_DEMO=1`.
 - The **web UAE PASS guard** is a simulation. The real guard is the Android notification-listener code.
 - **Scam simulations** in the Knowledge Centre use the reserved `.example` domain.
 
 ## Needs external API credentials (adapters written, off by default)
 - Google Web Risk (`GOOGLE_WEB_RISK_API_KEY`), VirusTotal (`VIRUSTOTAL_API_KEY`) and URLhaus (`URLHAUS_AUTH_KEY`): deep-scan signature checks. Without a key they are listed as "not checked", never as clean.
-- An optional LLM (`RAQEEB_LLM_URL`) for briefings, assistant rephrasing and translation.
+- An optional LLM (`MIRA_LLM_URL`) for briefings, assistant rephrasing and translation.
 
 ## Needs native mobile permissions
 - Android (`android/`, **written but not compiled**, because no Android SDK was available):

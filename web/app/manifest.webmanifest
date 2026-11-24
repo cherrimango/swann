@@ -1,6 +1,6 @@
 {
-  "name": "RAQEEB Protect",
-  "short_name": "RAQEEB",
+  "name": "MIRA Protect",
+  "short_name": "MIRA",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
@@ -41,7 +41,7 @@
       "url": "/app#report"
     },
     {
-      "name": "Ask RAQEEB",
+      "name": "Ask MIRA",
       "short_name": "Ask",
       "url": "/app#ask"
     }

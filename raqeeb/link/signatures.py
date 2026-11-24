@@ -2,8 +2,8 @@
 the matching indicator, a timestamp, the source's own classification and a reference where one exists.
 
 Always available (offline):
-    raqeeb_published  - rules in RAQEEB's latest signed protection package (officially approved threats)
-    raqeeb_threats    - threat records analysts verified or approved in RAQEEB
+    raqeeb_published  - rules in MIRA's latest signed protection package (officially approved threats)
+    raqeeb_threats    - threat records analysts verified or approved in MIRA
     public_feeds      - snapshot of OpenPhish + Phishing.Database bundled in models/ (refresh with data/download.py)
 Optional, only when an API key is set in the environment (never invented when absent):
     google_web_risk   - GOOGLE_WEB_RISK_API_KEY
@@ -112,9 +112,19 @@ EXTERNAL = [("google_web_risk", "GOOGLE_WEB_RISK_API_KEY", _web_risk), ("virusto
             ("urlhaus", "URLHAUS_AUTH_KEY", _urlhaus)]
 
 
+def _discovery(v):
+    from ..discovery import SOURCES, lookup
+    r = lookup(v["normalised_url"])
+    if not r:
+        return []
+    return [{"source": "mira_discovery", "indicator": r["value"], "classification": "phishing (feed indicator, not yet analyst-verified)",
+             "reference": SOURCES.get(r["source"], {}).get("name", r["source"]), "timestamp": _iso(r["last_seen"]),
+             "first_seen": _iso(r["first_seen"]), "match_type": "exact URL", "reliability": "medium"}]
+
+
 def check(v: dict, external: bool = True) -> dict:
     checked, matches, errors, skipped = [], [], {}, []
-    for name, fn in (("raqeeb_published", _published), ("raqeeb_threats", _threats), ("public_feeds", _feeds)):
+    for name, fn in (("raqeeb_published", _published), ("raqeeb_threats", _threats), ("public_feeds", _feeds), ("mira_discovery", _discovery)):
         try:
             matches += fn(v)
             checked.append(name)

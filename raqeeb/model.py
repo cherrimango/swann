@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 
-from .features import FEATURE_NAMES, extract, text_for_ngrams
+from .features import FEATURE_NAMES, canonical, extract, text_for_ngrams
 from .urlparse import parse
 
 MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
@@ -54,9 +54,14 @@ class Model:
 
     def predict(self, urls):
         """Return probabilities and per-feature contributions (log-odds) for explanations."""
+        if self.meta.get("canonical"):
+            urls = [canonical(u) for u in urls]
         X, texts = featurise(urls, self.include_path)
         lr_p = self.lr.predict_proba(texts)[:, 1].astype(np.float32)
         Xf = np.column_stack([X, lr_p])
         prob = self.booster.predict(Xf)
+        if self.meta.get("calibration"):
+            c = self.meta["calibration"]
+            prob = np.interp(prob, c["x"], c["y"])
         contrib = self.booster.predict(Xf, pred_contrib=True)[:, :-1]
         return prob, contrib, Xf

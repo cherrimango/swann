@@ -1,6 +1,6 @@
-"""Rehearsal data for a live demo. Fills an empty RAQEEB instance through its own API, exactly as real users would:
+"""Rehearsal data for a live demo. Fills an empty MIRA instance through its own API, exactly as real users would:
 
-  * registers demo citizens (emails end in @raqeeb.demo, so they are easy to spot and delete),
+  * registers demo citizens (emails end in @mira.demo, so they are easy to spot and delete),
   * submits citizen reports built from REAL UAE-targeted scam URLs mined from public phishing feeds,
   * has demo citizens corroborate some of them, and an analyst verify and confirm a few.
 
@@ -53,14 +53,14 @@ def main():
 
     citizens = []
     for i in range(5):  # the server allows 5 sign-ups per address per hour
-        email = f"demo{i}@raqeeb.demo"
+        email = f"demo{i}@mira.demo"
         r = s.post(a.api + "/api/auth/register", json={"email": email, "password": "demo-password-1", "emirate": EMIRATES[i % 7],
                                                         "public_rank": i != 3}, timeout=30)
         if r.status_code == 400:  # already registered on an earlier run
             r = s.post(a.api + "/api/auth/login", json={"email": email, "password": "demo-password-1"}, timeout=30)
         r.raise_for_status()
         citizens.append(r.json()["token"])
-    admin = post("/api/auth/login", json={"email": "admin@raqeeb.local", "password": admin_password(a.admin_password)})["token"]
+    admin = post("/api/auth/login", json={"email": "admin@mira.local", "password": admin_password(a.admin_password)})["token"]
 
     rows = list(csv.DictReader((ROOT / "data" / "uae_scam_urls.csv").open(encoding="utf-8")))
     rnd.shuffle(rows)

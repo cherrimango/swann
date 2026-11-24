@@ -1,4 +1,4 @@
-"""RAQEEB 2.0 API: accounts, threat intelligence, citizen reporting, rewards and protection distribution."""
+"""MIRA 2.0 API: accounts, threat intelligence, citizen reporting, rewards and protection distribution."""
 import asyncio
 import json
 import re
@@ -122,7 +122,7 @@ def admin_patch(uid: int, body: UserPatch, user=Depends(require("manage_users"))
     return auth.get_user(uid)
 
 
-# ============ threat intelligence (RAQEEB Command) ============
+# ============ threat intelligence (MIRA Command) ============
 @router.get("/api/threats")
 def threats(q: str = "", status: str | None = None, category: str | None = None, user=Depends(require("view_investigations"))):
     return intel.search(q, status, category)
@@ -253,7 +253,7 @@ async def threat_evidence(tid: str, user=Depends(require("view_evidence"))):
 def threat_export(tid: str, user=Depends(require("view_evidence"))):
     """Takedown / case export: the full threat record with history, linked reports and findings, as JSON."""
     t = threat(tid, user)
-    t["exported_by"], t["export_note"] = user["email"], "Prepared by RAQEEB for review by authorised officers."
+    t["exported_by"], t["export_note"] = user["email"], "Prepared by MIRA for review by authorised officers."
     audit("export", user, {"id": tid})
     return Response(json.dumps(t, ensure_ascii=False, indent=2, default=str), media_type="application/json",
                     headers={"Content-Disposition": f'attachment; filename="{tid}.json"'})
@@ -318,7 +318,7 @@ def activity(user=Depends(require_official)):
     for r in rows(db().execute("""SELECT r.ref, r.type, r.emirate, r.created, r.threat_ids, u.email FROM citizen_reports r
                                   LEFT JOIN users u ON u.id = r.user_id ORDER BY r.created DESC LIMIT 25""")):
         n = len(json.loads(r["threat_ids"] or "[]"))
-        items.append({"kind": "report", "ts": r["created"], "demo": (r["email"] or "").endswith("@raqeeb.demo"),
+        items.append({"kind": "report", "ts": r["created"], "demo": (r["email"] or "").endswith("@mira.demo"),
                       "title": f"Citizen report {r['ref']} ({community.REPORT_TYPES.get(r['type'], r['type'])})",
                       "detail": f"{r['emirate'] or 'Emirate not given'} · linked to {n} indicator{'s' if n != 1 else ''}"})
     return sorted(items, key=lambda i: -i["ts"])[:40]
@@ -357,7 +357,7 @@ def findings(agent: str | None = None, user=Depends(require("view_investigations
 @router.get("/api/intel/agents")
 def agent_list(user=Depends(require_official)):
     counts = dict(db().execute("SELECT agent, COUNT(*) FROM findings GROUP BY agent").fetchall())
-    return [{"id": a, "findings": counts.get(a, 0)} for a in agents.AGENTS] + [{"llm_enabled": bool(agents.os.environ.get("RAQEEB_LLM_URL"))}]
+    return [{"id": a, "findings": counts.get(a, 0)} for a in agents.AGENTS] + [{"llm_enabled": bool(agents.os.environ.get("MIRA_LLM_URL"))}]
 
 
 @router.get("/api/intel/early-watch")
@@ -458,7 +458,7 @@ def protection_check(value: str, kind: str = "url", user=Depends(current_user)):
     return {"blocked": bool(hit), "rule": hit, "personal": personal}
 
 
-# ============ citizens: RAQEEB Protect ============
+# ============ citizens: MIRA Protect ============
 @router.post("/api/citizen/report", dependencies=[Depends(rate("report"))])
 async def citizen_report(request: Request, type: str = Form("auto"), text: str = Form(""), emirate: str | None = Form(None),
                          impact: str = Form("{}"), file: UploadFile | None = File(None), user=Depends(current_user)):
@@ -487,7 +487,7 @@ async def citizen_report(request: Request, type: str = Form("auto"), text: str =
     if r["risk"] and r["risk"] >= 50:
         for link in r["links"]:
             await hub.send("feed", {"url": link["url"], "risk": link["risk"], "verdict": link["verdict"], "brand": link["brand"] or "",
-                                    "source": "Citizen report (RAQEEB Protect)", "reason": r["explanation_en"][:160]})
+                                    "source": "Citizen report (MIRA Protect)", "reason": r["explanation_en"][:160]})
     return r
 
 
@@ -677,7 +677,7 @@ async def link_preview(url: str):
     out = {"url": url, "risk": first["risk_score"], "verdict": first["verdict"], "reasons": first["reasons"][:4],
            "brand": (first.get("impersonated_brand") or {}).get("name")}
     try:
-        resp, chain, text = await asyncio.to_thread(safe_get, url, {"User-Agent": "Mozilla/5.0 RAQEEB-preview"}, 6, 6)
+        resp, chain, text = await asyncio.to_thread(safe_get, url, {"User-Agent": "Mozilla/5.0 MIRA-preview"}, 6, 6)
         m = re.search(r"<title[^>]*>(.*?)</title>", text, re.I | re.S)
         out["final_url"], out["chain"], out["title"] = resp.url, chain, (m.group(1).strip()[:160] if m else None)
         if resp.url != url:
@@ -706,7 +706,7 @@ def assistant_ask(body: AskIn):
 
 @router.get("/api/public/check-phone", dependencies=[Depends(rate("check"))])
 def check_phone(number: str, user=Depends(current_user)):
-    """What RAQEEB knows about a number. One citizen report never makes a number 'malicious'."""
+    """What MIRA knows about a number. One citizen report never makes a number 'malicious'."""
     n = intel.normalize_phone(number)
     if not n:
         raise HTTPException(400, "That doesn’t look like a phone number")

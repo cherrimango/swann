@@ -11,7 +11,7 @@ import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 
 /**
- * Offline protection: downloads the signed RAQEEB protection package, verifies its Ed25519 signature, and keeps the
+ * Offline protection: downloads the signed MIRA protection package, verifies its Ed25519 signature, and keeps the
  * rules on the phone so scam sites and numbers are caught without a connection. Expired rules are ignored.
  *
  * The server's public key is pinned on first sync (or set at build time in BuildConfig.PROTECTION_KEY); a package

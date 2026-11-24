@@ -1,4 +1,4 @@
-"""URL normalisation and parsing shared by every RAQEEB component."""
+"""URL normalisation and parsing shared by every MIRA component."""
 import ipaddress
 import re
 from dataclasses import dataclass

@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:label="RAQEEB"
+        android:label="MIRA"
         android:icon="@android:drawable/ic_lock_lock"
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.Raqeeb"
@@ -20,7 +20,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- "Share" a message or link from SMS / WhatsApp straight into RAQEEB -->
+            <!-- "Share" a message or link from SMS / WhatsApp straight into MIRA -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -60,7 +60,7 @@
         <service
             android:name=".QuickAlertTile"
             android:exported="true"
-            android:label="RAQEEB Quick Alert"
+            android:label="MIRA Quick Alert"
             android:icon="@android:drawable/ic_dialog_alert"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>

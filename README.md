@@ -1,4 +1,4 @@
-# RAQEEB رقيب: See the threat. Stop the scam. Protect everyone.
+# MIRA ميرا: See the threat. Stop the scam. Protect everyone.
 
 ScamShield AI Hackathon · Abu Dhabi Police × 42 Abu Dhabi
 
@@ -8,14 +8,14 @@ UAE scams copy the services people trust most: UAE PASS, TAMM, police fines, Dar
 ## The solution
 One connected intelligence system with two applications:
 
-- **RAQEEB COMMAND** (`/command`) is for authorised officials. It covers:
+- **MIRA COMMAND** (`/command`) is for authorised officials. It covers:
   - a live intelligence overview with an emirate map;
   - Domain Intelligence, a full investigation workspace for any URL;
   - scam campaigns, AI investigation, the citizen report queue and threat verification;
   - seasonal intelligence, Guardians and community review;
   - alerts and signed distribution, intelligence briefings, administration with the official brand registry, and audit logs.
-- **RAQEEB PROTECT** (`/app`) is for citizens. It is a mobile-first PWA in English, Arabic and Urdu, with five tabs:
-  - **Home**: check a link, Quick Alert for scam calls, *Ask RAQEEB*, "I've been scammed" guidance, verified alerts and seasonal warnings;
+- **MIRA PROTECT** (`/app`) is for citizens. It is a mobile-first PWA in English, Arabic and Urdu, with five tabs:
+  - **Home**: check a link, Quick Alert for scam calls, *Ask MIRA*, "I've been scammed" guidance, verified alerts and seasonal warnings;
   - **Protect**: checkers for websites, payment links, QR codes, messages, phone numbers, adverts and apps; recent checks; Block for me; official website lookup; UAE PASS guard; family alerts;
   - **Report**: 11 report types, screenshots and status tracking;
   - **Community**: leaderboards, the public safety report, scam simulations and lessons;
@@ -32,23 +32,23 @@ Python 3.10+ (3.12 recommended; on a Mac also run `brew install libomp`).
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-RAQEEB_DEMO=1 uvicorn server.app:app --host 0.0.0.0 --port 8000
+MIRA_DEMO=1 uvicorn server.app:app --host 0.0.0.0 --port 8000
 ```
 - Open **http://localhost:8000/**. The entry screen lists the demo accounts.
 - In COMMAND, *Demo scenario → Run steps 1–5* seeds the winter-camping scenario. The checklist then guides the live steps 6–11.
-- To run without demo mode, drop `RAQEEB_DEMO=1`. The official accounts are then in `data/first_run_credentials.txt`.
+- To run without demo mode, drop `MIRA_DEMO=1`. The official accounts are then in `data/first_run_credentials.txt`.
 - Phones on the same Wi-Fi can open `http://<laptop-ip>:8000/app`; *Connect phones* in COMMAND shows a QR code.
 
 | Demo account (demo mode only, never reuse) | Password | App |
 |---|---|---|
-| admin@raqeeb.demo | RaqeebDemo2026! | COMMAND (Super Administrator) |
-| analyst@raqeeb.demo | AnalystDemo2026! | COMMAND (Cybercrime Analyst) |
-| citizen@raqeeb.demo | CitizenDemo2026! | PROTECT |
+| admin@mira.demo | MiraDemo2026! | COMMAND (Super Administrator) |
+| analyst@mira.demo | AnalystDemo2026! | COMMAND (Cybercrime Analyst) |
+| citizen@mira.demo | CitizenDemo2026! | PROTECT |
 
 **Optional extras**
 - `pip install playwright && python -m playwright install chromium` enables deep scans in a real browser.
 - `pip install pytesseract` plus the Tesseract binary (with English and Arabic) reads text from screenshots.
-- `RAQEEB_LLM_URL` points to an OpenAI-compatible model, for example a local Ollama. It is used for briefings, assistant wording and translation.
+- `MIRA_LLM_URL` points to an OpenAI-compatible model, for example a local Ollama. It is used for briefings, assistant wording and translation.
 - API keys in `.env` switch on Google Web Risk, VirusTotal and URLhaus. See `.env.example`.
 
 ### Score a list of URLs (hidden test set)
@@ -105,7 +105,7 @@ Full detail is in `docs/STATUS.md`. In short:
 - The browser sandbox isolates at application level; container egress isolation is a deployment step (`infrastructure/`, not built here).
 - SQLite is used instead of PostgreSQL and Redis.
 - Translation and natural assistant wording need an optional model.
-- The visible IP of a scam site is rarely the scammer's: RAQEEB packages evidence for registrars, hosts and banks, and never claims a location.
+- The visible IP of a scam site is rarely the scammer's: MIRA packages evidence for registrars, hosts and banks, and never claims a location.
 
 ## Credits
 - **Data:** OpenPhish community feed, Phishing.Database (mitchellkrogza), top-1M domain list.

@@ -70,6 +70,13 @@ def analyse(url: str, mode: str = "quick", scan_id: str | None = None) -> dict:
         for s in ("domain", "sandbox", "visual"):
             stages[s] = "not_run"
     r.update({"domain": domain, "sandbox": sandbox, "visual": visual})
+    chain = None
+    if deep:
+        from . import redirects as redirects_mod
+        sbx = sandbox or {}
+        chain = redirects_mod.analyse(sbx.get("redirect_chain") or [], v["normalised_url"], sbx.get("final_url"),
+                                      None if sbx.get("available") else (sbx.get("error") or sbx.get("browser_error")),
+                                      sbx.get("blocked_internal_requests"))
     agg = risk.aggregate(r)
 
     brand = core.get("impersonated_brand")
@@ -101,6 +108,10 @@ def analyse(url: str, mode: str = "quick", scan_id: str | None = None) -> dict:
         "evidence": agg["evidence"], "strongest_indicators": strongest,
         "explanation": {"en": en_why, "ar": ar_why},
         "recommended_action": {"en": ACTIONS[agg["verdict"]][0], "ar": ACTIONS[agg["verdict"]][1]},
+        "redirects": chain or {"available": False, "reason": "redirects are followed in deep scans"},
+        "analysis_status": ("completed" if all(stages.get(k) == "complete" for k in ("domain", "sandbox", "visual")) else
+                            "partial" if any(stages.get(k) in ("complete", "partial") for k in ("domain", "sandbox", "visual")) else
+                            "failed") if deep else "completed (quick scan: link analysis only)",
         "stages": stages, "limitations": limitations, "duration_seconds": round(time.time() - t0, 3),
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
     }

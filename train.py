@@ -1,4 +1,4 @@
-"""Train the RAQEEB URL model.
+"""Train the MIRA URL model.
 
 Data sources (see data/download.py):
   host mode (default): phishing URLs (OpenPhish + Phishing.Database) vs top legitimate domains.

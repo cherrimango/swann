@@ -1,7 +1,7 @@
-"""Hackathon demonstration mode (RAQEEB_DEMO=1): demo accounts and the seeded "fake winter camping promotion" scenario.
+"""Hackathon demonstration mode (MIRA_DEMO=1): demo accounts and the seeded "fake winter camping promotion" scenario.
 
 Everything created here is marked as demonstration data (threats.demo = 1, sources say "DEMO SEED", accounts end in
-@raqeeb.demo). The discovery in step 1 is simulated; every analysis after it is RAQEEB's real engine running on the
+@mira.demo). The discovery in step 1 is simulated; every analysis after it is MIRA's real engine running on the
 seeded indicators. Steps 6-11 are done live by the presenter in COMMAND and PROTECT; their progress is read from the
 database, not pretended.
 """
@@ -14,11 +14,11 @@ from .db import db, one, rows
 from .link import pipeline
 
 DEMO_ACCOUNTS = [  # demonstration-only credentials; never use them outside a demo
-    {"label": "Command administrator", "email": "admin@raqeeb.demo", "password": "RaqeebDemo2026!", "role": "super_admin",
+    {"label": "Command administrator", "email": "admin@mira.demo", "password": "MiraDemo2026!", "role": "super_admin",
      "name": "Demo Administrator", "app": "command"},
-    {"label": "Cybercrime analyst", "email": "analyst@raqeeb.demo", "password": "AnalystDemo2026!", "role": "cyber_analyst",
+    {"label": "Cybercrime analyst", "email": "analyst@mira.demo", "password": "AnalystDemo2026!", "role": "cyber_analyst",
      "name": "Demo Analyst", "app": "command"},
-    {"label": "Citizen", "email": "citizen@raqeeb.demo", "password": "CitizenDemo2026!", "role": "citizen",
+    {"label": "Citizen", "email": "citizen@mira.demo", "password": "CitizenDemo2026!", "role": "citizen",
      "name": "Demo Citizen", "app": "protect", "emirate": "Abu Dhabi"},
 ]
 SCENARIO = {
@@ -41,14 +41,14 @@ STEPS = [
     ("verify", "An analyst reviews the evidence and marks it Analyst verified"),
     ("approve", "An authorised official approves it (Officially approved)"),
     ("distribute", "Global block approved: a new signed protection version reaches every device"),
-    ("citizen_check", "A citizen pastes the payment link in RAQEEB PROTECT and is warned"),
+    ("citizen_check", "A citizen pastes the payment link in MIRA PROTECT and is warned"),
     ("community", "The citizen reports the related advert; the community agent links it to the campaign"),
     ("command_update", "COMMAND shows the new evidence, the points awarded and the campaign timeline"),
 ]
 
 
 def enabled() -> bool:
-    return os.environ.get("RAQEEB_DEMO", "").lower() in ("1", "true", "yes")
+    return os.environ.get("MIRA_DEMO", "").lower() in ("1", "true", "yes")
 
 
 def ensure_accounts():
@@ -109,7 +109,7 @@ def seed() -> dict:
     ensure_accounts()
     helpers = []
     for i in range(1, 3):
-        email = f"helper{i}@raqeeb.demo"
+        email = f"helper{i}@mira.demo"
         if not _user(email):
             auth.create_user(email, f"demo-helper-{i}-pass", "citizen", f"Demo Helper {i}", "Dubai" if i == 1 else "Sharjah", True)
         helpers.append(_user(email))
@@ -147,7 +147,7 @@ def status() -> dict:
         done["approve"] = any(h.get("to") == "confirmed_malicious" for h in t["history"])
         done["distribute"] = t["block_status"] == "global"
         done["citizen_check"] = bool(one(db().execute("SELECT value FROM metrics WHERE key='demo_citizen_check'")))
-        c1 = _user("citizen@raqeeb.demo")
+        c1 = _user("citizen@mira.demo")
         if c1:
             done["community"] = bool(one(db().execute("SELECT id FROM citizen_reports WHERE user_id=? AND raw_text LIKE '%desertcamp%'", (c1["id"],))))
             done["command_update"] = done["community"] and bool(one(db().execute(
@@ -163,7 +163,7 @@ def note_citizen_check(text: str):
 
 def reset():
     """Remove all demo-seeded records (threats, reports, findings, demo-account activity). Real data is untouched."""
-    demo_users = [r["id"] for r in rows(db().execute("SELECT id FROM users WHERE email LIKE '%@raqeeb.demo'"))]
+    demo_users = [r["id"] for r in rows(db().execute("SELECT id FROM users WHERE email LIKE '%@mira.demo'"))]
     ids = {r["id"] for r in rows(db().execute("SELECT id FROM threats WHERE demo=1"))}
     by_users: dict[str, set] = {}
     for r in rows(db().execute("SELECT user_id, threat_ids FROM citizen_reports WHERE threat_ids IS NOT NULL")):

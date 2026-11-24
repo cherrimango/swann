@@ -1,4 +1,4 @@
-"""Registry of the intelligence and data sources RAQEEB uses, with access terms and known limitations."""
+"""Registry of the intelligence and data sources MIRA uses, with access terms and known limitations."""
 import datetime as dt
 import os
 
@@ -25,7 +25,7 @@ def sources() -> list[dict]:
          "used_for": ["legitimate class for training", "popular-domain dampening"], "limitations": "popular does not mean safe; domains only, no paths"},
         {"name": "UAE scam URLs mined from the feeds", "access": "data/mine_uae_scams.py over the two phishing feeds", "terms": "derived from the feeds above",
          "collected": snap, "update_frequency": "on demand", "type": "real UAE-targeted phishing URLs (221)", "coverage": "UAE brands",
-         "used_for": ["replay hunts", "kit campaign analysis", "demo reports"], "limitations": "selected by RAQEEB's brand detector, so not an independent test set"},
+         "used_for": ["replay hunts", "kit campaign analysis", "demo reports"], "limitations": "selected by MIRA's brand detector, so not an independent test set"},
         {"name": "UAE official brand registry", "access": "raqeeb/brands.json plus administrator additions", "terms": "public websites of each organisation",
          "collected": "2026-11-24", "update_frequency": "manual, per organisation", "type": "official domains and brand keywords", "coverage": "UAE",
          "used_for": ["official-domain allowlist", "impersonation detection"], "limitations": "entries marked unverified must be confirmed with each entity"},
@@ -38,7 +38,7 @@ def sources() -> list[dict]:
         {"name": "crt.sh Certificate Transparency", "access": "public JSON API, during hunts", "terms": "Sectigo crt.sh terms", "collected": "live",
          "update_frequency": "live", "type": "newly issued TLS certificates", "coverage": "global",
          "used_for": ["new look-alike domain discovery"], "limitations": "slow and often overloaded; certificates are not proof of a scam"},
-        {"name": "Citizen reports (RAQEEB Protect)", "access": "in-app submissions", "terms": "user consent at submission", "collected": "live",
+        {"name": "Citizen reports (MIRA Protect)", "access": "in-app submissions", "terms": "user consent at submission", "collected": "live",
          "update_frequency": "live", "type": "untrusted reports with indicators and screenshots", "coverage": "UAE",
          "used_for": ["investigation leads", "corroboration"], "limitations": "untrusted until an analyst reviews them; never used to retrain models automatically"},
         {"name": "Google Web Risk", "access": "API (GOOGLE_WEB_RISK_API_KEY)", "terms": "Google Cloud terms", "collected": "live",

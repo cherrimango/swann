@@ -1,4 +1,4 @@
-"""RAQEEB Link Intelligence Engine API (v1): the standard, documented scan interface used by both apps."""
+"""MIRA Link Intelligence Engine API (v1): the standard, documented scan interface used by both apps."""
 import json
 import shutil
 import threading
@@ -136,7 +136,7 @@ async def organisation_add(body: OrgIn, user=Depends(require("manage_registry"))
     return o
 
 
-# ---------- hackathon demonstration mode (RAQEEB_DEMO=1) ----------
+# ---------- hackathon demonstration mode (MIRA_DEMO=1) ----------
 demo_router = APIRouter(tags=["Demo mode"])
 
 
@@ -150,7 +150,7 @@ def demo_info():
 def _demo_on():
     from raqeeb import demo_scenario
     if not demo_scenario.enabled():
-        raise HTTPException(404, "Demo mode is off (start the server with RAQEEB_DEMO=1)")
+        raise HTTPException(404, "Demo mode is off (start the server with MIRA_DEMO=1)")
     return demo_scenario
 
 

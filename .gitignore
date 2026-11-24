@@ -16,3 +16,4 @@ data/first_run_credentials.txt
 .env
 data/raqeeb.db-wal
 data/raqeeb.db-shm
+data/processed/

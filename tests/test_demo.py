@@ -7,7 +7,7 @@ from raqeeb.security import limiter
 
 @pytest.fixture()
 def c(monkeypatch):
-    monkeypatch.setenv("RAQEEB_DEMO", "1")
+    monkeypatch.setenv("MIRA_DEMO", "1")
     limiter.reset()
     from server.app import app
     with TestClient(app) as client:
@@ -20,7 +20,7 @@ def tok(c, email, pw):
 
 
 def test_demo_off_by_default(monkeypatch):
-    monkeypatch.delenv("RAQEEB_DEMO", raising=False)
+    monkeypatch.delenv("MIRA_DEMO", raising=False)
     from server.app import app
     with TestClient(app) as client:
         assert client.get("/api/public/demo").json() == {"enabled": False, "accounts": [], "note": "Demonstration-only accounts. Never reuse these passwords."}
@@ -29,9 +29,9 @@ def test_demo_off_by_default(monkeypatch):
 def test_winter_camping_scenario_end_to_end(c):
     from raqeeb.demo_scenario import SCENARIO
     accounts = c.get("/api/public/demo").json()["accounts"]
-    assert {a["email"] for a in accounts} == {"admin@raqeeb.demo", "analyst@raqeeb.demo", "citizen@raqeeb.demo"}
-    adm, ana = tok(c, "admin@raqeeb.demo", "RaqeebDemo2026!"), tok(c, "analyst@raqeeb.demo", "AnalystDemo2026!")
-    cit = tok(c, "citizen@raqeeb.demo", "CitizenDemo2026!")
+    assert {a["email"] for a in accounts} == {"admin@mira.demo", "analyst@mira.demo", "citizen@mira.demo"}
+    adm, ana = tok(c, "admin@mira.demo", "MiraDemo2026!"), tok(c, "analyst@mira.demo", "AnalystDemo2026!")
+    cit = tok(c, "citizen@mira.demo", "CitizenDemo2026!")
     assert c.post("/api/demo/seed", headers=ana).status_code == 403  # analysts can't run the seed (it creates records)
     st = c.post("/api/demo/seed", headers=adm).json()["status"]
     tid = st["threat_id"]

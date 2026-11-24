@@ -5,7 +5,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Talks to the RAQEEB server. Only message text the user received is sent, never contacts or call data. */
+/** Talks to the MIRA server. Only message text the user received is sent, never contacts or call data. */
 object Api {
     fun server(ctx: Context): String =
         ctx.getSharedPreferences("raqeeb", Context.MODE_PRIVATE).getString("server", BuildConfig.SERVER) ?: BuildConfig.SERVER

@@ -5,11 +5,11 @@ import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = Path(os.environ.get("RAQEEB_DB", ROOT / "data" / "raqeeb.db"))
+DB_PATH = Path(os.environ.get("MIRA_DB", ROOT / "data" / "raqeeb.db"))
 LOCK = threading.RLock()
 
 MIGRATIONS = [
-    # 1 — RAQEEB 1.0 schema (unchanged so existing databases keep working)
+    # 1 — MIRA 1.0 schema (unchanged so existing databases keep working)
     """
     CREATE TABLE IF NOT EXISTS feed (id INTEGER PRIMARY KEY, url TEXT UNIQUE, host TEXT, brand TEXT, risk REAL,
         verdict TEXT, source TEXT, reason TEXT, ts REAL);
@@ -18,7 +18,7 @@ MIGRATIONS = [
     CREATE TABLE IF NOT EXISTS blocklist (domain TEXT PRIMARY KEY, reason TEXT, brand TEXT, added_by TEXT, ts REAL);
     CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY, action TEXT, detail TEXT, ts REAL);
     """,
-    # 2 — RAQEEB 2.0: accounts, threat intelligence, community, rewards, protection distribution
+    # 2 — MIRA 2.0: accounts, threat intelligence, community, rewards, protection distribution
     """
     ALTER TABLE audit ADD COLUMN actor TEXT;
     CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT UNIQUE NOT NULL, pw_hash TEXT NOT NULL, role TEXT NOT NULL,
@@ -67,6 +67,26 @@ MIGRATIONS = [
         keywords TEXT, added_by TEXT, created REAL);
     ALTER TABLE threats ADD COLUMN demo INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE citizen_reports ADD COLUMN details TEXT;
+    """,
+    # 5 — MIRA: citizen-alert workflow, attachment analysis, threat discovery engine
+    """
+    CREATE TABLE citizen_alerts (id TEXT PRIMARY KEY, status TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1,
+        severity TEXT NOT NULL, category TEXT NOT NULL, audience TEXT NOT NULL, channels TEXT NOT NULL, content TEXT NOT NULL,
+        brands TEXT, threat_ids TEXT, expires REAL, ai_drafted INTEGER NOT NULL DEFAULT 0, demo INTEGER NOT NULL DEFAULT 0,
+        created_by TEXT, created REAL, reviewed_by TEXT, reviewed REAL, review_note TEXT, approved_by TEXT, approved REAL,
+        published_by TEXT, published REAL, withdrawn_by TEXT, withdrawn REAL);
+    CREATE TABLE citizen_alert_versions (alert_id TEXT, version INTEGER, content TEXT, edited_by TEXT, edited REAL,
+        PRIMARY KEY (alert_id, version));
+    CREATE TABLE alert_deliveries (id INTEGER PRIMARY KEY, alert_id TEXT, channel TEXT, status TEXT, recipients INTEGER,
+        detail TEXT, created REAL);
+    CREATE TABLE alert_engagement (alert_id TEXT, user_id INTEGER, action TEXT, created REAL, PRIMARY KEY (alert_id, user_id, action));
+    CREATE TABLE alert_subscriptions (user_id INTEGER, category TEXT, PRIMARY KEY (user_id, category));
+    CREATE TABLE attachments (id TEXT PRIMARY KEY, sha256 TEXT NOT NULL, kind TEXT, size INTEGER, report TEXT, user_id INTEGER, created REAL);
+    CREATE TABLE discovery_runs (id INTEGER PRIMARY KEY, source TEXT NOT NULL, started REAL, finished REAL, status TEXT,
+        collected INTEGER, new_indicators INTEGER, duplicates INTEGER, error TEXT);
+    CREATE TABLE indicators (value TEXT PRIMARY KEY, kind TEXT NOT NULL, source TEXT NOT NULL, first_seen REAL, last_seen REAL,
+        times_seen INTEGER NOT NULL DEFAULT 1, verified INTEGER NOT NULL DEFAULT 0, brand TEXT);
+    CREATE INDEX idx_indicators_last ON indicators(last_seen);
     """,
 ]
 

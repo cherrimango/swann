@@ -1,32 +1,37 @@
-body { background: radial-gradient(1100px 620px at 82% -10%, rgba(40, 120, 200, .28), transparent 60%),
-                   radial-gradient(900px 500px at -10% 110%, rgba(18, 59, 104, .6), transparent 60%), var(--navy-950);
-       color: #EAF2FB; min-height: 100vh; }
-.flag-line { height: 3px; background: var(--flag-line); }
-.entry { max-width: 1080px; margin: 0 auto; padding: 28px 28px 40px; display: flex; flex-direction: column; min-height: calc(100vh - 3px); }
-.hero { margin: 9vh 0 40px; max-width: 760px; }
-.hero h1 { font: 800 clamp(34px, 5.2vw, 58px)/1.06 var(--font-ui); letter-spacing: -1.2px; margin: 0 0 18px; }
-.lede { font-size: 18px; line-height: 1.6; color: #B9CBE0; margin: 0 0 10px; max-width: 62ch; }
-.lede-ar { font: 400 17px/1.8 var(--font-ar); color: #8FA6C1; margin: 0; max-width: 62ch; }
-.doors { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.door { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 26px 26px 24px; border-radius: var(--radius-l); text-decoration: none; color: inherit;
-        background: linear-gradient(160deg, rgba(18, 59, 104, .55), rgba(11, 31, 58, .7)); border: 1px solid rgba(117, 184, 234, .18);
-        backdrop-filter: blur(10px); transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease); overflow: hidden; }
-.door::before { content: ""; position: absolute; inset: 0 auto auto 0; height: 2px; width: 100%; background: var(--flag-line); opacity: 0; transition: opacity .25s var(--ease); }
-.door:hover, .door:focus-visible { transform: translateY(-3px); border-color: rgba(117, 184, 234, .5); box-shadow: 0 18px 40px rgba(0, 0, 0, .35); outline: none; }
-.door:hover::before, .door:focus-visible::before { opacity: 1; }
-.door-k { font-size: 13.5px; color: var(--blue-300); }
-.door-t { font: 900 26px/1.1 var(--font-tech); letter-spacing: 1.5px; }
-.door-d { color: #B9CBE0; line-height: 1.55; max-width: 44ch; }
-.door-go { margin-top: 14px; align-self: flex-start; padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 15px; }
-.command .door-go { background: var(--blue-500); color: #fff; }
-.protect .door-go { background: #fff; color: var(--navy-900); }
-.demo { margin-top: 28px; padding: 20px 22px; border-radius: var(--radius-m); border: 1px dashed rgba(242, 181, 68, .45); background: rgba(242, 181, 68, .06); }
+body { color: #EEF2FA; min-height: 100vh; }
+.entry { max-width: 1140px; margin: 0 auto; padding: 24px 28px 36px; display: flex; flex-direction: column; min-height: 100vh; }
+.entry-head { display: flex; justify-content: space-between; align-items: center; }
+.hero { display: grid; grid-template-columns: auto 1fr; gap: 44px; align-items: center; margin: 8vh 0 48px; }
+.emblem { position: relative; width: 190px; aspect-ratio: 201 / 211; }
+.emblem img { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 28px rgba(185, 200, 230, .25)); }
+/* the one moving element: a slow scan line passing over the eye */
+.sweep { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0 46%, rgba(230, 57, 70, .55) 50%, transparent 54% 100%);
+         mix-blend-mode: screen; -webkit-mask: url(/static/shared/mira-mark.png) center / contain no-repeat; mask: url(/static/shared/mira-mark.png) center / contain no-repeat;
+         background-size: 100% 260%; animation: sweep 5.5s cubic-bezier(.45, 0, .2, 1) infinite; }
+@keyframes sweep { 0% { background-position: 0 100%; } 60%, 100% { background-position: 0 0; } }
+.hero h1 { font: 700 clamp(32px, 4.6vw, 56px)/1.08 var(--font-ui); letter-spacing: -.8px; margin: 0 0 18px; max-width: 18ch; }
+[dir="rtl"] .hero h1 { letter-spacing: 0; line-height: 1.35; }
+.lede { font-size: 18px; line-height: 1.65; color: #B8C3DA; margin: 0; max-width: 60ch; }
+.doors { display: grid; grid-template-columns: 1.15fr 1.15fr .9fr; gap: 16px; }
+.door { display: flex; flex-direction: column; gap: 8px; padding: 24px; border-radius: var(--radius-l); text-decoration: none; color: inherit;
+        background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+        transition: border-color .2s var(--ease), background .2s var(--ease); }
+.door:hover, .door:focus-visible { border-color: var(--glass-line-strong); background: var(--glass-strong); outline: none; }
+.door-t { font: 700 24px/1.15 var(--font-ui); }
+.door-k { font-size: 14px; color: var(--blue-300); }
+.door-d { color: #B8C3DA; line-height: 1.6; max-width: 46ch; }
+.door-go { margin-top: auto; padding-top: 16px; font-weight: 600; font-size: 15px; }
+.command .door-go { color: #fff; }
+.command { border-top: 2px solid var(--red); }
+.protect { border-top: 2px solid var(--green); }
+.pass { border-top: 2px solid rgba(255, 255, 255, .5); }
+.demo { margin-top: 24px; padding: 18px 20px; border-radius: var(--radius-m); border: 1px dashed rgba(242, 181, 68, .45); background: rgba(242, 181, 68, .05); }
 .demo h2 { margin: 0 0 4px; font: 700 17px/1.3 var(--font-ui); }
-.demo-note { margin: 0 0 12px; color: #C9B68A; font-size: 14px; }
-.demo ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-.demo li { background: rgba(7, 20, 38, .6); border-radius: var(--radius-s); padding: 12px 14px; }
+.demo-note { margin: 0 0 12px; color: #CDBB90; font-size: 14px; }
+.demo ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.demo li { background: rgba(3, 10, 26, .55); border-radius: var(--radius-s); padding: 12px 14px; }
 .demo li b { display: block; margin-bottom: 4px; }
-.demo code { font: 500 13.5px/1.5 var(--font-tech); color: #DCEBFA; display: block; }
-.demo a { display: inline-block; margin-top: 8px; color: var(--blue-300); font-weight: 600; font-size: 14px; }
-.foot { margin-top: auto; padding-top: 40px; color: #6F86A3; font-size: 13px; }
-@media (max-width: 760px) { .doors { grid-template-columns: 1fr; } .hero { margin-top: 5vh; } }
+.demo code { font: 500 13.5px/1.5 var(--font-en); color: #E1E8F5; display: block; direction: ltr; text-align: start; }
+.demo a { display: inline-block; margin-top: 8px; color: #fff; font-weight: 600; font-size: 14px; }
+.foot { margin-top: auto; padding-top: 36px; color: #7F8FAE; font-size: 13px; }
+@media (max-width: 900px) { .doors { grid-template-columns: 1fr; } .hero { grid-template-columns: 1fr; gap: 24px; margin-top: 5vh; } .emblem { width: 130px; } }
