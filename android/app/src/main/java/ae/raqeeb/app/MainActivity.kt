@@ -3,6 +3,7 @@ package ae.raqeeb.app
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.role.RoleManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(web)
         load(intent)
         askPermissions()
+        Thread { Protection.sync(this, force = true) }.start()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -47,6 +49,15 @@ class MainActivity : AppCompatActivity() {
         val perms = mutableListOf(Manifest.permission.READ_PHONE_STATE)
         if (Build.VERSION.SDK_INT >= 33) perms += Manifest.permission.POST_NOTIFICATIONS
         ActivityCompat.requestPermissions(this, perms.toTypedArray(), 1)
+
+        // Android 10+: let RAQEEB reject calls from confirmed scam numbers (the user approves this in a system dialog).
+        if (Build.VERSION.SDK_INT >= 29) {
+            val roles = getSystemService(RoleManager::class.java)
+            if (roles.isRoleAvailable(RoleManager.ROLE_CALL_SCREENING) && !roles.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)) {
+                @Suppress("DEPRECATION")
+                startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), 2)
+            }
+        }
 
         val enabled = NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)
         if (!enabled) {

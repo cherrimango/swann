@@ -14,7 +14,7 @@ POINTS = {  # configurable: RAQEEB_POINTS='{"new_website": 20, ...}'
     "useful_evidence": 10, "campaign_connection": 30, "independent_confirmation": 10, "high_impact_campaign": 50,
     "learning": 5,
 }
-POINTS.update(json.loads(os.environ.get("RAQEEB_POINTS", "{}")))
+POINTS.update(json.loads(os.environ.get("RAQEEB_POINTS") or "{}"))
 
 LEVELS = [(0, "Observer"), (50, "Scout"), (150, "Defender"), (400, "Sentinel"), (900, "Guardian"),
           (2000, "Elite Guardian"), (5000, "RAQEEB Champion")]

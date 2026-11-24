@@ -172,7 +172,7 @@ LIMITS = {
     "check": (180, 60),
     "upload": (20, 600),
 }
-LIMITS.update({k: tuple(v) for k, v in json.loads(os.environ.get("RAQEEB_RATE_LIMITS", "{}")).items()})
+LIMITS.update({k: tuple(v) for k, v in json.loads(os.environ.get("RAQEEB_RATE_LIMITS") or "{}").items()})
 
 
 def ip_hash(ip: str) -> str:

@@ -101,14 +101,16 @@ def publish(actor: str, notes: str = "") -> dict:
                      (payload["version"], payload["created"], actor, json.dumps(rules), sig, notes[:300]))
         db().execute("INSERT INTO audit (action, detail, ts, actor) VALUES (?,?,?,?)",
                      ("protection_publish", json.dumps({"version": payload["version"], "rules": len(rules), "notes": notes}), time.time(), actor))
-    return {"payload": payload, "signature": sig}
+    return {"payload": payload, "signature": sig, "signed_payload": canonical(payload).decode()}
 
 
 def latest() -> dict:
     v = one(db().execute("SELECT * FROM protection_versions ORDER BY version DESC LIMIT 1"))
     if not v:
         return publish("system", "initial empty package")
-    return {"payload": {"version": v["version"], "created": v["created"], "rules": json.loads(v["rules"])}, "signature": v["signature"]}
+    payload = {"version": v["version"], "created": v["created"], "rules": json.loads(v["rules"])}
+    # signed_payload is the exact signed text, so clients in any language verify the same bytes before parsing them
+    return {"payload": payload, "signature": v["signature"], "signed_payload": canonical(payload).decode()}
 
 
 def versions(limit=30) -> list[dict]:

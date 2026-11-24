@@ -48,6 +48,10 @@ class RaqeebListener : NotificationListenerService() {
         }
     }
 
+    override fun onListenerConnected() {
+        pool.execute { Protection.sync(this, force = true) }
+    }
+
     private fun isApproval(pkg: String, text: String): Boolean {
         val low = text.lowercase()
         return pkg in approvalPackages || approvalCues.count { low.contains(it) } >= 2
@@ -64,6 +68,14 @@ class RaqeebListener : NotificationListenerService() {
     }
 
     private fun check(text: String) {
+        Protection.sync(this)
+        // 1. Published RAQEEB rules on the phone: works offline and needs no server round trip.
+        LINK.findAll(text).map { it.value }.firstNotNullOfOrNull { Protection.matchLink(this, it) }?.let { rule ->
+            alert("Blocked scam link", "This message links to ${rule.value}, a confirmed scam" +
+                (if (rule.brand.isNotEmpty()) " pretending to be ${rule.brand}" else "") + ". Don’t open it.")
+            return
+        }
+        // 2. Online analysis for links RAQEEB hasn't seen yet.
         val r = Api.checkMessage(this, text) ?: return
         val verdict = r.optString("verdict")
         if (verdict != "scam" && verdict != "suspicious") return

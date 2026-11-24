@@ -169,6 +169,7 @@ def test_signed_packages(c):
     pkg = c.get("/api/protection/latest").json()
     key = c.get("/api/protection/public-key").json()["public_key"]
     assert len(base64.b64decode(key)) == 32 and protection.verify(pkg, key)
+    assert json.loads(pkg["signed_payload"]) == pkg["payload"]
     pkg["payload"]["rules"].append({"type": "domain", "value": "google.com"})
     assert not protection.verify(pkg, key)
 

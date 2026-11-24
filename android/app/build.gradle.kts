@@ -10,10 +10,27 @@ android {
         applicationId = "ae.raqeeb.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1-hackathon"
+        versionCode = 2
+        versionName = "2.0"
         // Laptop running the RAQEEB server on the same Wi-Fi. Change before building, or edit in the app.
         buildConfigField("String", "SERVER", "\"http://192.168.1.10:8000\"")
+        // Optional: pin the protection-package public key (GET /api/protection/public-key). Empty = pin on first sync.
+        buildConfigField("String", "PROTECTION_KEY", "\"${project.findProperty("raqeebProtectionKey") ?: ""}\"")
+    }
+    // Release signing (APK and AAB): put these in ~/.gradle/gradle.properties, never in the repository.
+    signingConfigs {
+        create("release") {
+            (project.findProperty("raqeebKeystore") as String?)?.let { storeFile = file(it) }
+            storePassword = project.findProperty("raqeebKeystorePassword") as String?
+            keyAlias = project.findProperty("raqeebKeyAlias") as String?
+            keyPassword = project.findProperty("raqeebKeyPassword") as String?
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            if (project.hasProperty("raqeebKeystore")) signingConfig = signingConfigs.getByName("release")
+        }
     }
     buildFeatures { buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
