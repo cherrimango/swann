@@ -689,4 +689,8 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
   syncProtection(); loadAlerts(); loadBrands().catch(() => {});
   connect();
   if (shared) { $('#input').value = shared; check(shared); }
+  const want2 = location.hash.replace('#', '');  // home-screen shortcuts and the Android Quick Settings tile
+  if (want2 === 'quick') openSheet('quick');
+  else if (want2 === 'report') go('report');
+  else if (want2 === 'ask') $('#open-assistant').click();
 })();

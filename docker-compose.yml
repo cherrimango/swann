@@ -1,0 +1,20 @@
+# RAQEEB with Docker (not built in the hackathon environment; see README "Deployment").
+#   docker compose up --build        then open http://localhost:8000
+# The database, keys and evidence live in the named volume, never in the image.
+services:
+  raqeeb:
+    build: { context: ., dockerfile: infrastructure/Dockerfile }
+    ports: ["8000:8000"]
+    env_file: [.env]
+    environment:
+      RAQEEB_DB: /srv/raqeeb/data/raqeeb.db
+    volumes:
+      - raqeeb-data:/srv/raqeeb/data
+      - raqeeb-evidence:/srv/raqeeb/evidence
+    read_only: false
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 2g
+    cpus: 2
+volumes:
+  raqeeb-data:
+  raqeeb-evidence:

@@ -9,6 +9,7 @@ RAQEEB Protect runs in any phone browser at `/app` and can be installed as a PWA
 | Message scanning | `RaqeebListener.kt` reads the text of new SMS, WhatsApp and Telegram notifications once the user grants Notification access. It checks links against the local rules first (this works offline), then asks the server about unknown links. | 8+ |
 | UAE PASS guard | If a UAE PASS or bank approval notification arrives while a call is active, a full-screen stop opens. Only the call state is read, never numbers or audio. | 8+ |
 | Share to RAQEEB | Share any message or link into the app to check it or report it. | 8+ |
+| Quick Alert tile | `QuickAlertTile.kt` adds a Quick Settings tile. After a suspicious call, one tap opens the Quick Alert report. Nothing is read from the call; the user types what they know. | 7+ |
 
 ## Build
 1. Open the `android/` folder in Android Studio (Hedgehog or newer) and let Gradle sync.

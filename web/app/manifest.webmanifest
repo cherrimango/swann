@@ -8,12 +8,43 @@
   "theme_color": "#14243A",
   "lang": "en",
   "icons": [
-    {"src": "/static/app/icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "/static/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "/static/app/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ],
   "share_target": {
     "action": "/app",
     "method": "GET",
-    "params": {"title": "title", "text": "text", "url": "url"}
-  }
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Quick Alert: scam call",
+      "short_name": "Quick Alert",
+      "url": "/app#quick"
+    },
+    {
+      "name": "Report a scam",
+      "short_name": "Report",
+      "url": "/app#report"
+    },
+    {
+      "name": "Ask RAQEEB",
+      "short_name": "Ask",
+      "url": "/app#ask"
+    }
+  ],
+  "description": "Check links, messages, QR codes and numbers, report scams and get verified alerts."
 }

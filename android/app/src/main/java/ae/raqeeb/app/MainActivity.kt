@@ -41,8 +41,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun load(intent: Intent?) {
         val shared = intent?.takeIf { it.action == Intent.ACTION_SEND }?.getStringExtra(Intent.EXTRA_TEXT)
-        val url = "${Api.server(this)}/app" + (shared?.let { "?text=" + Uri.encode(it) } ?: "")
+        val section = intent?.getStringExtra(EXTRA_SECTION)?.takeIf { it in setOf("quick", "report", "ask") }
+        val url = "${Api.server(this)}/app" + (shared?.let { "?text=" + Uri.encode(it) } ?: "") + (section?.let { "#$it" } ?: "")
         web.loadUrl(url)
+    }
+
+    companion object {
+        const val EXTRA_SECTION = "ae.raqeeb.app.SECTION"
     }
 
     private fun askPermissions() {

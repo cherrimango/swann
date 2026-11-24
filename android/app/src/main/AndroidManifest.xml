@@ -55,5 +55,17 @@
                 <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
         </service>
+
+        <!-- Quick Settings tile: one tap after a scam call opens the Quick Alert report -->
+        <service
+            android:name=".QuickAlertTile"
+            android:exported="true"
+            android:label="RAQEEB Quick Alert"
+            android:icon="@android:drawable/ic_dialog_alert"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
