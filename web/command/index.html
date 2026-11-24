@@ -8,41 +8,111 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500..800&family=Readex+Pro:wght@300..600&display=swap">
 <link rel="stylesheet" href="/static/command/command.css">
 </head>
-<body>
+<body class="signed-out">
+
+<!-- SIGN IN -->
+<section id="login" class="login">
+  <form id="login-form" class="login-card">
+    <div class="brand"><span class="word">RAQEEB</span><span class="word-ar" lang="ar">رقيب</span></div>
+    <p class="login-sub">Command: for authorised officials only. Every action is recorded.</p>
+    <label for="l-email">Email</label>
+    <input id="l-email" type="email" autocomplete="username" required>
+    <label for="l-pass">Password</label>
+    <input id="l-pass" type="password" autocomplete="current-password" required>
+    <p id="login-error" class="form-error" role="alert"></p>
+    <button class="primary" type="submit">Sign in</button>
+    <p class="login-hint">First run? The accounts and passwords are in <code>data/first_run_credentials.txt</code> on the server.</p>
+  </form>
+</section>
+
 <header class="top">
+  <button id="nav-toggle" class="ghost nav-toggle" aria-label="Show or hide navigation" aria-expanded="true">☰</button>
   <div class="brand">
     <span class="word">RAQEEB</span><span class="word-ar" lang="ar">رقيب</span>
     <span class="role">Command</span>
   </div>
   <dl class="counters" aria-label="Live totals">
-    <div><dt>Scam sites tracked</dt><dd id="c-feed">–</dd></div>
-    <div><dt>Kit campaigns</dt><dd id="c-camp">–</dd></div>
-    <div><dt>Blocked on phones</dt><dd id="c-block">–</dd></div>
-    <div><dt>Resident reports</dt><dd id="c-rep">–</dd></div>
+    <div><dt>Review queue</dt><dd id="c-review">–</dd></div>
+    <div><dt>Awaiting block</dt><dd id="c-await">–</dd></div>
+    <div><dt>Blocked now</dt><dd id="c-block">–</dd></div>
+    <div><dt>Reports today</dt><dd id="c-rep">–</dd></div>
   </dl>
   <div class="top-actions">
     <span id="live" class="live off" role="status">Connecting</span>
     <button id="btn-phones" class="ghost">Connect phones</button>
+    <div class="who"><b id="who-name"></b><span id="who-role"></span></div>
+    <button id="btn-logout" class="ghost">Sign out</button>
   </div>
 </header>
 
 <nav class="rail" aria-label="Sections">
-  <button data-view="feed" class="on">Live feed</button>
+  <p class="rail-group">Operations</p>
+  <button data-view="overview" class="on">Overview</button>
+  <button data-view="threats" data-perm="view_investigations">Threats</button>
+  <button data-view="reports" data-perm="view_investigations">Citizen reports</button>
+  <button data-view="feed" data-perm="view_investigations">Hunt feed</button>
+  <button data-view="watch" data-perm="view_investigations">Early threat watch</button>
   <button data-view="scan">Check a link</button>
-  <button data-view="campaigns">Campaigns</button>
-  <button data-view="scamcast">ScamCast</button>
-  <button data-view="blocklist">Blocklist</button>
-  <button data-view="reports">Reports</button>
+  <p class="rail-group">Intelligence</p>
+  <button data-view="campaigns" data-perm="view_investigations">Campaigns</button>
+  <button data-view="forecast">Forecast</button>
+  <button data-view="briefing">Briefing</button>
+  <button data-view="agents">Agents</button>
+  <p class="rail-group">Protection</p>
+  <button data-view="protection">Distribution</button>
+  <button data-view="community" data-perm="review_community">Community</button>
+  <p class="rail-group">Administration</p>
+  <button data-view="audit" data-perm="view_audit">Audit log</button>
+  <button data-view="users" data-perm="manage_users">Users and roles</button>
 </nav>
 
 <main>
-  <!-- LIVE FEED -->
-  <section id="v-feed" class="view on">
+  <!-- OVERVIEW -->
+  <section id="v-overview" class="view on">
+    <h2>Overview</h2>
+    <p class="sub" id="ov-sub">Live state of RAQEEB across the UAE.</p>
+    <dl id="ov-kpis" class="kpis"></dl>
+    <div class="ov-grid">
+      <article class="panel"><h3>Reports and threats by emirate</h3><p class="note">Schematic map. Emirate-level counts only: RAQEEB never stores precise citizen locations.</p><div id="map" class="map"></div></article>
+      <article class="panel"><h3>Today’s briefing</h3><p id="ov-brief" class="brief"></p><ol id="ov-actions" class="actions-list"></ol></article>
+      <article class="panel"><h3>Status of all threats</h3><div id="ov-status" class="bars"></div></article>
+      <article class="panel"><h3>Most impersonated</h3><div id="ov-brands" class="bars"></div></article>
+    </div>
+  </section>
+
+  <!-- THREATS -->
+  <section id="v-threats" class="view">
+    <div class="split">
+      <div class="list-col">
+        <div class="filters">
+          <input id="t-search" type="search" placeholder="Search ID, domain, number or brand" aria-label="Search threats">
+          <select id="t-status" aria-label="Filter by status"><option value="">All statuses</option></select>
+        </div>
+        <div class="list-tools"><span id="t-count" class="meta"></span><button id="t-add" class="ghost small" data-perm="verify_threat">Add threat</button></div>
+        <ol id="t-list" class="feed" aria-label="Threats"></ol>
+      </div>
+      <div class="detail-col"><div id="t-detail" class="detail empty">
+        <p class="empty-title">Pick a threat</p>
+        <p class="empty-text">You’ll see the evidence, linked citizen reports, the review history and the decisions your role allows.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- CITIZEN REPORTS -->
+  <section id="v-reports" class="view">
+    <h2>Citizen reports</h2>
+    <p class="sub">Reports from RAQEEB Protect, analysed on arrival. Open the linked threat to review it. Reporter identities are not shown here.</p>
+    <div class="chips" id="r-filter"></div>
+    <ol id="r-list" class="reports"></ol>
+  </section>
+
+  <!-- HUNT FEED -->
+  <section id="v-feed" class="view">
     <div class="feed-col">
       <div class="hunt-bar">
         <p class="hint">Hunt now</p>
-        <div class="hunt-buttons">
-          <button data-hunt="scamcast">ScamCast watchlist</button>
+        <div class="hunt-buttons" data-perm="run_hunt">
+          <button data-hunt="scamcast">Forecast watchlist</button>
           <button data-hunt="permute">Look-alike domains</button>
           <button data-hunt="crtsh">New certificates</button>
           <button data-hunt="replay">Replay reported scams</button>
@@ -57,8 +127,15 @@
     </div>
     <div class="detail-col"><div id="detail" class="detail empty">
       <p class="empty-title">Pick a site from the feed</p>
-      <p class="empty-text">You’ll see the look-alike next to the real domain, why it was flagged, and the actions to block it or build a takedown pack.</p>
+      <p class="empty-text">You’ll see the look-alike next to the real domain, why it was flagged, and the actions your role allows.</p>
     </div></div>
+  </section>
+
+  <!-- EARLY WATCH -->
+  <section id="v-watch" class="view">
+    <h2>Early threat watch</h2>
+    <p class="sub">Look-alike domains the threat hunter found that nobody has reported yet. Promote one to open a threat record for review.</p>
+    <table class="table"><thead><tr><th>Domain</th><th>Risk</th><th>Brand</th><th>Found by</th><th>Why</th><th></th></tr></thead><tbody id="w-rows"></tbody></table>
   </section>
 
   <!-- CHECK A LINK -->
@@ -69,61 +146,117 @@
         <input id="scan-url" type="text" placeholder="Paste a link, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" required>
         <button type="submit" class="primary">Check link</button>
       </div>
-      <label class="check"><input id="scan-live" type="checkbox"> Run live checks (redirects, domain age, page content). Needs internet.</label>
+      <label class="check" data-perm="view_evidence"><input id="scan-live" type="checkbox"> Run live checks (redirects, domain age, page content). Needs internet.</label>
     </form>
     <div id="scan-result" class="detail"></div>
   </section>
 
   <!-- CAMPAIGNS -->
   <section id="v-campaigns" class="view">
+    <div class="chips" role="tablist">
+      <button id="g-threats" class="on">Linked threat records</button>
+      <button id="g-kits">Phishing kits in public feeds</button>
+    </div>
     <div class="camp-wrap">
       <div class="graph-box">
-        <canvas id="graph" aria-label="Campaign graph: domains linked to the phishing kits and brands they share"></canvas>
-        <div class="legend">
-          <span><i class="dot kit"></i>Phishing kit</span>
-          <span><i class="dot brand"></i>UAE brand</span>
-          <span><i class="dot domain"></i>Scam domain</span>
-        </div>
+        <canvas id="graph" aria-label="Campaign graph"></canvas>
+        <div class="legend" id="legend"></div>
       </div>
       <div class="camp-list">
-        <h2>Kits reused across domains</h2>
-        <p class="sub">Scammers change domains every day but reuse the same kit. Same file names and folders = same operation.</p>
+        <h2 id="camp-title">Campaigns</h2>
+        <p class="sub" id="camp-sub"></p>
         <ol id="camp-list"></ol>
       </div>
     </div>
   </section>
 
-  <!-- SCAMCAST -->
-  <section id="v-scamcast" class="view">
-    <h2>ScamCast</h2>
-    <p class="sub">Scams follow the calendar. These seasons are active now, so RAQEEB is already watching for the domains scammers are likely to register.</p>
+  <!-- FORECAST -->
+  <section id="v-forecast" class="view">
+    <h2>Forecast</h2>
+    <p class="sub">Four kinds of information, kept apart on purpose. Only the first column is confirmed.</p>
+    <div class="evidence-cols" id="fc-cols"></div>
+    <h3 class="section-h">Domain-name watchlists for active seasons</h3>
     <div id="seasons" class="seasons"></div>
   </section>
 
-  <!-- BLOCKLIST -->
-  <section id="v-blocklist" class="view">
-    <h2>Blocked on every RAQEEB phone</h2>
-    <p class="sub">Each entry is pushed to phones instantly and served to the DNS shield as <a href="/api/blocklist.txt" target="_blank">blocklist.txt</a>.</p>
-    <table class="table"><thead><tr><th>Domain</th><th>Brand</th><th>Reason</th><th>Added</th><th></th></tr></thead><tbody id="block-rows"></tbody></table>
+  <!-- BRIEFING -->
+  <section id="v-briefing" class="view">
+    <div class="row-between"><h2>Intelligence briefing</h2>
+      <div class="chips" id="b-period"><button data-p="day" class="on">Daily</button><button data-p="week">Weekly</button><button data-p="month">Monthly</button><button id="b-print" class="ghost small">Print</button></div></div>
+    <article class="panel briefing" id="b-body"></article>
   </section>
 
-  <!-- REPORTS -->
-  <section id="v-reports" class="view">
-    <h2>Reports from residents</h2>
-    <p class="sub">Messages and links residents sent from the RAQEEB app, checked on arrival.</p>
-    <div id="emirates" class="emirates"></div>
-    <ol id="report-rows" class="reports"></ol>
+  <!-- AGENTS -->
+  <section id="v-agents" class="view">
+    <h2>Intelligence agents</h2>
+    <p class="sub">Ten specialised agents. Each finding records its evidence, confidence, reasoning, source and next action. Agents recommend; only authorised people decide.</p>
+    <div id="a-list" class="agents"></div>
+    <h3 class="section-h">Latest findings</h3>
+    <table class="table"><thead><tr><th>Agent</th><th>Subject</th><th>Confidence</th><th>Reasoning</th><th>Next action</th><th>When</th></tr></thead><tbody id="a-rows"></tbody></table>
+  </section>
+
+  <!-- PROTECTION -->
+  <section id="v-protection" class="view">
+    <h2>Protection distribution</h2>
+    <p class="sub">Every change is a new signed version. Phones and the DNS shield verify the signature before applying it, cache it for offline use, and drop rules when they expire.</p>
+    <dl class="kpis" id="p-kpis"></dl>
+    <div class="row-between"><h3 class="section-h">Rules in the current version</h3><div class="actions-inline"><a class="ghost small" href="/api/blocklist.txt" target="_blank">DNS blocklist</a><a class="ghost small" href="/api/protection/latest" target="_blank">Signed package</a><button id="p-rollback" class="ghost small danger" data-perm="rollback">Emergency rollback</button></div></div>
+    <table class="table"><thead><tr><th>Rule</th><th>Value</th><th>Threat</th><th>Brand</th><th>Expires</th></tr></thead><tbody id="p-rules"></tbody></table>
+    <h3 class="section-h">Version history</h3>
+    <table class="table"><thead><tr><th>Version</th><th>Published</th><th>By</th><th>Rules</th><th>Change</th></tr></thead><tbody id="p-versions"></tbody></table>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="v-community" class="view">
+    <h2>Community</h2>
+    <p class="sub">RAQEEB Guardians. Points are paid only for verified reports and reversed for false positives. Accounts with unusual patterns are listed for review.</p>
+    <div class="ov-grid">
+      <article class="panel"><h3>Accounts to review</h3><table class="table"><thead><tr><th>Guardian</th><th>Emirate</th><th>Reputation</th><th>Reports 24h</th><th>Rejected</th></tr></thead><tbody id="cm-abuse"></tbody></table></article>
+      <article class="panel"><h3>This week’s leaderboard</h3><ol id="cm-board" class="board"></ol></article>
+    </div>
+  </section>
+
+  <!-- AUDIT -->
+  <section id="v-audit" class="view">
+    <h2>Audit log</h2>
+    <p class="sub">Sign-ins, decisions, blocks, exports and rollbacks. Read-only.</p>
+    <table class="table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody id="au-rows"></tbody></table>
+  </section>
+
+  <!-- USERS -->
+  <section id="v-users" class="view">
+    <h2>Users and roles</h2>
+    <form id="u-form" class="inline-form">
+      <input id="u-email" type="email" placeholder="Email" required aria-label="Email">
+      <input id="u-pass" type="password" placeholder="Temporary password (8+ characters)" minlength="8" required aria-label="Temporary password">
+      <select id="u-role" aria-label="Role"></select>
+      <button class="primary" type="submit">Add account</button>
+    </form>
+    <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="u-rows"></tbody></table>
   </section>
 </main>
 
 <div id="phones" class="modal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="phones-title">
     <h2 id="phones-title">Connect a phone</h2>
-    <p>Scan with a phone on the same Wi-Fi to open the RAQEEB app. Every block you push reaches it instantly.</p>
-    <img id="qr" alt="QR code to open the RAQEEB app" width="260" height="260">
+    <p>Scan with a phone on the same Wi-Fi to open RAQEEB Protect.</p>
+    <img id="qr" alt="QR code to open RAQEEB Protect" width="260" height="260">
     <p id="join-url" class="join-url"></p>
     <button class="primary" id="phones-close">Done</button>
   </div>
+</div>
+
+<div id="add-threat" class="modal" hidden>
+  <form class="modal-card left" id="add-form" role="dialog" aria-modal="true" aria-labelledby="add-title">
+    <h2 id="add-title">Add a threat</h2>
+    <label for="add-type">Type</label>
+    <select id="add-type"><option value="url">Website or link</option><option value="phone">Phone number</option><option value="email">Email address</option><option value="text">Message text</option></select>
+    <label for="add-value">Indicator</label>
+    <input id="add-value" required>
+    <label for="add-note">Note</label>
+    <input id="add-note">
+    <div class="actions"><button class="primary" type="submit">Add for review</button><button class="ghost" type="button" id="add-cancel">Cancel</button></div>
+  </form>
 </div>
 
 <div id="toasts" class="toasts" aria-live="polite"></div>

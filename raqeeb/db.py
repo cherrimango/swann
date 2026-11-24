@@ -67,6 +67,7 @@ def _connect() -> sqlite3.Connection:
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA journal_mode=WAL")
     c.execute("PRAGMA foreign_keys=ON")
+    c.execute("PRAGMA busy_timeout=10000")
     return c
 
 
@@ -95,25 +96,32 @@ def migrate(c: sqlite3.Connection) -> int:
     return len(MIGRATIONS)
 
 
-_conn = None
+_local = threading.local()
+_generation = 0
+_migrated = -1
 
 
 def db() -> sqlite3.Connection:
-    global _conn
+    """One connection per thread (the server runs handlers on a thread pool); SQLite WAL handles the concurrency."""
+    global _migrated
+    conn = getattr(_local, "conn", None)
+    if conn is not None and getattr(_local, "gen", None) == _generation:
+        return conn
+    conn = _connect()
     with LOCK:
-        if _conn is None:
-            _conn = _connect()
-            migrate(_conn)
-        return _conn
+        if _migrated != _generation:
+            migrate(conn)
+            _migrated = _generation
+    _local.conn, _local.gen = conn, _generation
+    return conn
 
 
 def reset_for_tests(path: Path):
     """Point the module at a fresh database file (tests only)."""
-    global _conn, DB_PATH
+    global _generation, DB_PATH
     with LOCK:
-        if _conn is not None:
-            _conn.close()
-        _conn, DB_PATH = None, Path(path)
+        _generation += 1
+        DB_PATH = Path(path)
 
 
 def rows(cur) -> list[dict]:
