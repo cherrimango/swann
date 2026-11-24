@@ -130,8 +130,47 @@ def seed() -> dict:
     t = _main_threat()
     camp = next((c for c in g["campaigns"] if t["id"] in c["threats"]), None)
     log.append(f"Campaign {camp['id'] if camp else '-'}: {len(camp['threats']) if camp else 0} linked indicators")
+    log += _seed_mira_samples()
     db().execute("INSERT INTO audit (action, detail, ts, actor) VALUES (?,?,?,?)", ("demo_seed", json.dumps(log), time.time(), "demo-seed"))
     return {"log": log, "status": status()}
+
+
+DEMO_SCAN_ID = "SCAN-DEMO-REDIRECT1"
+
+
+def _seed_mira_samples() -> list[str]:
+    """Synthetic, clearly labelled samples for the MIRA screens that need a live network to fill on their own:
+    a deep-scan report with a redirect chain, and citizen alerts at two workflow stages."""
+    from . import alerts
+    from .link import pipeline, redirects
+    out = []
+    if not pipeline.get(DEMO_SCAN_ID):
+        rep = pipeline.analyse("https://bit.ly/demo-camp-permit", "quick", DEMO_SCAN_ID)
+        chain = [{"status": 301, "url": "https://bit.ly/demo-camp-permit"},
+                 {"status": 302, "url": "https://go.trk-redirect.example/c?id=771"},
+                 {"status": 200, "url": "https://" + SCENARIO["domain"] + "/pay"}]
+        rep.update(mode="deep", demo=True, final_url=chain[-1]["url"], analysis_status="partial (synthetic demo sample)",
+                   redirects=redirects.analyse(chain, rep["submitted_url"], chain[-1]["url"]),
+                   website_analysis={"available": True, "mode": "SYNTHETIC DEMO SAMPLE (not a real visit)", "final_url": chain[-1]["url"],
+                                     "http_status": 200, "redirect_chain": chain, "page_title": "Camping permit payment (demo)",
+                                     "password_fields": 0, "payment_fields": True, "forms": [], "screenshot": False})
+        rep["limitations"] = ["SYNTHETIC DEMO SAMPLE: the redirect chain and page details were written for the demonstration, "
+                              "not collected from the internet. Run a real deep scan to see live evidence."] + rep["limitations"]
+        pipeline.save(rep, None)
+        out.append(f"Synthetic deep-scan sample {DEMO_SCAN_ID} with a {len(chain) - 1}-hop redirect chain")
+    if not one(db().execute("SELECT id FROM citizen_alerts WHERE demo = 1")):
+        analyst, admin = _user("analyst@mira.demo"), _user("admin@mira.demo")
+        d = alerts.ai_draft("seasonal", ["TAMM"], ["Asks for a 'camping permit fee' by card"])
+        a = alerts.create({"category": "seasonal", "severity": "high", "content": d["content"], "brands": ["TAMM"],
+                           "audience": {"kind": "all"}, "channels": ["in_app", "sms"], "expires_in_days": 30}, analyst, True, demo=True)
+        alerts.submit(a["id"], analyst)
+        out.append(f"Demo citizen alert {a['id']} waiting for review (AI-assisted draft)")
+        b = alerts.create({"category": "fake_government", "severity": "medium", "content": alerts.ai_draft("fake_government", ["Abu Dhabi Police"])["content"],
+                           "audience": {"kind": "all"}, "channels": ["in_app"], "expires_in_days": 30}, analyst, True, demo=True)
+        alerts.submit(b["id"], analyst)
+        alerts.review(b["id"], admin, True, "Demo review")
+        out.append(f"Demo citizen alert {b['id']} reviewed and waiting for approval")
+    return out
 
 
 def status() -> dict:
@@ -183,6 +222,11 @@ def reset():
     db().execute("DELETE FROM findings WHERE source LIKE 'DEMO SEED%'")
     db().execute("DELETE FROM feed WHERE source LIKE 'DEMO SEED%'")
     db().execute("DELETE FROM metrics WHERE key='demo_citizen_check'")
+    db().execute("DELETE FROM scans WHERE id LIKE 'SCAN-DEMO-%'")
+    for r in rows(db().execute("SELECT id FROM citizen_alerts WHERE demo = 1")):
+        for t in ("alert_deliveries", "alert_engagement", "citizen_alert_versions"):
+            db().execute(f"DELETE FROM {t} WHERE alert_id = ?", (r["id"],))
+    db().execute("DELETE FROM citizen_alerts WHERE demo = 1")
     from . import protection
     protection.publish("demo-seed", "Demo data reset")
     return {"removed_threats": len(ids)}

@@ -117,6 +117,19 @@ def login(email: str, password: str, ip: str = "") -> tuple[str, dict]:
     return token, get_user(u["id"])
 
 
+def issue_session(uid: int, ip: str = "") -> tuple[str, dict]:
+    """Create a session for an already-authenticated user (used by the demo sign-in prototype after its simulated
+    approval). Only the SHA-256 of the token is stored."""
+    u = get_user(uid)
+    if not u or u["disabled"]:
+        raise AuthError("Account unavailable")
+    token = secrets.token_urlsafe(32)
+    ttl = SESSION_TTL["official" if u["role"] in OFFICIAL_ROLES else "citizen"]
+    db().execute("INSERT INTO sessions (token_hash, user_id, created, expires, ip) VALUES (?,?,?,?,?)",
+                 (_th(token), uid, time.time(), time.time() + ttl, ip))
+    return token, u
+
+
 def logout(token: str):
     db().execute("DELETE FROM sessions WHERE token_hash = ?", (_th(token),))
 

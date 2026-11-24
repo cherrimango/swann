@@ -82,7 +82,7 @@ function applyLang() {
   $$('[data-i]').forEach(el => { const v = t(el.dataset.i); if (typeof v === 'string') el.textContent = v; });
   $$('[data-ph]').forEach(el => { el.placeholder = t(el.dataset.ph); });
   $$('.langs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
-  fillEmirates(); renderTypes(); renderShield(); renderAlerts(); renderRecent(); renderActivity(); renderCheckerTabs(); renderChecker();
+  fillEmirates(); renderTypes(); renderShield(); renderAlerts(); renderOfficial(); renderRecent(); renderActivity(); renderCheckerTabs(); renderChecker();
   if (BRANDS) renderBrands();
   syncAuthForm(); renderSuggest(); renderQuickKinds(); renderHello();
   for (const fn of [loadSeason, loadMyReports, loadBlocks, loadFamily, loadCommunity, loadProfile, loadEmergency]) fn().catch(() => {});
@@ -266,6 +266,33 @@ function renderAlerts() {
   $('#alerts').replaceChildren(...(ALERTS.length ? ALERTS.slice(0, 3).map(alertItem) : [empty()]));
   $('#alerts-full').replaceChildren(...(ALERTS.length ? ALERTS.map(alertItem) : [empty()]));
 }
+/* official citizen alerts published from MIRA Command (approved by an administrator) */
+let OFFICIAL = [];
+async function loadOfficial() {
+  try { OFFICIAL = (await api('/api/v1/notifications')).alerts || []; } catch { OFFICIAL = []; }
+  renderOfficial();
+}
+function renderOfficial() {
+  const box = $('#official-alerts');
+  if (!box) return;
+  box.hidden = !OFFICIAL.length;
+  box.replaceChildren(...OFFICIAL.slice(0, 3).map(a => {
+    const c = a.content[lang === 'ar' ? 'ar' : 'en'] || a.content.en;
+    const list = (title, items) => items?.length ? h('div', {}, h('b', {}, title), h('ul', {}, items.map(x => h('li', {}, x)))) : null;
+    const ack = h('button', { class: 'soft', ...(a.acknowledged ? { disabled: '' } : {}), onclick: async () => {
+      if (!TOKEN) { go('me'); return; }
+      try { await api(`/api/v1/notifications/${a.id}/engage`, { body: { action: 'acknowledged' } }); a.acknowledged = true; renderOfficial(); } catch (e) { banner('', e.message); }
+    } }, a.acknowledged ? t('alertAcked') : t('alertAck'));
+    const det = h('details', { class: 'oa-more', ontoggle: e => { if (e.target.open && TOKEN) api(`/api/v1/notifications/${a.id}/engage`, { body: { action: 'opened' } }).catch(() => {}); } },
+      h('summary', {}, c.title), h('p', {}, c.description), list(t('signs'), c.warning_signs), list(t('whatToDo'), c.what_to_do), list(t('neverShare'), c.never_share),
+      list('', c.official_resources));
+    return h('article', { class: `oa sev-${a.severity}` }, h('p', { class: 'oa-k' }, `${t('officialAlert')} · ${sevLabel(a.severity)}${a.demo ? ' · DEMO' : ''}`), det,
+      h('div', { class: 'two' }, ack, h('button', { class: 'soft', onclick: () => {
+        if (TOKEN) api(`/api/v1/notifications/${a.id}/engage`, { body: { action: 'reported_related' } }).catch(() => {});
+        $('#r-text').value = ''; go('report');
+      } }, t('alertReport'))));
+  }));
+}
 async function loadSeason() {
   const f = await api('/api/public/forecast');
   const items = f.predicted.filter(p => p.basis === 'seasonal pattern').slice(0, 3);
@@ -286,15 +313,60 @@ function renderActivity() {
 }
 
 /* ---------------- Protect: checkers ---------------- */
-const CHECKERS = ['website', 'payment', 'qr', 'message', 'phone', 'ad', 'app'];
-const CK_KEYS = { website: 'Website', payment: 'Payment', qr: 'Qr', message: 'Message', phone: 'Phone', ad: 'Ad', app: 'App' };
+const CHECKERS = ['website', 'image', 'payment', 'qr', 'message', 'phone', 'ad', 'app'];
+const CK_KEYS = { image: 'Image', website: 'Website', payment: 'Payment', qr: 'Qr', message: 'Message', phone: 'Phone', ad: 'Ad', app: 'App' };
 let ckType = 'website';
 function renderCheckerTabs() {
   $('#checker-tabs').replaceChildren(...CHECKERS.map(k => h('button', { role: 'tab', 'aria-selected': String(k === ckType), class: k === ckType ? 'on' : '',
     onclick: () => { ckType = k; renderCheckerTabs(); renderChecker(); } }, t(`ck${CK_KEYS[k]}`))));
 }
+function renderImageChecker(box) {
+  const out = h('div', { id: 'ck-out', class: 'ck-out', 'aria-live': 'polite' });
+  const pick = h('input', { type: 'file', id: 'ck-pick', accept: 'image/*,application/pdf,text/plain', hidden: '' });
+  const cam = h('input', { type: 'file', id: 'ck-cam', accept: 'image/*', capture: 'environment', hidden: '' });
+  const zone = h('div', { class: 'dropzone', tabindex: 0, role: 'button', 'aria-label': t('dropHere') },
+    h('b', {}, t('dropHere')), h('p', { class: 'hint' }, t('fileTypes')));
+  const send = f => f && analyseFile(f, out);
+  zone.addEventListener('click', () => pick.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick.click(); } });
+  ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => send(e.dataTransfer.files[0]));
+  pick.addEventListener('change', () => send(pick.files[0]));
+  cam.addEventListener('change', () => send(cam.files[0]));
+  box.replaceChildren(h('p', { class: 'hint' }, t('ckImageL')), zone, pick, cam,
+    h('div', { class: 'two' }, h('button', { type: 'button', class: 'soft', onclick: () => pick.click() }, t('chooseFile')),
+      h('button', { type: 'button', class: 'soft', onclick: () => cam.click() }, t('takePhoto'))), out);
+}
+async function analyseFile(f, out) {
+  out.replaceChildren(h('p', { class: 'hint' }, t('analysing')));
+  const fd = new FormData(); fd.append('file', f);
+  try {
+    const r = await api('/api/v1/attachments/analyze', { body: fd });
+    remember('image', f.name, r.verdict);
+    const lines = [...r.reasons];
+    if (r.qr?.codes?.length) lines.unshift(t('qrFound', r.qr.codes.length));
+    if (r.indicators.phone_numbers.length) lines.push(`${t('numbersFound')}: ${r.indicators.phone_numbers.join(', ')}`);
+    if (r.message_analysis) lines.push(lang === 'ar' ? r.message_analysis.advice_ar : r.message_analysis.advice_en);
+    lines.push(...r.limitations);
+    const links = r.link_scans.length ? h('div', { class: 'card inset' }, h('b', {}, t('linksFound')), h('ul', {}, r.link_scans.map(s =>
+      h('li', {}, h('span', { class: 'ltr' }, s.url), ` — ${t(s.verdict)}`, s.from_qr ? ' (QR)' : '')))) : null;
+    const text = r.ocr?.text ? h('details', {}, h('summary', {}, t('textRead')), h('pre', { class: 'ocr-text' }, r.ocr.text)) : null;
+    if (!r.link_scans.length && !r.ocr?.text && !r.qr?.codes?.length && r.detected_type?.startsWith('image')) lines.unshift(t('nothingFound'));
+    out.replaceChildren(resultCard(TONE[r.verdict] || 'unclear', t(r.verdict), lines, h('div', {}, links, text,
+      h('button', { class: 'soft', onclick: () => { $('#r-text').value = [...r.indicators.urls, ...r.indicators.phone_numbers].join('\n'); go('report'); } }, t('reportToMIRA')))));
+  } catch (err) { out.replaceChildren(h('p', { class: 'error' }, err.message)); }
+}
+function redirectList(r) {
+  const rd = r.redirects;
+  if (!rd?.hops?.length) return null;
+  return h('div', { class: 'card inset' }, h('b', {}, `${t('redirectsT')} · ${t('hopsN', rd.redirect_count)}`),
+    h('ol', { class: 'timeline' }, rd.hops.map(x => h('li', { class: x.domain_changed || x.shortener ? 'hop-risk' : '' }, h('span', { class: 'ltr' }, x.url), h('div', { class: 'st' }, `${x.status ?? ''} · ${x.type}`))),
+      h('li', {}, h('div', { class: 'st' }, `${t('stopped')}: ${rd.stopped_reason}`))));
+}
 function renderChecker() {
   const k = CK_KEYS[ckType], box = $('#checker');
+  if (ckType === 'image') return renderImageChecker(box);
   const multi = ['message', 'ad'].includes(ckType);
   const input = multi ? h('textarea', { id: 'ck-in', rows: 4, placeholder: t(`ph${k}`) }) : h('input', { id: 'ck-in', placeholder: t(`ph${k}`), inputmode: ckType === 'phone' ? 'tel' : 'url' });
   const out = h('div', { id: 'ck-out', class: 'ck-out', 'aria-live': 'polite' });
@@ -323,9 +395,9 @@ async function runChecker() {
       const lines = [r.detected_brand && tone !== 'safe' ? t('pretends', r.detected_brand) : null, ...r.strongest_indicators.map(detail),
         t('confidence', r.assessment_confidence), t('completeness', Math.round(r.analysis_completeness * 100)),
         r.final_url && r.final_url !== r.normalised_url ? `${t('goesTo')}: ${r.final_url}` : null, ckType === 'payment' ? t('payWarn') : null];
-      out.replaceChildren(resultCard(tone, v === 'blocked' ? t('blocked') : t(v), lines,
+      out.replaceChildren(resultCard(tone, v === 'blocked' ? t('blocked') : t(v), lines, h('div', {}, redirectList(r),
         h('div', { class: 'two' }, h('button', { class: 'soft', onclick: () => { $('#r-text').value = val; selectType(ckType === 'qr' ? 'qr' : 'website'); go('report'); } }, t('reportToMIRA')),
-          h('button', { class: 'soft', onclick: () => preview(val, out) }, t('preview')))));
+          h('button', { class: 'soft', onclick: () => preview(val, out) }, t('preview'))))));
     } else if (ckType === 'message') {
       const m = await api('/api/check-message', { body: { text: val } });
       const v = m.links.some(l => l.blocked) ? 'blocked' : m.verdict === 'scam' ? 'MALICIOUS' : m.verdict === 'suspicious' ? 'SUSPICIOUS' : m.verdict === 'inconclusive' ? 'INCONCLUSIVE' : 'SAFE';
@@ -517,6 +589,7 @@ function renderSuggest() {
   $('#suggest').replaceChildren(...(T[lang].suggestions || T.en.suggestions).map(s => h('button', { type: 'button', onclick: () => ask(s) }, s)));
 }
 function bubble(who, ...kids) { const li = h('li', { class: `msg ${who}` }, ...kids); $('#chat').append(li); li.scrollIntoView({ block: 'end' }); return li; }
+$('#open-picture').addEventListener('click', () => { ckType = 'image'; go('protect'); renderCheckerTabs(); renderChecker(); });
 $('#open-assistant').addEventListener('click', () => {
   if (!$('#chat').children.length) bubble('bot', h('p', {}, t('asHello')));
   openSheet('assistant');
@@ -665,6 +738,10 @@ function connect() {
       banner(t('newBlock'), t('newVersion', data.version));
       navigator.vibrate?.([200, 80, 200]);
       notifyDevice(t('newBlock'), t('newVersion', data.version));
+    } else if (event === 'citizen_alert') {
+      loadOfficial();
+      const title = lang === 'ar' ? data.title_ar : data.title;
+      banner(t('officialAlert'), title); notifyDevice(t('officialAlert'), title);
     } else if (event === 'report_status') {
       banner(t('statusChanged', data.ref), statusLabel(data.status));
       notifyDevice(t('statusChanged', data.ref), statusLabel(data.status));
@@ -687,7 +764,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
   const want = decodeURIComponent((location.hash.match(/demo=([^&]+)/) || [])[1] || '');
   const acct = DEMO.accounts?.find(a => a.email === want && a.app === 'protect');
   if (acct && !TOKEN) signIn({ email: acct.email, password: acct.password }).catch(() => {});
-  syncProtection(); loadAlerts(); loadBrands().catch(() => {});
+  syncProtection(); loadAlerts(); loadOfficial(); loadBrands().catch(() => {});
   connect();
   if (shared) { $('#input').value = shared; check(shared); }
   const want2 = location.hash.replace('#', '');  // home-screen shortcuts and the Android Quick Settings tile

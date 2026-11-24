@@ -87,12 +87,16 @@ async def lifespan(_app):
         print("DEMO MODE: demo accounts are active (admin@mira.demo, analyst@mira.demo, citizen@mira.demo)")
     seed()
     protection.latest()
+    from raqeeb import discovery
+    discovery.start_scheduler()
     task = asyncio.create_task(_expiry_loop())
     yield
     task.cancel()
 
 
-app = FastAPI(title="MIRA 2.0: UAE scam intelligence", lifespan=lifespan)
+app = FastAPI(title="MIRA API", version="3.0", lifespan=lifespan,
+              description="MIRA (ميرا) shared threat-intelligence backend for MIRA Protect and MIRA Command. "
+                          "See docs/API_GUIDE.md for configuration of every external service.")
 _origins = [o for o in os.environ.get("MIRA_CORS_ORIGINS", "").split(",") if o]
 if _origins:
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])
@@ -100,6 +104,10 @@ app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.include_router(v2_router)
 app.include_router(v1_router)
 app.include_router(demo_router)
+from .api_mira import router as mira_router  # noqa: E402
+from .signin_demo import router as signin_router  # noqa: E402
+app.include_router(mira_router)
+app.include_router(signin_router)
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
        "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
@@ -129,6 +137,16 @@ def entry_page():
 @app.get("/command", include_in_schema=False)
 def command_page():
     return FileResponse(WEB / "command" / "index.html")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(WEB / "app" / "icon-192.png", media_type="image/png")
+
+
+@app.get("/signin", include_in_schema=False)
+def signin_page():
+    return FileResponse(WEB / "signin" / "index.html")
 
 
 @app.get("/app", include_in_schema=False)
@@ -416,7 +434,7 @@ def api_evidence_zip(case_id: str, user=Depends(require("view_evidence"))):
         for f in folder.iterdir():
             z.write(f, f.name)
     return Response(buf.getvalue(), media_type="application/zip",
-                    headers={"Content-Disposition": f'attachment; filename="raqeeb-case-{case_id}.zip"'})
+                    headers={"Content-Disposition": f'attachment; filename="mira-case-{case_id}.zip"'})
 
 
 @app.get("/api/qr", include_in_schema=False)

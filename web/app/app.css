@@ -347,3 +347,12 @@ textarea:focus, input:focus, select:focus { border-color: #fff; box-shadow: 0 0 
 .timeline li:last-child::after { display: none; }
 .timeline li.hop-risk::before { background: var(--red); }
 .timeline .st { font-size: 12.5px; color: var(--muted); }
+
+.quick #open-picture { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; background: linear-gradient(120deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); }
+.official { display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px; }
+.oa { border-radius: var(--radius-l); padding: 14px 16px; background: linear-gradient(150deg, rgba(230,57,70,.16), rgba(10,28,63,.6)); border: 1px solid rgba(230,57,70,.4); backdrop-filter: var(--blur); }
+.oa.sev-low, .oa.sev-medium { background: linear-gradient(150deg, rgba(242,181,68,.12), rgba(10,28,63,.6)); border-color: rgba(242,181,68,.35); }
+.oa-k { margin: 0 0 4px; font-size: 12.5px; color: #FFC9CD; text-transform: capitalize; }
+.oa summary { font-weight: 700; font-size: 16.5px; cursor: pointer; }
+.oa ul { margin: 4px 0 8px; padding-inline-start: 18px; font-size: 14.5px; }
+.ocr-text { white-space: pre-wrap; font-size: 13px; background: rgba(0,0,0,.25); padding: 8px; border-radius: 8px; max-height: 200px; overflow: auto; }

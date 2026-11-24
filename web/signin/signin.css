@@ -1,0 +1,49 @@
+body { color: #EEF2FA; min-height: 100vh; }
+.proto-band { background: rgba(242, 181, 68, .14); border-bottom: 1px solid rgba(242, 181, 68, .45); color: #F7DFA6; padding: 9px 22px; font-size: 14px; text-align: center; }
+.head { display: flex; align-items: center; gap: 18px; padding: 16px 24px; flex-wrap: wrap; }
+.seg { display: flex; gap: 2px; margin-inline: auto; background: rgba(255, 255, 255, .05); border: 1px solid var(--glass-line); border-radius: 12px; padding: 3px; }
+.seg button { background: none; border: 0; color: #B8C3DA; padding: 7px 14px; border-radius: 9px; font-weight: 500; }
+.seg button.on { background: rgba(255, 255, 255, .13); color: #fff; }
+main { max-width: 1080px; margin: 0 auto; padding: 18px 24px 48px; }
+.pane { display: none; } .pane.on { display: block; }
+.glass { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-radius: var(--radius-l); }
+.flow { display: grid; grid-template-columns: 1fr 300px; gap: 28px; align-items: start; }
+.card { padding: 28px; } .card.wide { max-width: 900px; }
+h1 { font: 700 30px/1.2 var(--font-ui); margin: 0 0 10px; }
+h2 { font: 700 18px/1.3 var(--font-ui); margin: 0 0 8px; }
+.sub { color: #B8C3DA; line-height: 1.6; margin: 0 0 20px; max-width: 60ch; }
+.primary, .ghost { border-radius: 12px; padding: 12px 18px; font-weight: 600; font-size: 15px; }
+.primary { background: #fff; color: var(--navy-950); border: 0; }
+.ghost { background: transparent; color: #fff; border: 1px solid var(--glass-line-strong); }
+.qr-step { margin-top: 8px; }
+.qr-wrap { position: relative; width: 236px; padding: 8px; background: #fff; border-radius: 16px; }
+.qr-wrap img { display: block; width: 220px; height: 220px; }
+.qr-tag { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--amber); color: #2A1A00; font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 6px; }
+.state { font-weight: 600; margin: 14px 0 6px; min-height: 1.4em; }
+.hint { color: #9FAECB; font-size: 14px; }
+.alt { margin-top: 22px; color: #9FAECB; font-size: 14px; } .alt a { color: #fff; }
+.phone { border-radius: 38px; border: 10px solid #111827; background: #050B1A; aspect-ratio: 9 / 18; box-shadow: 0 30px 60px rgba(0, 0, 0, .45); }
+.phone-screen { padding: 34px 18px; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+.ph-app { font-size: 12.5px; color: var(--amber); margin: 0 0 8px; }
+.ph-title { font-weight: 700; font-size: 17px; }
+.ph-lbl { font-size: 13px; color: #9FAECB; }
+select { width: 100%; background: rgba(255, 255, 255, .06); border: 1px solid var(--glass-line); border-radius: 10px; padding: 10px; color: #fff; }
+select option { color: #000; }
+.consent { display: flex; gap: 8px; font-size: 13.5px; align-items: flex-start; margin: 6px 0; }
+.ph-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+.sim-head { margin-bottom: 18px; }
+.steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; counter-reset: s; }
+.step { padding: 18px 20px; counter-increment: s; position: relative; }
+.step h2::before { content: counter(s) ". "; color: var(--red); }
+.scenario { color: #D7DEEC; line-height: 1.55; }
+.url { font: 500 14px var(--font-en); background: rgba(0, 0, 0, .35); padding: 6px 10px; border-radius: 8px; overflow-wrap: anywhere; }
+.tip { color: #9FE2C0; font-size: 14px; }
+.det { margin-top: 10px; }
+.res { border-inline-start: 4px solid #8C9AB5; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .04); }
+.res.MALICIOUS { border-color: var(--red); background: rgba(230, 57, 70, .12); } .res.SUSPICIOUS { border-color: var(--amber); }
+.res.SAFE { border-color: var(--green); } .res ul { margin: 6px 0; padding-inline-start: 18px; font-size: 14px; }
+.how { width: 100%; border-collapse: collapse; margin: 8px 0 24px; font-size: 14.5px; }
+.how th, .how td { text-align: start; padding: 10px 8px; border-bottom: 1px solid var(--glass-line); vertical-align: top; }
+.how th { color: #9FAECB; font-weight: 500; }
+.calls { line-height: 1.6; padding-inline-start: 18px; }
+@media (max-width: 860px) { .flow { grid-template-columns: 1fr; } .phone { max-width: 300px; } .seg { margin-inline: 0; order: 3; width: 100%; overflow-x: auto; } }

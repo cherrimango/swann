@@ -16,7 +16,7 @@ import re
 import secrets
 import time
 
-from .messages import analyse as analyse_message
+from .messages import check_message as analyse_message
 from .messages import URL_RX
 
 MAX_BYTES = 10 * 1024 * 1024

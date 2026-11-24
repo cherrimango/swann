@@ -82,6 +82,7 @@
     <div class="view-head"><div><h2 class="glass-h">Overview</h2><p class="sub" id="ov-sub">Live state of MIRA across the UAE.</p></div>
       <span class="live-pill" id="ov-season"></span></div>
     <dl id="ov-kpis" class="kpis"></dl>
+    <div id="ov-mira" class="ov-mira"></div>
     <div class="ov-grid">
       <article class="panel span-2"><div class="panel-head"><h3>Live intelligence activity</h3><span class="note">From recorded events only. Demo-seeded items are marked.</span></div><ol id="ov-activity" class="activity"></ol></article>
       <article class="panel"><div class="panel-head"><h3>Threats by emirate</h3><span class="note">Schematic. Emirate level only.</span></div><div id="map" class="map"></div><div id="map-detail" class="map-detail"></div></article>
@@ -198,11 +199,53 @@
 
   <!-- AGENTS -->
   <section id="v-agents" class="view">
-    <h2>Intelligence agents</h2>
-    <p class="sub">Ten specialised agents. Each finding records its evidence, confidence, reasoning, source and next action. Agents recommend; only authorised people decide.</p>
+    <h2>AI agents</h2>
+    <p class="sub">Fourteen agents share one engine and one result format: task, result, evidence, confidence, source, time, limitations and recommended action. Agents analyse and recommend; they cannot approve threats, block globally or publish alerts.</p>
+    <div id="ag14" class="ag14"></div>
+    <div id="ag-out" class="ag-out" aria-live="polite"></div>
+    <h3 class="section-h">Agent activity (earlier agent framework)</h3>
     <div id="a-list" class="agents"></div>
     <h3 class="section-h">Latest findings</h3>
     <table class="table"><thead><tr><th>Agent</th><th>Subject</th><th>Confidence</th><th>Reasoning</th><th>Next action</th><th>When</th></tr></thead><tbody id="a-rows"></tbody></table>
+  </section>
+
+
+  <!-- THREAT DISCOVERY ENGINE -->
+  <section id="v-discovery" class="view">
+    <div class="view-head"><div><h2>Threat discovery engine</h2>
+      <p class="sub">Scheduled collection from permitted public threat feeds. New indicators are unverified leads: they inform deep scans and analyst review and never block anything on their own. Times are shown in your local time.</p></div>
+      <button id="d-run" class="primary" data-perm="run_hunt">Collect now</button></div>
+    <dl id="d-kpis" class="kpis"></dl>
+    <article class="panel"><div class="panel-head"><h3>Sources</h3><span class="note" id="d-sched"></span></div>
+      <table class="table sortable"><thead><tr><th>Source</th><th>Health</th><th>Last success</th><th>Last run</th><th>Collected</th><th>New</th><th>Duplicates</th><th>Stored</th><th>Terms</th></tr></thead><tbody id="d-rows"></tbody></table></article>
+    <article class="panel"><h3>Recent runs and errors</h3><table class="table"><thead><tr><th>When</th><th>Source</th><th>Status</th><th>New</th><th>Error</th></tr></thead><tbody id="d-runs"></tbody></table></article>
+  </section>
+
+  <!-- SANDBOX CONFIGURATION -->
+  <section id="v-sandbox" class="view">
+    <h2>Sandbox configuration &amp; analysis parameters</h2>
+    <p class="sub">How MIRA's isolated browser is configured right now, read from the running server. Enter a deep-scan ID to see which parameters were actually collected for that scan.</p>
+    <div class="row-form inline"><input id="sb-id" placeholder="Scan ID, e.g. SCAN-20261124-ABC123" aria-label="Scan ID"><button id="sb-go" class="primary">Show collected parameters</button></div>
+    <div id="sb-scan"></div>
+    <div id="sb-config" class="cfg-grid"></div>
+  </section>
+
+  <!-- CITIZEN ALERTS -->
+  <section id="v-alerts" class="view">
+    <div class="view-head"><div><h2>Citizen alerts</h2>
+      <p class="sub">Draft, review, translate, approve and publish warnings to MIRA Protect. The author cannot review or approve their own alert; only an administrator can approve and publish. Delivery is only reported when a channel confirms it.</p></div>
+      <button id="al-new" class="primary" data-perm="edit_investigation">Create citizen alert</button></div>
+    <div class="al-layout">
+      <div><div class="chips-row" id="al-filter"></div><ol id="al-list" class="al-list"></ol></div>
+      <div id="al-editor" class="panel al-editor"><p class="meta">Select an alert, or create one. You can also start an alert from a threat record.</p></div>
+    </div>
+  </section>
+
+  <!-- MODELS -->
+  <section id="v-models" class="view">
+    <h2>Models &amp; evaluation</h2>
+    <p class="sub">Measured results for the deployed URL model and for MIRA's end-to-end verdicts, on a test split grouped by registered domain. Nothing here is estimated.</p>
+    <div id="m-body"></div>
   </section>
 
   <!-- PROTECTION -->

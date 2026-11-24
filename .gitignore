@@ -17,3 +17,5 @@ data/first_run_credentials.txt
 data/raqeeb.db-wal
 data/raqeeb.db-shm
 data/processed/
+data/mira.db*
+models_v21_host/threat_*

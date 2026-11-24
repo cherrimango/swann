@@ -288,6 +288,7 @@ async function openThreat(id) {
     tools.append(ev);
   }
   if (can('view_evidence')) tools.append(h('button', { class: 'ghost', onclick: () => download(`/api/threats/${t.id}/export`, `${t.id}.json`) }, 'Export case file'));
+  if (can('edit_investigation') && window.newAlertFromThreat) tools.append(h('button', { class: 'ghost', onclick: () => window.newAlertFromThreat(t) }, 'Create citizen alert'));
   kids.push(tools);
 
   kids.push(h('h3', { class: 'section-h' }, `Linked citizen reports (${t.reports.length})`),
@@ -466,7 +467,7 @@ async function renderScan(r, box) {
   const reg = r.official_domain_comparison || {}, ml = r.ml_result || {}, sig = r.signature_result || {};
   const dom = r.domain_intelligence || {}, web = r.website_analysis || {}, vis = r.visual_analysis || {};
   const banner = h('div', { class: `verdict-banner ${r.verdict}` },
-    h('div', {}, h('div', { class: 'vb-word' }, r.verdict), h('div', { class: 'meta' }, `${r.scan_id} · ${r.mode} scan · ${r.duration_seconds}s`)),
+    h('div', {}, h('div', { class: 'vb-word' }, r.verdict), h('div', { class: 'meta' }, `${r.scan_id} · ${r.mode} scan · ${r.analysis_status || ''} · ${r.duration_seconds}s`)),
     h('p', { class: 'vb-why' }, r.explanation?.en || ''),
     h('dl', { class: 'vb-nums' },
       h('div', {}, h('dt', {}, 'Risk score'), h('dd', {}, r.risk_score ?? '–', h('small', { class: 'meta' }, ` ${r.risk_level}`))),
@@ -481,13 +482,13 @@ async function renderScan(r, box) {
   const p = (title, ...kids) => h('article', { class: 'panel' }, h('h3', {}, title), ...kids);
   const rd = dom.rdap || {}, dns = dom.dns || {}, cert = dom.certificate || {};
   const related = await api(`/api/threats?q=${encodeURIComponent(r.registered_domain)}`).catch(() => []);
-  box.replaceChildren(banner, stages, twin || '',
+  box.replaceChildren(banner, stages, twin || '', redirectTimeline(r),
     h('div', { class: 'report-grid' },
       p('Identity', kv([['Submitted', h('span', { class: 'mono' }, r.submitted_url)], ['Normalised', h('span', { class: 'mono' }, r.normalised_url)],
         ['Final destination', r.final_url ? h('span', { class: 'mono' }, r.final_url) : r.mode === 'deep' ? 'Not reached: the site could not be visited' : 'Not followed (quick scan)'], ['Registered domain', r.registered_domain],
         ['Detected brand', r.detected_brand || 'None'], ['Official domain', reg.official_domain_match ? `Yes: ${reg.organisation} (${reg.matched_domain})` : 'No'],
         ['Closest official', reg.closest_official ? `${reg.closest_official}, similarity ${reg.similarity}` : '–']])),
-      p('Machine learning', ml.available ? kv([['Prediction', ml.prediction], ['Model score', `${ml.probability} (threshold ${ml.decision_threshold}; not a calibrated probability)`],
+      p('Machine learning', ml.available ? kv([['Prediction', ml.prediction], ['Model score', `${ml.probability} (calibrated; decision threshold ${ml.decision_threshold})`],
         ['Model', ml.model_version], ['Top contributions', h('ul', {}, ml.feature_contributions.map(f => h('li', {}, `${f.description}: ${f.contribution > 0 ? '+' : ''}${f.contribution}`)))]]) : unavailable(ml)),
       p('Threat intelligence', kv([['Known threat', yesNo(sig.known_threat)], ['Sources checked', sig.sources_checked?.join(', ')],
         ['Not checked', sig.sources_skipped?.map(x => `${x.source} (${x.reason})`).join(', ')], ['Errors', Object.entries(sig.errors || {}).map(([k, v]) => `${k}: ${v}`).join('; ')]]),
@@ -515,6 +516,23 @@ async function renderScan(r, box) {
     p('Evidence', h('ul', { class: 'ev-list' }, r.evidence.map(e => h('li', { class: e.direction }, h('span', { class: 'stage' }, e.stage), h('span', {}, e.detail_en), h('span', { class: 'str' }, `${e.direction === 'trust' ? '−' : '+'}${e.strength} · ${e.reliability}`))))),
     p('Recommended action and limitations', h('p', {}, r.recommended_action.en), h('ul', { class: 'limits' }, r.limitations.map(l => h('li', {}, l)))));
   if (web.screenshot && can('view_evidence')) authedBlob(`/api/v1/scan/${r.scan_id}/screenshot`).then(u => $('#shot-slot')?.append(h('img', { class: 'shot', src: u, alt: `Screenshot of ${r.final_url}` }))).catch(() => {});
+}
+function redirectTimeline(r) {
+  const rd = r.redirects || {};
+  if (!rd.hops) return h('article', { class: 'panel journey' }, h('h3', {}, 'Redirect journey'),
+    h('p', { class: 'meta' }, r.mode === 'deep' ? 'The live page could not be visited, so no redirects were recorded.' : 'Redirects are followed in deep scans. Run a deep scan to see the full journey.'));
+  const sum = [`${rd.redirect_count} redirect${rd.redirect_count === 1 ? '' : 's'}`, `${rd.domains.length} domain${rd.domains.length === 1 ? '' : 's'}`,
+    rd.final_registered_domain && rd.final_registered_domain !== r.registered_domain ? `ends on a different domain (${rd.final_registered_domain})` : 'ends on the submitted domain'];
+  return h('article', { class: 'panel journey' },
+    h('div', { class: 'panel-head' }, h('h3', {}, 'Redirect journey'), h('span', { class: `note ${rd.all_destinations_analysed ? '' : 'warn-t'}` },
+      rd.all_destinations_analysed ? 'All destinations analysed' : `Incomplete: ${rd.stopped_reason}`)),
+    h('p', { class: 'meta' }, sum.join(' · ') + (rd.suspicious_patterns.length ? ` · suspicious: ${rd.suspicious_patterns.join(', ')}` : '')),
+    h('ol', { class: 'hops' }, h('li', { class: 'hop start' }, h('span', { class: 'hop-k' }, 'Submitted'), h('span', { class: 'mono' }, r.submitted_url)),
+      rd.hops.map(x => h('li', { class: `hop ${x.domain_changed ? 'changed' : ''} ${x.shortener ? 'short' : ''}` },
+        h('span', { class: 'hop-k' }, `${x.hop}. ${x.status ?? '–'} · ${x.type}`), h('span', { class: 'mono' }, x.url),
+        x.domain_changed ? h('span', { class: 'hop-flag' }, `domain changes to ${x.registered_domain}`) : null,
+        x.shortener ? h('span', { class: 'hop-flag' }, 'link shortener') : null)),
+      h('li', { class: 'hop end' }, h('span', { class: 'hop-k' }, 'Stopped'), h('span', {}, rd.stopped_reason))));
 }
 async function loadWatch() {
   const rows = await api('/api/intel/early-watch');
