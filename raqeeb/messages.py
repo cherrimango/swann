@@ -5,7 +5,7 @@ from .brands import BRANDS
 from .engine import scan_many
 
 URL_RX = re.compile(
-    r"(?:(?:https?://|www\.)[^\s<>\"']+)|(?:\b[a-z0-9][a-z0-9\-]{1,62}(?:\.[a-z0-9\-]{1,62})*\.(?:com|net|org|info|ae|top|xyz|shop|online|site|live|click|icu|cfd|sbs|vip|io|app|co|me|cc|link|support|help)(?:/[^\s<>\"']*)?)",
+    r"(?:(?:https?://|www\.)[^\s<>\"']+)|(?:\b[a-z0-9][a-z0-9\-]{1,62}(?:\.[a-z0-9\-]{1,62})*\.(?:com|net|org|info|ae|top|xyz|shop|online|site|live|click|icu|cfd|sbs|vip|io|app|co|me|cc|link|support|help|ly|gl|gd|to|in|uk|be|fr|de)(?:/[^\s<>\"']*)?)",
     re.IGNORECASE)
 
 # Scam scripts seen in UAE advisories: (code, weight, english regex, arabic regex, explanation en, explanation ar)
@@ -32,6 +32,20 @@ SCRIPTS = [
 ]
 
 
+# Urdu (Arabic script) and Roman Urdu wording for the same scam scripts.
+URDU = {
+    "urgency": r"(فوری|ابھی|آج ہی|24 گھنٹے|آخری موقع)|\b(foran|abhi|aaj hi)\b",
+    "blocked": r"(بلاک|معطل|بند کر دیا|بند ہو جائے گا)|\b(band ho jayega|block ho gaya)\b",
+    "small_fee": r"\d{1,3}\s?(درہم|فیس)",
+    "otp": r"(او ٹی پی|تصدیقی کوڈ|کوڈ بھیجیں|کوڈ بتائیں)|\b(otp bhej|code bata|code bhej)",
+    "update_details": r"(تفصیلات اپ ڈیٹ|معلومات کی تصدیق|ایمریٹس آئی ڈی)|\b(details update kar)",
+    "parcel": r"(پارسل|ڈیلیوری|کسٹم)",
+    "fine_toll": r"(جرمانہ|چالان|ٹول)|\b(jurmana|challan)\b",
+    "prize": r"(مبارک ہو|انعام|جیت لیا)|\b(inaam|mubarak ho)\b",
+    "too_cheap": r"(رعایت|ڈسکاؤنٹ|آفر)",
+}
+
+
 def _brands_named(text: str) -> list[str]:
     low = text.lower()
     out = []
@@ -52,7 +66,7 @@ def check_message(text: str) -> dict:
     link_results = scan_many(urls[:10]) if urls else []
     hits, script_score = [], 0
     for code, w, en_rx, ar_rx, en, ar in SCRIPTS:
-        if re.search(en_rx, text, re.IGNORECASE) or re.search(ar_rx, text):
+        if re.search(en_rx, text, re.IGNORECASE) or re.search(ar_rx, text) or (code in URDU and re.search(URDU[code], text, re.IGNORECASE)):
             hits.append({"code": code, "en": en, "ar": ar, "weight": w})
             script_score += w
     named = _brands_named(text)

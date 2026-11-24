@@ -132,7 +132,7 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
                                        "عنوان IP مع كلمات دخول أو دفع", 2))
             if is_short:
                 risk = max(min(risk, 49), 40)
-                reasons.append(_reason("shortener", "Shortened link hides the real destination - unroll with --live",
+                reasons.append(_reason("shortener", "Shortened link hides the real destination; a deep scan or link preview can follow it",
                                        "رابط مختصر يخفي الوجهة الحقيقية", 1))
             if p.is_punycode and not hits:
                 risk = max(risk, 55)

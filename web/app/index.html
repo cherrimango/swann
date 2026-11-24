@@ -3,19 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14243A">
+<meta name="theme-color" content="#071426">
 <title>RAQEEB Protect</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/static/app/icon-192.png">
 <link rel="apple-touch-icon" href="/static/app/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500..800&family=Readex+Pro:wght@300..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@500;700;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/static/shared/tokens.css">
 <link rel="stylesheet" href="/static/app/app.css">
 </head>
 <body>
 <header class="bar">
-  <div class="mark"><span class="w-en">RAQEEB</span><span class="w-ar">رقيب</span><span class="w-sub" data-i="protect">Protect</span></div>
-  <button id="lang" class="lang" aria-label="Switch language">عربي</button>
+  <span class="mark"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></span>
+  <div class="langs" role="group" aria-label="Language">
+    <button data-lang="en" lang="en">EN</button><button data-lang="ar" lang="ar">ع</button><button data-lang="ur" lang="ur">اردو</button>
+  </div>
 </header>
 
 <div id="banner" class="banner" hidden role="alert"></div>
@@ -23,60 +26,69 @@
 <main>
   <!-- HOME -->
   <section id="t-home" class="tab on">
-    <div id="shield" class="shield">
-      <p class="shield-state" id="shield-state" data-i="shieldOn">Protection is on</p>
-      <p class="shield-meta" id="shield-meta"></p>
+    <div class="hello">
+      <p class="hello-k" id="hello-name"></p>
+      <h1 data-i="protectedTitle">You’re protected with RAQEEB.</h1>
+      <p class="shield-line" id="shield"><span class="dot"></span><span id="shield-state" data-i="shieldOn">Protection is on</span><span id="shield-meta"></span></p>
     </div>
-    <h1 data-i="checkTitle">Check before you tap</h1>
-    <form id="check-form">
-      <label for="input" class="sr" data-i="inputLabel">Link or message</label>
-      <textarea id="input" rows="4" data-ph="inputPh" placeholder="Paste a link or a message you received"></textarea>
-      <button class="go" type="submit" data-i="checkBtn">Check it</button>
+    <form id="check-form" class="check-card">
+      <label for="input" class="check-label" data-i="checkTitle">Check a link before you tap</label>
+      <textarea id="input" rows="2" data-ph="inputPh" placeholder="Paste a link or a message you received"></textarea>
+      <div class="check-row">
+        <button class="go" type="submit" data-i="checkBtn">Check it</button>
+        <button id="qr-btn" class="icon-btn" type="button" data-i="qrBtn">Scan QR</button>
+      </div>
     </form>
-    <div class="two">
-      <button id="qr-btn" class="soft" data-i="qrBtn">Scan a QR code</button>
-      <button class="soft accent" data-goto="report" data-i="reportScam">Report a scam</button>
-    </div>
     <div id="qr-box" class="qr-box" hidden>
       <video id="qr-video" playsinline muted></video>
       <p class="hint" data-i="qrHint">Point the camera at the QR code</p>
       <button id="qr-stop" class="soft light" data-i="cancel">Cancel</button>
     </div>
-    <h2 class="h2-gap" data-i="alertsTitle">Confirmed scams in the UAE</h2>
-    <p class="hint" data-i="alertsLede">Verified by analysts. New ones reach your phone the moment they’re approved.</p>
-    <ol id="alerts" class="alerts"></ol>
+    <div class="quick">
+      <button data-goto="report"><b data-i="qReport">Report a scam</b><span data-i="qReportD">Send it to analysts</span></button>
+      <button id="open-quick"><b data-i="qCall">Quick Alert</b><span data-i="qCallD">I just had a scam call</span></button>
+      <button id="open-assistant"><b data-i="qAsk">Ask RAQEEB</b><span data-i="qAskD">Is this genuine?</span></button>
+      <button id="open-emergency" class="urgent"><b data-i="qHelp">I’ve been scammed</b><span data-i="qHelpD">What to do now</span></button>
+    </div>
     <div class="card season" id="season-card" hidden>
-      <h2 data-i="seasonTitle">Watch out this season</h2>
-      <p class="hint" data-i="seasonNote">A forecast from seasonal patterns, not confirmed scams.</p>
+      <p class="tag" data-i="forecastTag">Forecast</p>
+      <h2 id="season-title" data-i="seasonTitle">Stay alert this season</h2>
       <ul id="season-list"></ul>
+      <p class="hint" data-i="seasonNote">A forecast from seasonal patterns, not confirmed scams.</p>
+    </div>
+    <div class="section-head"><h2 data-i="alertsTitle">Verified scam alerts</h2><button class="link" data-goto="protect" data-scroll="alerts-all" data-i="seeAll">See all</button></div>
+    <ol id="alerts" class="alerts"></ol>
+    <div class="card activity">
+      <h2 data-i="activityTitle">Your protection</h2>
+      <dl class="stats" id="my-activity"></dl>
+      <div id="guardian-mini" class="guardian-mini" hidden></div>
     </div>
   </section>
 
   <!-- PROTECT -->
   <section id="t-protect" class="tab">
-    <h1 data-i="protectTitle">Your protection</h1>
-    <div class="card">
-      <h2 data-i="previewTitle">Where does this link really go?</h2>
-      <p class="hint" data-i="previewLede">RAQEEB opens it safely on its server, follows every redirect, and shows you the final address. Nothing runs on your phone.</p>
-      <form id="preview-form" class="row-form">
-        <input id="preview-url" type="url" inputmode="url" data-ph="previewPh" placeholder="https://bit.ly/…" required>
-        <button class="go small" type="submit" data-i="previewBtn">Preview</button>
-      </form>
-      <div id="preview-out" class="preview-out"></div>
-    </div>
+    <h1 data-i="protectTitle">Check anything</h1>
+    <div class="chips" id="checker-tabs" role="tablist"></div>
+    <div class="card checker" id="checker"></div>
+    <div class="section-head"><h2 data-i="recentTitle">Recent checks</h2><button class="link" id="clear-recent" data-i="clear">Clear</button></div>
+    <ol id="recent" class="recent"></ol>
     <div class="card">
       <h2 data-i="myBlocksTitle">Blocked for me</h2>
       <p class="hint" data-i="myBlocksLede">Sites and numbers you blocked. This only affects your own phone.</p>
       <form id="myblock-form" class="row-form">
-        <input id="myblock-value" data-ph="myBlockPh" placeholder="Website or phone number" required>
+        <input id="myblock-value" data-ph="myBlockPh" placeholder="Website or phone number" required aria-label="Website or phone number">
         <button class="go small" type="submit" data-i="blockBtn">Block</button>
       </form>
       <ul id="myblocks" class="plain"></ul>
     </div>
+    <div class="card" id="alerts-all">
+      <h2 data-i="alertsTitle">Verified scam alerts</h2>
+      <ol id="alerts-full" class="alerts"></ol>
+    </div>
     <div class="card">
       <h2 data-i="brandsTitle">Is this really them?</h2>
       <p class="hint" data-i="brandsLede">Official websites of UAE government entities, banks and services.</p>
-      <input id="brand-search" type="search" data-ph="brandPh" placeholder="Search: UAE PASS, Salik, ADCB…" aria-label="Search brands">
+      <input id="brand-search" type="search" data-ph="brandPh" placeholder="Search: UAE PASS, Salik, ADCB…" aria-label="Search organisations">
       <ul id="brands" class="brands"></ul>
     </div>
     <div class="card">
@@ -115,7 +127,7 @@
         <label><input type="checkbox" value="paid"> <span data-i="impPaid">I paid</span></label>
         <label><input type="checkbox" value="lost_money"> <span data-i="impLost">I lost money</span></label>
       </fieldset>
-      <p id="lost-help" class="help" hidden data-i="lostHelp">Call your bank now to block your card, then report to the police. Speed matters.</p>
+      <p id="lost-help" class="help" hidden><span data-i="lostHelp">Call your bank now to block your card, then report to the police. Speed matters.</span> <button type="button" class="link" data-open="emergency" data-i="whatToDo">What to do now</button></p>
       <button class="go" type="submit" data-i="submitReport">Send report to RAQEEB</button>
       <p class="hint" id="anon-note" data-i="anonNote">You’re not signed in. Your report still helps, but you can’t track it or earn Guardian points.</p>
     </form>
@@ -156,6 +168,7 @@
         <p id="auth-error" class="error" role="alert"></p>
         <button class="go" type="submit" id="auth-submit" data-i="register">Create account</button>
       </form>
+      <div id="demo-citizen" class="demo-box" hidden></div>
     </div>
     <div id="signed-in" hidden>
       <div class="level-card">
@@ -180,15 +193,16 @@
       <button id="notify" class="soft" data-i="notifyBtn">Turn on alert notifications</button>
       <button id="signout" class="soft" data-i="signOut">Sign out</button>
     </div>
+    <button class="soft" data-open="emergency" data-i="qHelp">I’ve been scammed</button>
   </section>
 </main>
 
 <nav class="tabs" aria-label="Sections">
-  <button data-tab="home" class="on"><span data-i="tabHome">Home</span></button>
-  <button data-tab="protect"><span data-i="tabProtect">Protect</span></button>
-  <button data-tab="report" class="report-tab"><span data-i="tabReport">Report</span></button>
-  <button data-tab="community"><span data-i="tabCommunity">Community</span></button>
-  <button data-tab="profile"><span data-i="tabProfile">Profile</span><b id="note-count" hidden></b></button>
+  <button data-tab="home" class="on"><i class="ti home" aria-hidden="true"></i><span data-i="tabHome">Home</span></button>
+  <button data-tab="protect"><i class="ti shield" aria-hidden="true"></i><span data-i="tabProtect">Protect</span></button>
+  <button data-tab="report" class="report-tab"><i class="ti flag" aria-hidden="true"></i><span data-i="tabReport">Report</span></button>
+  <button data-tab="community"><i class="ti people" aria-hidden="true"></i><span data-i="tabCommunity">Community</span></button>
+  <button data-tab="profile"><i class="ti person" aria-hidden="true"></i><span data-i="tabProfile">Profile</span><b id="note-count" hidden></b></button>
 </nav>
 
 <!-- verdict sheet -->
@@ -205,15 +219,50 @@
       <button id="v-close" class="soft light" data-i="close">Close</button>
     </div>
     <p class="v-explain" data-i="blockVsReport">“Block for me” protects only your phone. “Report to RAQEEB” sends it to analysts, who can block it for everyone once it’s confirmed.</p>
-    <p class="aman"><span data-i="amanAlso">Lost money? Contact Aman (Abu Dhabi Police):</span> <a href="tel:8002626">8002626</a> · <a href="sms:2828">SMS 2828</a></p>
   </div>
+</section>
+
+<!-- assistant -->
+<section id="assistant" class="panel-sheet" hidden aria-modal="true" role="dialog" aria-labelledby="as-title">
+  <div class="ps-head"><h2 id="as-title" data-i="asTitle">Ask RAQEEB</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <ol id="chat" class="chat" aria-live="polite"></ol>
+  <div class="suggest" id="suggest"></div>
+  <form id="ask-form" class="ask">
+    <label for="ask" class="sr" data-i="asTitle">Ask RAQEEB</label>
+    <textarea id="ask" rows="2" data-ph="askPh" placeholder="Ask anything about a scam, or paste a message"></textarea>
+    <button class="go small" type="submit" data-i="send">Send</button>
+  </form>
+</section>
+
+<!-- quick alert -->
+<section id="quick" class="panel-sheet" hidden aria-modal="true" role="dialog" aria-labelledby="qa-title">
+  <div class="ps-head"><h2 id="qa-title" data-i="qaTitle">Quick Alert: suspicious call</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <p class="hint" data-i="qaLede">Report it now and finish later. RAQEEB only records what you type here; it can’t see your calls.</p>
+  <form id="quick-form" class="stack">
+    <label for="qa-number" data-i="qaNumber">The number that called (if you have it)</label>
+    <input id="qa-number" type="tel" inputmode="tel" placeholder="+971 5x xxx xxxx">
+    <label for="qa-kind" data-i="qaKind">They said they were</label>
+    <select id="qa-kind"></select>
+    <label for="qa-text" data-i="qaWhat">What did they ask for? (optional)</label>
+    <textarea id="qa-text" rows="3"></textarea>
+    <button class="go" type="submit" data-i="qaSend">Send Quick Alert</button>
+  </form>
+  <div id="qa-done" class="card result" hidden></div>
+</section>
+
+<!-- emergency guidance -->
+<section id="emergency" class="panel-sheet urgent" hidden aria-modal="true" role="dialog" aria-labelledby="em-title">
+  <div class="ps-head"><h2 id="em-title" data-i="emTitle">If you think you’ve been scammed</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <ol id="em-steps" class="em-steps"></ol>
+  <a class="go" href="tel:8002626" data-i="emCall">Call Aman (Abu Dhabi Police) 8002626</a>
+  <button class="soft" data-goto="report" data-close data-i="emReport">Report it in RAQEEB</button>
+  <p class="hint" data-i="emNote">Call your bank using the number on your card or in its official app, never a number from the message.</p>
 </section>
 
 <!-- UAE PASS guard takeover -->
 <section id="takeover" class="takeover" hidden role="alertdialog" aria-labelledby="to-title">
   <p class="to-eyebrow" data-i="toEyebrow">RAQEEB stopped an approval</p>
   <p id="to-title" class="to-title" data-i="toTitle">Someone is trying to log in as you.</p>
-  <p class="to-title ar-line" lang="ar">شخص ما يحاول تسجيل الدخول باسمك.</p>
   <p class="to-body" data-i="toBody">You’re on a call with an unknown number and a UAE PASS approval just arrived. Real officials never ask you to approve a login. Hang up first.</p>
   <button id="to-deny" class="go light" data-i="toDeny">I didn’t ask for this. Decline</button>
   <button id="to-allow" class="soft light" data-i="toAllow">It was me</button>

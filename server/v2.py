@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from raqeeb import agents, auth, community, content, intel, protection, rewards
 from raqeeb.db import db, rows
 from raqeeb.engine import scan_many
+from raqeeb.messages import check_message
 from raqeeb.security import LIMITS, BadUpload, UnsafeTarget, ip_hash, limiter, ocr_image, read_image, safe_get, store_image
 
 from .deps import client_ip, current_user, rate, require, require_official, require_user
@@ -689,3 +690,100 @@ async def link_preview(url: str):
         out["error"] = "The site could not be reached for a preview. The offline check above still applies."
     return out
 
+
+
+# ============ citizen tools: assistant, phone and advert checks, translation, emergency guidance ============
+class AskIn(BaseModel):
+    message: str = Field(min_length=1, max_length=3000)
+    lang: str | None = None
+
+
+@router.post("/api/assistant", dependencies=[Depends(rate("check"))])
+def assistant_ask(body: AskIn):
+    from raqeeb import assistant
+    return assistant.answer(body.message, body.lang)
+
+
+@router.get("/api/public/check-phone", dependencies=[Depends(rate("check"))])
+def check_phone(number: str, user=Depends(current_user)):
+    """What RAQEEB knows about a number. One citizen report never makes a number 'malicious'."""
+    n = intel.normalize_phone(number)
+    if not n:
+        raise HTTPException(400, "That doesn’t look like a phone number")
+    info, _ = agents.phone_agent(n)
+    rule = protection.check_value(n, "phone")
+    t = rows(db().execute("SELECT status, report_count FROM threats WHERE indicator_type='phone' AND normalized=?", (n,)))
+    status = t[0]["status"] if t else None
+    verdict = ("blocked" if rule else "confirmed" if status == "confirmed_malicious" else "verified" if status == "analyst_verified"
+               else "reported" if t else "unknown")
+    return {"number": n, "kind": info["kind"], "verdict": verdict, "reports": t[0]["report_count"] if t else 0, "status": status,
+            "signals": info["signals"], "personal_block": bool(user and community.personally_blocked(user["id"], n)),
+            "note": "Reports alone don’t prove a number is a scam. A number is only marked as a scam after analysts verify it."}
+
+
+@router.post("/api/public/check-ad", dependencies=[Depends(rate("check"))])
+async def check_ad(text: str = Form(""), file: UploadFile | None = File(None)):
+    """Analyse an advertisement's text and, if Tesseract is installed, the text in its screenshot. Nothing is stored."""
+    ocr_text, ocr_state = "", "no screenshot"
+    if file is not None and file.filename:
+        import io
+        from PIL import Image, UnidentifiedImageError
+        data = await file.read(5 * 1024 * 1024 + 1)
+        if len(data) > 5 * 1024 * 1024:
+            raise HTTPException(400, "Images must be under 5 MB")
+        try:
+            img = Image.open(io.BytesIO(data))
+            img.verify()
+            img = Image.open(io.BytesIO(data)).convert("RGB")
+        except (UnidentifiedImageError, OSError) as e:
+            raise HTTPException(400, "That file isn’t a readable image") from e
+        from raqeeb.link.visual import ocr
+        o = await asyncio.to_thread(ocr, img)
+        ocr_text, ocr_state = (o.get("text", ""), "read") if o.get("available") else ("", "OCR not installed on this server")
+    full = (text + "\n" + ocr_text).strip()
+    if not full:
+        raise HTTPException(400, "Paste the advert text or attach a screenshot")
+    ex = agents.extract(full)
+    links, _ = agents.phishing_agent(ex["urls"])
+    ad, _ = agents.ad_agent(full, links)
+    msg = check_message(full)
+    risk = max(ad["risk"], msg["risk_score"])
+    return {"risk": round(risk, 1), "verdict": "scam" if risk >= 50 else "suspicious" if risk >= 35 else "no strong signs",
+            "signals": ad["signals"], "script_signals": msg["script_signals"], "brands_named": msg["brands_named"],
+            "links": [{"url": l["url"], "risk": l["risk_score"], "verdict": l["verdict"], "brand": (l.get("impersonated_brand") or {}).get("name")} for l in links],
+            "phones": ex["phones"], "ocr": ocr_state, "extracted_text": ocr_text[:1500]}
+
+
+class TranslateIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+    target: str = Field(pattern="^(en|ar|ur)$")
+
+
+@router.post("/api/translate", dependencies=[Depends(rate("check"))])
+def translate_text(body: TranslateIn):
+    from raqeeb import translate
+    return translate.translate(body.text, body.target)
+
+
+@router.get("/api/public/emergency")
+def emergency():
+    return content.EMERGENCY
+
+
+class DetailsIn(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/api/citizen/reports/{ref}/details")
+def report_details(ref: str, body: DetailsIn, user=Depends(require_user)):
+    """Add more details to your own report after sending it (for example after a Quick Alert)."""
+    r = community.get_report(ref)
+    if not r or r["user_id"] != user["id"]:
+        raise HTTPException(404, "No report with that reference")
+    prev = json.loads(db().execute("SELECT details FROM citizen_reports WHERE id=?", (r["id"],)).fetchone()[0] or "[]")
+    prev.append({"text": body.text, "ts": time.time()})
+    db().execute("UPDATE citizen_reports SET details=?, updated=? WHERE id=?", (json.dumps(prev[-20:]), time.time(), r["id"]))
+    ex = agents.extract(body.text)
+    if ex["urls"] or ex["phones"]:  # new indicators in the details go through the normal pipeline, linked to the same report
+        community.submit(user, "other", body.text, r["emirate"])
+    return {"ref": ref, "details": len(prev)}

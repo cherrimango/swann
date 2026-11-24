@@ -149,7 +149,7 @@ def _explain(urls, msg, phones, ad, lang) -> str:
                      else "علامات إعلان احتيالي: عرض مبالغ فيه أو طريقة دفع غير معتادة.")
     if not parts:
         return "No strong scam signals yet. Analysts will review it." if lang == "en" else "لا توجد علامات احتيال قوية حتى الآن، وسيراجعه المحللون."
-    return " ".join(p for p in parts if p)
+    return " ".join(p if p.endswith((".", "۔")) else p + "." for p in (x.strip() for x in parts) if p)
 
 
 def corroborate(user: dict, tid: str, report_id: int | None = None, auto: bool = False) -> dict:

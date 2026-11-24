@@ -22,6 +22,11 @@ def level(score: float | None) -> str:
     return "LOW" if score < low else "MODERATE" if score < mod else "HIGH" if score < high else "CRITICAL"
 
 
+SOURCE_NAMES = {"raqeeb_published": "RAQEEB's published protection list", "raqeeb_threats": "RAQEEB's verified threat records",
+                "public_feeds": "public phishing feeds (OpenPhish / Phishing.Database)", "google_web_risk": "Google Web Risk",
+                "virustotal": "VirusTotal", "urlhaus": "URLhaus"}
+
+
 def ev(stage, signal, en, ar, direction, strength, reliability):
     return {"stage": stage, "signal": signal, "detail_en": en, "detail_ar": ar, "direction": direction,
             "strength": round(strength, 2), "reliability": reliability}
@@ -45,9 +50,12 @@ def aggregate(r: dict) -> dict:
 
     if sig["matches"]:
         for m in sig["matches"]:
-            evidence.append(ev("signatures", m["source"], f"Listed as {m['classification']} by {m['source']}"
+            name = SOURCE_NAMES.get(m["source"], m["source"])
+            evidence.append(ev("signatures", m["source"], f"Listed as {m['classification']} in {name}"
                                + (f" ({m['reference']})" if m.get("reference") else ""),
-                               f"مدرج كتهديد لدى {m['source']}", "risk", 1.0, "high"))
+                               "مدرج كتهديد في " + ("قائمة الحماية المنشورة في رقيب" if m["source"] == "raqeeb_published" else
+                                                    "سجلات التهديدات الموثّقة في رقيب" if m["source"] == "raqeeb_threats" else name),
+                               "risk", 1.0, "high"))
         score = max(score, 97.0 if any(m["source"].startswith("raqeeb") for m in sig["matches"]) else 95.0)
         strong += 2
 
