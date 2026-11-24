@@ -34,6 +34,7 @@ from raqeeb.urlparse import parse
 
 from .deps import current_user, rate, require, require_official
 from .hub import hub
+from .api_v1 import demo_router
 from .api_v1 import router as v1_router
 from .v2 import router as v2_router
 
@@ -80,6 +81,10 @@ async def lifespan(_app):
     created = auth.bootstrap()
     if created:
         print("RAQEEB Command accounts created. Credentials: data/first_run_credentials.txt")
+    from raqeeb import demo_scenario
+    if demo_scenario.enabled():
+        demo_scenario.ensure_accounts()
+        print("DEMO MODE: demo accounts are active (admin@raqeeb.demo, analyst@raqeeb.demo, citizen@raqeeb.demo)")
     seed()
     protection.latest()
     task = asyncio.create_task(_expiry_loop())
@@ -94,6 +99,7 @@ if _origins:
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.include_router(v2_router)
 app.include_router(v1_router)
+app.include_router(demo_router)
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss:; "
@@ -116,6 +122,11 @@ async def security_headers(request: Request, call_next):
 
 # ---------- pages ----------
 @app.get("/", include_in_schema=False)
+def entry_page():
+    return FileResponse(WEB / "index.html")
+
+
+@app.get("/command", include_in_schema=False)
 def command_page():
     return FileResponse(WEB / "command" / "index.html")
 
@@ -157,6 +168,12 @@ class MessageIn(BaseModel):
     emirate: str = "Abu Dhabi"
 
 
+def _demo_note(text):
+    from raqeeb import demo_scenario
+    if demo_scenario.enabled():
+        demo_scenario.note_citizen_check(text)
+
+
 def _with_block(r):
     r["blocked"] = bool(r.get("host") and (protection.check_value(r["url"]) or store.is_blocked(r["host"])))
     return r
@@ -179,6 +196,7 @@ async def api_scan(body: ScanIn, user=Depends(current_user)):
 @app.get("/api/check", dependencies=[Depends(rate("check"))])
 def api_check(url: str):
     content.bump("checks")
+    _demo_note(url)
     r = _with_block(scan_many([url])[0])
     if r["blocked"]:
         content.bump("checks_blocked")
@@ -198,6 +216,7 @@ async def api_message(body: MessageIn, user=Depends(current_user)):
     """Check a message. With report=true it is filed through the RAQEEB 2.0 citizen-report pipeline."""
     from raqeeb import community
     content.bump("checks")
+    _demo_note(body.text)
     r = check_message(body.text)
     for link in r["links"]:
         _with_block(link)

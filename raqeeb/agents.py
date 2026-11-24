@@ -241,6 +241,13 @@ def correlate() -> dict:
 
 # ---------- Agent 7: Seasonal intelligence ----------
 EXTRA_SEASONS = [  # dates for moon-sighted holidays are approximate and labelled so
+    {"id": "winter_camping", "name": "Winter camping and desert season (Nov–Mar)", "name_ar": "موسم التخييم الشتوي والبر (نوفمبر–مارس)",
+     "months": [11, 12, 1, 2, 3], "categories": ["fraud_ad", "fake_payment", "fake_gov"],
+     "keywords": ["camp", "camping", "safari", "desert", "glamping", "permit", "تخييم", "رحلة سفاري", "تصريح"],
+     "advice": "Warn about fake camping permits, desert-safari deals and equipment sellers that ask for transfers."},
+    {"id": "winter_tourism", "name": "Winter tourism, hotels and events", "name_ar": "السياحة الشتوية والفنادق والفعاليات",
+     "months": [11, 12, 1, 2], "categories": ["fraud_ad", "fake_payment"], "keywords": ["hotel", "booking", "staycation", "ticket", "festival"],
+     "advice": "Warn about fake hotel bookings, staycation deals and event tickets sold on social media."},
     {"id": "ramadan", "name": "Ramadan (approx. Feb–Mar 2027)", "name_ar": "رمضان (تقريباً فبراير–مارس 2027)", "months": [2, 3],
      "categories": ["fake_payment", "fraud_ad", "impersonation"], "advice": "Warn about fake charity, iftar-box and Zakat collection links."},
     {"id": "eid_fitr", "name": "Eid Al Fitr (approx. Mar 2027)", "name_ar": "عيد الفطر (تقريباً مارس 2027)", "months": [3],
@@ -269,8 +276,16 @@ def seasonal_agent(today: dt.date | None = None) -> dict:
                 for k, v in this_week.items() if v >= 2 and v > 1.5 * last_week.get(k, 0)]
     predicted = [{"season": s["name"], "season_ar": s["name_ar"], "watchlist": predicted_domains(s)[:6], "basis": "domain-name forecast"}
                  for s in active(today)]
-    predicted += [{"season": s["name"], "season_ar": s["name_ar"], "categories": s["categories"], "advice": s["advice"],
-                   "basis": "seasonal pattern"} for s in EXTRA_SEASONS if today.month in s["months"]]
+    for s in EXTRA_SEASONS:
+        if today.month not in s["months"]:
+            continue
+        signals = {"real": 0, "demo": 0}
+        for kw in s.get("keywords", []):
+            for demo, n in db().execute("""SELECT demo, COUNT(*) FROM threats WHERE last_seen >= ? AND (normalized LIKE ? OR original LIKE ?)
+                                           GROUP BY demo""", (now - 30 * 86400, f"%{kw}%", f"%{kw}%")).fetchall():
+                signals["demo" if demo else "real"] += n
+        predicted.append({"season": s["name"], "season_ar": s["name_ar"], "categories": s["categories"], "advice": s["advice"],
+                          "basis": "seasonal pattern", "observed_signals_30d": signals})
     return {
         "confirmed_current": confirmed,          # confirmed by analysts in the last 30 days
         "observed_emerging": observed,           # reporting volume rising week over week

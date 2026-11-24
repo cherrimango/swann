@@ -134,3 +134,40 @@ async def organisation_add(body: OrgIn, user=Depends(require("manage_registry"))
                  ("organisation_saved", json.dumps({"id": o["id"], "domains": [d["domain"] for d in o["domains"]]}), user["email"]))
     await hub.send("registry", {"id": o["id"]})
     return o
+
+
+# ---------- hackathon demonstration mode (RAQEEB_DEMO=1) ----------
+demo_router = APIRouter(tags=["Demo mode"])
+
+
+@demo_router.get("/api/public/demo")
+def demo_info():
+    from raqeeb import demo_scenario
+    return {"enabled": demo_scenario.enabled(), "accounts": demo_scenario.public_accounts() if demo_scenario.enabled() else [],
+            "note": "Demonstration-only accounts. Never reuse these passwords."}
+
+
+def _demo_on():
+    from raqeeb import demo_scenario
+    if not demo_scenario.enabled():
+        raise HTTPException(404, "Demo mode is off (start the server with RAQEEB_DEMO=1)")
+    return demo_scenario
+
+
+@demo_router.get("/api/demo/status")
+def demo_status(user=Depends(require("view_command"))):
+    return _demo_on().status()
+
+
+@demo_router.post("/api/demo/seed")
+async def demo_seed(user=Depends(require("approve_threat"))):
+    out = _demo_on().seed()
+    await hub.send("citizen_report", {"ref": "demo", "type": "sms", "risk": None, "severity": None, "emirate": None, "threats": []})
+    return out
+
+
+@demo_router.post("/api/demo/reset")
+async def demo_reset(user=Depends(require("approve_threat"))):
+    out = _demo_on().reset()
+    await hub.send("protection", {"version": protection.latest()["payload"]["version"], "rules": len(protection.latest()["payload"]["rules"])}, audience="all")
+    return out
