@@ -1,5 +1,6 @@
 """Two-stage ML model: char n-gram logistic regression -> LightGBM over handcrafted features."""
 import json
+import os
 from pathlib import Path
 
 import joblib
@@ -12,7 +13,7 @@ from sklearn.pipeline import make_pipeline
 from .features import FEATURE_NAMES, canonical, extract, text_for_ngrams
 from .urlparse import parse
 
-MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
+MODEL_DIR = Path(os.environ.get("MIRA_MODEL_PATH") or Path(__file__).resolve().parent.parent / "models")
 
 
 def make_lr():

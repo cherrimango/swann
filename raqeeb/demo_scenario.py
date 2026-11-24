@@ -147,7 +147,7 @@ def _seed_mira_samples() -> list[str]:
     if not pipeline.get(DEMO_SCAN_ID):
         rep = pipeline.analyse("https://bit.ly/demo-camp-permit", "quick", DEMO_SCAN_ID)
         chain = [{"status": 301, "url": "https://bit.ly/demo-camp-permit"},
-                 {"status": 302, "url": "https://go.trk-redirect.example/c?id=771"},
+                 {"status": 302, "url": "https://go.trk-redirect.example.com/c?id=771"},
                  {"status": 200, "url": "https://" + SCENARIO["domain"] + "/pay"}]
         rep.update(mode="deep", demo=True, final_url=chain[-1]["url"], analysis_status="partial (synthetic demo sample)",
                    redirects=redirects.analyse(chain, rep["submitted_url"], chain[-1]["url"]),

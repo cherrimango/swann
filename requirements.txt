@@ -19,6 +19,8 @@ beautifulsoup4>=4.12
 dnspython>=2.4
 httpx
 pytest
+opencv-python-headless>=4.8
+pypdf>=4
 # optional: deep scans in a real headless browser (screenshots, JavaScript redirects)
 # playwright  (then: python -m playwright install chromium)
 # optional: reading text from screenshots (also install the tesseract binary with English + Arabic data)

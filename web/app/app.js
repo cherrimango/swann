@@ -344,8 +344,8 @@ async function analyseFile(f, out) {
   try {
     const r = await api('/api/v1/attachments/analyze', { body: fd });
     remember('image', f.name, r.verdict);
-    const lines = [...r.reasons];
-    if (r.qr?.codes?.length) lines.unshift(t('qrFound', r.qr.codes.length));
+    const lines = [...(lang === 'ar' ? r.reasons_ar || r.reasons : r.reasons)];
+    if (r.qr?.codes?.length) lines.unshift(t('qrCount', r.qr.codes.length));
     if (r.indicators.phone_numbers.length) lines.push(`${t('numbersFound')}: ${r.indicators.phone_numbers.join(', ')}`);
     if (r.message_analysis) lines.push(lang === 'ar' ? r.message_analysis.advice_ar : r.message_analysis.advice_en);
     lines.push(...r.limitations);

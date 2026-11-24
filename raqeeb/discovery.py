@@ -22,8 +22,9 @@ SOURCES = {
     "phishing_database_today": {"name": "Phishing.Database — new links today",
                                 "url": "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-links-NEW-today.txt",
                                 "format": "lines", "key_env": None, "terms": "MIT licence", "min_interval_min": 60},
-    "urlhaus_recent": {"name": "URLhaus recent URLs (abuse.ch)", "url": "https://urlhaus.abuse.ch/downloads/text_recent/",
-                       "format": "lines", "key_env": None, "terms": "abuse.ch terms of use (CC0 data)", "min_interval_min": 5},
+    "urlhaus_recent": {"name": "URLhaus recent URLs (abuse.ch)", "url": "https://urlhaus-api.abuse.ch/v1/urls/recent/",
+                       "format": "urlhaus_json", "key_env": "MIRA_URLHAUS_AUTH_KEY", "key_header": "Auth-Key",
+                       "terms": "abuse.ch terms of use; free Auth-Key required since 30 June 2025", "min_interval_min": 5},
     "phishtank": {"name": "PhishTank online-valid", "url": "https://data.phishtank.com/data/{key}/online-valid.csv",
                   "format": "phishtank_csv", "key_env": "MIRA_PHISHTANK_APP_KEY", "terms": "PhishTank developer terms (free key)",
                   "min_interval_min": 60},
@@ -47,6 +48,11 @@ def _parse_phishtank(text):
     return [r["url"][:2000] for r in csv.DictReader(io.StringIO(text)) if r.get("url")]
 
 
+def _parse_urlhaus(text):
+    import json
+    return [u["url"][:2000] for u in json.loads(text).get("urls", []) if u.get("url")]
+
+
 def collect(source_id: str) -> dict:
     src = SOURCES[source_id]
     started = time.time()
@@ -56,8 +62,10 @@ def collect(source_id: str) -> dict:
         rec.update(status="blocked_missing_key", error=f"set {src['key_env']} to enable this source")
     else:
         try:
-            _, _, body = safe_get(src["url"].format(key=key or ""), timeout=20)
-            urls = _parse_phishtank(body) if src["format"] == "phishtank_csv" else _parse_lines(body)
+            headers = {src["key_header"]: key} if src.get("key_header") and key else None
+            url = src["url"].format(key=key or "")
+            _, _, body = safe_get(url, headers=headers, timeout=20) if headers else safe_get(url, timeout=20)
+            urls = {"phishtank_csv": _parse_phishtank, "urlhaus_json": _parse_urlhaus}.get(src["format"], _parse_lines)(body)
             now = time.time()
             with _lock:
                 for u in urls:

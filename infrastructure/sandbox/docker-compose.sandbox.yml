@@ -1,0 +1,21 @@
+# Run one sandbox visit in an isolated, throw-away container:
+#   docker compose -f infrastructure/sandbox/docker-compose.sandbox.yml run --rm sandbox https://example.com
+# Egress goes through the "sandbox-egress" network only; it must have no route to internal networks
+# (add host firewall rules that drop RFC1918, link-local and 169.254.169.254 from this bridge).
+services:
+  sandbox:
+    build: { context: ../.., dockerfile: infrastructure/sandbox/Dockerfile }
+    read_only: true
+    tmpfs: ["/tmp:size=256m", "/home/sandbox:size=64m"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    pids_limit: 256
+    mem_limit: 1g
+    cpus: 1.0
+    networks: [sandbox-egress]
+    environment:
+      MIRA_SANDBOX_TIMEOUT: "15000"
+networks:
+  sandbox-egress:
+    driver: bridge
+    internal: false

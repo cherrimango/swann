@@ -594,7 +594,7 @@ function startGraph(g, colorFn, radiusFn, alwaysLabel) {
   const links = g.edges.map(e => ({ s: byId[e.source], t: byId[e.target] })).filter(l => l.s && l.t);
   let hover = null, ticks = 0;
   cv.onmousemove = e => { const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; hover = nodes.find(n => (n.x - x) ** 2 + (n.y - y) ** 2 < 120) || null; };
-  cv.onclick = () => { if (hover) { selectedNode = hover.id; if (graphMode === 'threats' && hover.id.startsWith('RQ-')) { show('threats'); openThreat(hover.id); } } };
+  cv.onclick = () => { if (hover) { selectedNode = hover.id; if (graphMode === 'threats' && (hover.id.startsWith('MT-') || hover.id.startsWith('RQ-'))) { show('threats'); openThreat(hover.id); } } };
   if (sim) cancelAnimationFrame(sim);
   const frame = () => {
     if (ticks++ < 400) {

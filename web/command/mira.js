@@ -218,3 +218,18 @@ loaders.overview = async () => {
       srcs.some(s => s.health !== 'healthy') ? L('open Threat discovery engine for errors', 'افتح محرك الاكتشاف للأخطاء') : L('all feeds collecting', 'جميع المصادر تعمل'), srcs.every(s => s.health === 'healthy') ? 'good' : 'warn'),
     tile(L('Sandbox activity', 'نشاط البيئة المعزولة'), `${deep.length} ${L('deep scans', 'فحص عميق')}`, `${done.length} ${L('completed', 'مكتمل')} · ${deep.filter(s => s.status === 'running').length} ${L('running', 'قيد التشغيل')} · ${deep.filter(s => s.status === 'failed').length} ${L('failed', 'فاشل')}`));
 };
+
+/* view headings in Arabic (detailed analyst tables stay in English; see docs/STATUS.md) */
+const VIEW_AR = { overview: 'نظرة عامة', threats: 'التحقق من التهديدات', reports: 'بلاغات المواطنين', feed: 'استخبارات التهديدات المباشرة',
+  domain: 'تحليل الروابط والنطاقات', campaigns: 'حملات الاحتيال', forecast: 'الاستخبارات الموسمية', briefing: 'تقارير الاستخبارات', agents: 'وكلاء الذكاء الاصطناعي',
+  protection: 'الحظر والتوزيع', community: 'الحماة والمجتمع', audit: 'سجلات التدقيق', users: 'الإدارة', demo: 'سيناريو العرض',
+  discovery: 'محرك اكتشاف التهديدات', sandbox: 'إعدادات البيئة المعزولة ومعاملات التحليل', alerts: 'تنبيهات المواطنين', models: 'النماذج والتقييم' };
+function headings() {
+  $$('.view').forEach(v => {
+    const h2 = v.querySelector('h2'); if (!h2) return;
+    h2.dataset.en = h2.dataset.en || h2.textContent;
+    h2.textContent = MiraLang.get() === 'ar' ? (VIEW_AR[v.id.slice(2)] || h2.dataset.en) : h2.dataset.en;
+  });
+}
+document.addEventListener('mira:lang', () => { headings(); const on = $('.view.on'); if (on) loaders[on.id.slice(2)]?.().catch(() => {}); });
+headings();

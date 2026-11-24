@@ -5,10 +5,10 @@
   "mode": "quick scan (link analysis only)",
   "mira": {
     "phishing": {
-      "MALICIOUS": 0.7192,
-      "SUSPICIOUS": 0.1424,
-      "INCONCLUSIVE": 0.1332,
-      "SAFE": 0.0052,
+      "MALICIOUS": 0.7216,
+      "SUSPICIOUS": 0.1464,
+      "INCONCLUSIVE": 0.1308,
+      "SAFE": 0.0012,
       "n": 2500
     },
     "legitimate": {
@@ -18,11 +18,11 @@
       "SAFE": 0.2256,
       "n": 2500
     },
-    "phishing_marked_safe": 0.0052,
-    "phishing_flagged_malicious_or_suspicious": 0.8616,
+    "phishing_marked_safe": 0.0012,
+    "phishing_flagged_malicious_or_suspicious": 0.868,
     "legitimate_flagged_malicious_or_suspicious": 0.0232,
     "legitimate_marked_safe": 0.2256,
-    "seconds": 42.3
+    "seconds": 47.9
   },
   "raqeeb_2_1": {
     "phishing": {
@@ -43,7 +43,7 @@
     "phishing_flagged_malicious_or_suspicious": 0.7484,
     "legitimate_flagged_malicious_or_suspicious": 0.1548,
     "legitimate_marked_safe": 0.8452,
-    "seconds": 40.6
+    "seconds": 41.0
   },
   "uae_eval_mira": {
     "phishing": {
@@ -56,14 +56,14 @@
     "legitimate": {
       "MALICIOUS": 0.0,
       "SUSPICIOUS": 0.05,
-      "INCONCLUSIVE": 0.2833,
-      "SAFE": 0.6667,
+      "INCONCLUSIVE": 0.2167,
+      "SAFE": 0.7333,
       "n": 60
     },
     "phishing_marked_safe": 0.0,
     "phishing_flagged_malicious_or_suspicious": 1.0,
     "legitimate_flagged_malicious_or_suspicious": 0.05,
-    "legitimate_marked_safe": 0.6667
+    "legitimate_marked_safe": 0.7333
   },
   "uae_eval_raqeeb_2_1": {
     "phishing": {

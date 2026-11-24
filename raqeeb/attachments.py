@@ -211,14 +211,17 @@ def analyse(data: bytes, filename: str = "", declared_type: str = "") -> dict:
     if verdict == "SAFE" and not scans:
         verdict = "INCONCLUSIVE"  # no links and no scam wording is not proof the attachment is safe
     report["verdict"] = verdict
-    reasons = []
+    reasons, reasons_ar = [], []
     for s in scans:
         if s["verdict"] in ("MALICIOUS", "SUSPICIOUS"):
             reasons.append(("QR code" if s["from_qr"] else "Link") + f" {s['url'][:80]}: {s['explanation']['en']}")
+            reasons_ar.append(("رمز QR" if s["from_qr"] else "الرابط") + f" {s['url'][:80]}: {s['explanation']['ar']}")
     for sig in (msg or {}).get("script_signals", []):
         reasons.append(sig["en"])
+        reasons_ar.append(sig.get("ar") or sig["en"])
     reasons += [f"PDF {f}" for f in risk_flags]
-    report["reasons"] = reasons[:8]
+    reasons_ar += [f"ملف PDF: {f}" for f in risk_flags]
+    report["reasons"], report["reasons_ar"] = reasons[:8], reasons_ar[:8]
     if not urls and not text.strip():
         report["limitations"].append("No text, links or QR codes were found in this file.")
     report["duration_seconds"] = round(time.time() - t0, 2)

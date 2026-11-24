@@ -1,5 +1,6 @@
 """MIRA scoring engine: allowlist + brand impersonation rules + ML model -> risk score with reasons (EN/AR)."""
 import gzip
+import os
 from pathlib import Path
 
 import numpy as np
@@ -57,7 +58,7 @@ def user_content(p) -> bool:
 
 _model = None
 _threat = None
-MODELS = Path(__file__).resolve().parent.parent / "models"
+MODELS = Path(os.environ.get("MIRA_MODEL_PATH") or Path(__file__).resolve().parent.parent / "models")
 
 
 def threat_lists():

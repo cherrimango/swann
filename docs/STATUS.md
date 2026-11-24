@@ -1,64 +1,108 @@
-# MIRA: implementation status
+# MIRA: implemented versus pending
 
-Updated 24 November 2026. Every "tested" claim below is covered by `pytest -q` (75 tests, all passing) or was checked by hand in a browser, as stated.
+Updated 24 November 2026. Labels follow the MIRA brief:
+**IMPLEMENTED AND TESTED** · **IMPLEMENTED BUT NOT FULLY TESTED** · **PARTIALLY IMPLEMENTED** · **SIMULATED FOR DEMONSTRATION** ·
+**NOT IMPLEMENTED** · **BLOCKED BY MISSING API ACCESS OR CREDENTIALS**.
 
-## Fully implemented and tested
-| Capability | Where | How it was tested |
+"Tested" means covered by `pytest -q` (**96 tests, all passing**) or checked by hand in headless Chrome, as stated.
+The build machine had **no outbound internet and no Docker daemon**, so nothing that needs a live website or a container was
+exercised here.
+
+## Test commands and results
+
+```text
+$ pytest -q
+96 passed in 12.2s
+$ python data/build_dataset.py      → mira-ds-946b39760a: 1,511,838 rows, 494,915 registered domains
+$ python train_mira.py              → test precision 0.9969, recall 0.7659, F1 0.8663, FPR 0.0025, ROC-AUC 0.9787
+$ python evaluate_mira.py --old /tmp/old21
+                                    → phishing marked SAFE: RAQEEB 2.1 24.96% → MIRA 0.12%
+                                      legitimate flagged:   RAQEEB 2.1 15.48% → MIRA 2.32%
+```
+New regression tests: `tests/test_mira.py` (21 tests). Screens checked by hand at 1440×900 and 420×900 in English and Arabic:
+entry, Command (overview, alerts, sandbox, redirect journey), Protect (home, picture scan), `/signin`.
+
+## Detection engine
+| Feature | Label | Evidence |
 |---|---|---|
-| **Link Intelligence Engine**: validation (Public Suffix List, IDN, homoglyphs, IP forms, credentials, `@`, double extensions, redirect parameters), static features, official registry, signatures, ML, risk aggregation with separate score, confidence and completeness | `raqeeb/link/`, `POST /api/v1/scan` | `tests/test_link_engine.py` (Unicode, IDN, IP, malformed input, normalisation, verdict/level consistency, API contract) |
-| **Browser sandbox**: real headless Chromium, every request re-checked against internal addresses, downloads refused, nothing submitted | `raqeeb/link/sandbox.py` | Test against a local fake login page; it finds the password field, the form sending data to another site and the brand text |
-| **ML model**: char n-gram LR stacked into LightGBM, grouped by registered domain, TreeSHAP contributions | `train.py`, `raqeeb/link/ml.py` | Held-out domains: precision 98.2%, recall 68.7%, FPR 1.3% |
-| **Model comparison** with Random Forest and XGBoost on the identical split | `compare_models.py`, `models/evaluation.json` | Production 0.81 F1, RF 0.74, XGBoost 0.66. The production model's test numbers match its training report exactly, which confirms the split is the same and nothing leaked |
-| **Accounts and RBAC**: 6 official roles plus citizens; scrypt; hashed session tokens; permission checks on every route | `raqeeb/auth.py`, `server/deps.py` | `test_roles_and_registration`, `test_rbac` |
-| **Verification workflow**: AI flagged → analyst verified → officially approved (separate permission) → global block | `server/v2.py`, `raqeeb/community.py` | `test_global_block_policy`, `test_full_workflow`, `test_demo.py` |
-| **Citizen reporting**: 11 types, auto-detection, indicator extraction, duplicates, screenshots (validated, re-encoded, encrypted), impact questions, status tracking, adding details later | `raqeeb/community.py` | `test_v2.py` 3–5, `test_report_details_can_be_added_later` |
-| **Community corroboration**: weighted by reputation; never blocks by itself | `community.corroborate` | `test_corroboration_never_blocks` |
-| **Signed protection distribution**: Ed25519, versioned, URL-level rules for shared platforms, expiry, rollback; the browser verifies the signature itself (checked in Chrome) | `raqeeb/protection.py`, Protect app | `test_signed_packages`, `test_rollback`, `test_block_expiry`, `test_url_level_blocking_for_shared_platforms` |
-| **Guardians**: points only after verification, never twice, reversed on false positives, anonymous leaderboards, levels and badges | `raqeeb/rewards.py` | `test_v2.py` 14–17 |
-| **Campaign correlation**: shared domain, phishing kit, co-occurrence in one report, near-identical text | `agents.correlate` | `test_campaign_correlation`, demo test |
-| **Seasonal intelligence**: confirmed, emerging, predicted and historical kept apart; counts real versus demo signals | `agents.seasonal_agent` | `test_forecast_separates_evidence_classes` |
-| **Assistant** in English, Arabic and Urdu: detects the language, calls the link engine, phone and message tools, labels live checks versus general guidance | `raqeeb/assistant.py` | `test_assistant_uses_tools_and_answers_in_the_same_language` |
-| **Message intelligence** in English, Arabic, Urdu and Roman Urdu | `raqeeb/messages.py` | `test_urdu_scam_message_is_detected` and 1.0 tests |
-| **Phone and advert checkers**: one report never condemns a number | `server/v2.py` | `test_phone_checker_never_condemns_on_reports_alone`, `test_advert_checker` |
-| **Security**: SSRF checks on every redirect hop, upload validation, rate limits (per address and per account for sign-in), CSP and other headers, audit log | `raqeeb/security.py`, `server/app.py` | `test_security_controls` |
-| **Demo mode**: spec demo accounts plus the seeded winter-camping scenario through all 11 steps, then removable | `raqeeb/demo_scenario.py` | `test_winter_camping_scenario_end_to_end` |
-| **Interfaces**: entry screen; COMMAND (13 sections plus demo); PROTECT (5 tabs, 7 checkers, assistant, Quick Alert, emergency guidance, EN/AR/UR with right-to-left layout) | `web/` | Checked by hand in headless Chrome at desktop and mobile sizes, with no console errors and no server errors |
+| Fix for phishing marked SAFE (four verdicts; SAFE needs positive evidence; unknown → INCONCLUSIVE) | IMPLEMENTED AND TESTED | `test_unknown_benign_looking_site_is_inconclusive_not_safe`, `test_official_and_popular_domains_can_be_safe`, end-to-end evaluation |
+| Popular-domain cap removed for user-content platforms and hosting providers; strict threshold before questioning a popular page | IMPLEMENTED AND TESTED | `test_phishing_on_user_content_platforms_is_not_capped_as_popular`, `test_hosting_provider_subdomain_is_not_safe` |
+| PSL-aware parsing (`login.uaepass.example.com` → `example.com`) | IMPLEMENTED AND TESTED | `test_psl_brand_text_in_subdomain_is_not_official` |
+| Verdict, risk score, confidence, completeness and analysis status reported separately | IMPLEMENTED AND TESTED | scan report contract, Command report view |
+| Full-URL model trained on the attached dataset + feeds, calibrated, versioned | IMPLEMENTED AND TESTED | `test_model_is_the_full_url_model_with_calibration`, `docs/MODEL_REPORT.md` |
+| Baselines (RF, XGBoost, char-LR, RAQEEB 2.1) on the same split | IMPLEMENTED AND TESTED | `models/evaluation_mira.json` |
+| 99.9% accuracy target | NOT MET | measured 87.9% accuracy, 76.6% recall at 0.25% FPR; see report |
+| 10M-record dataset | PARTIALLY IMPLEMENTED | pipeline is repeatable and versioned; 1.51M distinct records from available sources |
+| Temporal evaluation | PARTIALLY IMPLEMENTED | no timestamps in the data; OpenPhish snapshot used as the fresh-threat test (83.3% recall) |
+| `.gov.ae / .ac.ae / .sch.ae / .mil.ae` restricted-zone trust | IMPLEMENTED AND TESTED | `.aeDA` eligibility policy; `test_official_and_popular_domains_can_be_safe` |
+| Threat intel: bundled OpenPhish + Phishing.Database snapshot, MIRA verified threats, published rules, discovery indicators | IMPLEMENTED AND TESTED | `test_discovery_records_new_duplicates_missing_keys_and_failures` |
+| Google Web Risk, VirusTotal, URLhaus, PhishTank | BLOCKED BY MISSING API ACCESS OR CREDENTIALS | adapters written; without a key they show "not checked" |
+| Spamhaus | NOT IMPLEMENTED | needs a commercial data agreement |
+| RDAP, DNS, TLS certificate | IMPLEMENTED BUT NOT FULLY TESTED | code from 2.1; needs internet |
+| ASN / hosting relationships | PARTIALLY IMPLEMENTED | RDAP IP lookup in `raqeeb/live.py`; no ASN graph |
+| Sandbox (Playwright Chromium, SSRF check on every request and redirect, downloads refused, dialogs dismissed) | IMPLEMENTED BUT NOT FULLY TESTED | 2.1 local fake-page test; live sites not reachable here |
+| Sandbox failure never SAFE | IMPLEMENTED AND TESTED | `test_sandbox_failure_never_yields_safe` |
+| Hardened Docker sandbox container | IMPLEMENTED BUT NOT FULLY TESTED | `infrastructure/sandbox/` written, not built (no Docker daemon) |
+| Redirect analysis (every hop, status, type, domain changes, shorteners, loops, hop limit, stop reason, all-analysed flag) | IMPLEMENTED AND TESTED | `test_redirect_analysis_counts_hops_domains_and_loops` |
+| Redirect timeline in Command (and in Protect deep-scan results) | IMPLEMENTED AND TESTED | checked by hand with `SCAN-DEMO-REDIRECT1` |
+| Screenshot + pHash/layout/colour comparison + OCR | PARTIALLY IMPLEMENTED | works when reference screenshots exist (`data/capture_references.py`, needs internet); logo detection and image embeddings not implemented |
+| Sandbox Configuration & Analysis Parameters page + per-scan collected parameters | IMPLEMENTED AND TESTED | `test_sandbox_configuration_is_for_officials_only`, checked by hand |
 
-## Partially implemented
-| Capability | What works | What doesn't yet |
+## Shared AI, discovery and agents
+| Feature | Label | Evidence |
 |---|---|---|
-| **Visual impersonation** | pHash, layout and colour similarity against reference screenshots; OCR (English + Arabic) when Tesseract is installed; brand text on the page | No reference screenshots ship with the repo (`data/capture_references.py` needs internet). Logo detection and CLIP-style embeddings are not implemented. Without references the stage reports itself unavailable |
-| **Domain intelligence** | RDAP, DNS (A, AAAA, MX, TXT, NS with dnspython), certificate details including SANs and fingerprint | Needs internet. Passive DNS is not integrated (it needs a licence) |
-| **Domain Hunter** | Look-alike permutations that resolve, crt.sh certificates, seasonal watchlists, replay of real feed URLs | Not scheduled continuously; hunts run when an analyst starts them |
-| **Screenshot OCR in reports** | Runs if `pytesseract` and the Tesseract binary are installed | Without them the screenshot is stored as evidence but not read |
-| **Translation service** | URLs, numbers, amounts, codes and dates are masked and restored exactly (tested) | Needs an OpenAI-compatible model (`MIRA_LLM_URL`); without one it says it is unavailable |
-| **Assistant wording** | Reviewed guidance plus live tool results, no model needed | Natural rephrasing only with `MIRA_LLM_URL` |
-| **Database** | SQLite with versioned migrations and WAL; one connection per thread | Not PostgreSQL or Redis. Chosen so the demo runs with no setup; the schema is plain SQL and can be ported |
-| **Interactive UAE map** | Clickable emirate-level breakdown (reports, threats, categories, campaigns) | A schematic layout, not a geographic map |
+| One backend used by Protect and Command (`/api/v1/scan`, attachments, agents) | IMPLEMENTED AND TESTED | both apps call the same routes |
+| Global Threat Discovery Engine (scheduled polling, per-source health, new vs duplicate, failures recorded, UTC storage, unverified leads) | IMPLEMENTED BUT NOT FULLY TESTED | logic tested with a mocked feed; live polling needs internet; scheduler on with `MIRA_DISCOVERY_ENABLED=1` |
+| 14 agents with the structured envelope | IMPLEMENTED AND TESTED | `test_fourteen_agents_with_structured_results` |
+| Campaign correlation, seasonal intelligence (confirmed / emerging / predicted / historical) | IMPLEMENTED AND TESTED | 2.1 tests |
 
-## Demonstration-only
-- The **seeded winter-camping scenario**: step 1 is a simulated discovery. Its domains, phone number and messages are invented and marked as demo data. Steps 2–11 run the real engine and workflow.
-- The **demo accounts** (`*@mira.demo`) exist only with `MIRA_DEMO=1`.
-- The **web UAE PASS guard** is a simulation. The real guard is the Android notification-listener code.
-- **Scam simulations** in the Knowledge Centre use the reserved `.example` domain.
+## MIRA Protect
+| Feature | Label | Evidence |
+|---|---|---|
+| Rebrand, exact logo, dark-navy glass design, no flag motifs | IMPLEMENTED AND TESTED | `test_pages_served_and_no_old_branding`, screenshots |
+| English + Arabic only, global switch, RTL | IMPLEMENTED AND TESTED | Urdu strings kept inactive in `i18n.js` for later |
+| Picture and file scanning (file picker, camera capture, gallery, drag and drop → QR decode, OCR, URLs, phones, link scans) | IMPLEMENTED AND TESTED | `test_attachment_qr_image_is_decoded_and_link_scanned`, `test_attachment_text_file_with_scam_link`, checked by hand |
+| Unsupported or executable uploads refused with a clear message | IMPLEMENTED AND TESTED | `test_attachment_rejects_programs_and_unknown_types` |
+| PDF analysis (text, link annotations, JavaScript / launch / embedded-file flags) | IMPLEMENTED BUT NOT FULLY TESTED | no PDF fixture in the tests |
+| Malware scanning of uploads | NOT IMPLEMENTED | files are never executed; no AV engine is bundled |
+| Official citizen alerts on Home (bilingual, acknowledge, report a related attempt, live push over WebSocket) | IMPLEMENTED AND TESTED | `test_citizen_alert_workflow_enforces_review_approval_and_honest_delivery` |
+| Reporting (11 types), own report status, Block for me / Report to MIRA | IMPLEMENTED AND TESTED | 2.1 tests + `test_models_metrics_and_reports_endpoints` |
 
-## Needs external API credentials (adapters written, off by default)
-- Google Web Risk (`GOOGLE_WEB_RISK_API_KEY`), VirusTotal (`VIRUSTOTAL_API_KEY`) and URLhaus (`URLHAUS_AUTH_KEY`): deep-scan signature checks. Without a key they are listed as "not checked", never as clean.
-- An optional LLM (`MIRA_LLM_URL`) for briefings, assistant rephrasing and translation.
+## MIRA Command
+| Feature | Label | Evidence |
+|---|---|---|
+| Redesign: top-bar workspaces + contextual tabs, full-screen mode, glass panels | IMPLEMENTED AND TESTED | checked by hand |
+| Overview with model, SAFE-rate, source health and sandbox activity from backend data | IMPLEMENTED AND TESTED | checked by hand |
+| Citizen-alert workflow (draft, AI draft, EN/AR, review by someone else, admin approval, publish, withdraw, versions, delivery and engagement tracking, audit) | IMPLEMENTED AND TESTED | `test_citizen_alert_workflow…`, `test_ai_draft_is_labelled_and_bilingual` |
+| Create citizen alert from a threat record | IMPLEMENTED BUT NOT FULLY TESTED | button wired; checked by hand only |
+| Arabic in Command | PARTIALLY IMPLEMENTED | navigation, workspaces, headings, sign-in, new MIRA views translated; older detailed analyst tables remain English |
+| Sortable tables | PARTIALLY IMPLEMENTED | discovery and model tables; other tables not yet |
+| RBAC (6 official roles + citizen), audit log | IMPLEMENTED AND TESTED | 2.1 tests + new permission tests |
 
-## Needs native mobile permissions
-- Android (`android/`, **written but not compiled**, because no Android SDK was available):
-  - notification reading for SMS and WhatsApp scanning;
-  - call-state reading for the UAE PASS guard;
-  - call screening, which rejects confirmed scam numbers offline;
-  - the Quick Settings tile for Quick Alert;
-  - signed offline rules.
-- iOS is a plan only (`docs/ios.md`): Message Filter, Call Directory and Share extensions.
-- Power-button shortcuts are not used, because they are reserved for emergency functions on many phones. Quick Alert is reached through the in-app button, PWA home-screen shortcuts and the Android tile.
+## Sign-in
+| Feature | Label | Evidence |
+|---|---|---|
+| Demo sign-in prototype (QR, simulated phone approval, consent, success/denial/expiry, one-time token, demo mode only) | SIMULATED FOR DEMONSTRATION | `test_demo_signin_prototype_issues_one_time_session`, `test_demo_signin_disabled_outside_demo_mode` |
+| UAE PASS Security Simulator (7 steps, real engine link checks, call explanation; no calls placed) | SIMULATED FOR DEMONSTRATION | checked by hand |
+| Real UAE PASS integration | BLOCKED BY MISSING API ACCESS OR CREDENTIALS | path documented in `docs/UAE_PASS_INTEGRATION.md` |
+| Automatic sign-in (stored token, expiry, logout, hashed tokens, bearer header) | IMPLEMENTED AND TESTED | unchanged from 2.1 |
 
-## Needs future infrastructure
-- A Docker sandbox with network-level egress controls and CPU/memory limits. `infrastructure/Dockerfile` and `docker-compose.yml` are written but **not built** here, because no Docker daemon was available.
-- Firebase or APNs push. Notifications currently travel over the live WebSocket and the browser Notification API.
-- PostgreSQL/Redis, SQLCipher or disk encryption, and passive DNS feeds.
-- A DNS-rebinding fix at the network layer: application checks run before each connection, but a race remains possible.
-- An appeal workflow for citizens. False positives, revocation and rollback exist on the official side.
+## Delivery channels
+| Channel | Label |
+|---|---|
+| In-app (Protect inbox + live WebSocket) | IMPLEMENTED AND TESTED |
+| Push, e-mail, SMS | BLOCKED BY MISSING API ACCESS OR CREDENTIALS: no provider adapters; recorded as "not configured", never as delivered |
+
+## Mobile
+| Feature | Label |
+|---|---|
+| PWA (share target, shortcuts, offline signed rules) | IMPLEMENTED AND TESTED (2.1) |
+| Android module (notification scanning, call screening, Quick Settings tile) | IMPLEMENTED BUT NOT FULLY TESTED: written, not compiled (no Android SDK) |
+| iOS extensions | NOT IMPLEMENTED (plan in `docs/ios.md`) |
+
+## Known limitations
+- SQLite instead of PostgreSQL/Redis (`MIRA_REDIS_URL` is reserved, unused).
+- DNS rebinding is checked before each connection at the application layer; a network-level egress policy is still needed (container profile provided).
+- Visual comparison needs reference screenshots captured online; none ship.
+- The attached dataset's provenance is not stated; check its licence before redistribution.
+- The UAE evaluation set is small (113 URLs).

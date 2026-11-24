@@ -73,7 +73,7 @@ def normalize(indicator_type: str, raw: str) -> str:
 
 def _next_id() -> str:
     n = db().execute("SELECT COUNT(*) FROM threats").fetchone()[0] + 1
-    return f"RQ-{time.strftime('%Y')}-{n:05d}"
+    return f"MT-{time.strftime('%Y')}-{n:05d}"  # MIRA threat
 
 
 def _hist(entry: dict) -> dict:

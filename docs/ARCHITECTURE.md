@@ -36,7 +36,7 @@
 | `intelligence/official_domains.py`, `signature_detector.py`, `threat_feeds.py`, `source_registry.py` | `raqeeb/link/official_domains.py`, `signatures.py`, `source_registry.py`; feeds via `data/download.py` |
 | `sandbox/browser_analyzer.py` | `raqeeb/link/sandbox.py` |
 | `ml/train.py`, `predict.py` | `train.py`, `compare_models.py`, `raqeeb/model.py`, `raqeeb/link/ml.py`, `models/` |
-| `agents/*.py` | `raqeeb/agents.py` (one module, ten agents), `raqeeb/assistant.py` |
+| `agents/*.py` | `raqeeb/mira_agents.py` (fourteen agents, one result envelope) over `raqeeb/agents.py`; `raqeeb/assistant.py` |
 | `database/` | `raqeeb/db.py` (versioned migrations) |
 | `mobile/` | `android/`, `docs/ios.md`, PWA in `web/app` |
 | `infrastructure/docker` | `infrastructure/Dockerfile`, `docker-compose.yml` |
@@ -85,3 +85,18 @@ The modules stay importable on their own: `from raqeeb.link import analyse` runs
 discovery or citizen report → AI analysis → evidence collection → duplicate detection → campaign correlation → risk → **analyst verified** (`verify_threat`) → **officially approved** (`approve_threat`: Police or Super Admin) → global block (`approve_block`, approved threats only) → signed publication → citizen notification → expiry and re-evaluation (hourly job), revocation, rollback.
 
 Agents and citizens cannot skip a step: each transition is checked on the server.
+
+## MIRA additions (November 2026)
+| Component | File | Notes |
+|---|---|---|
+| Canonical URL form + full-URL model | `raqeeb/features.py::canonical`, `raqeeb/model.py`, `train_mira.py` | isotonic calibration; strict and operating thresholds in `models/meta.json` |
+| Versioned dataset pipeline | `data/build_dataset.py` → `data/processed/` | source on every row, dedup, conflict removal, manifest |
+| Redirect analysis | `raqeeb/link/redirects.py` | used by deep scans; `report.redirects` |
+| Sandbox configuration | `raqeeb/link/sandbox_config.py` | `/api/v1/sandbox/configuration`, `/api/v1/sandbox/{id}` |
+| Attachments | `raqeeb/attachments.py` | magic-byte typing, Pillow re-encode, OpenCV QR, Tesseract, pypdf |
+| Threat Discovery Engine | `raqeeb/discovery.py` | `indicators`, `discovery_runs` tables; scheduler thread |
+| Citizen alerts | `raqeeb/alerts.py` | `citizen_alerts`, `citizen_alert_versions`, `alert_deliveries`, `alert_engagement`, `alert_subscriptions` |
+| MIRA API router | `server/api_mira.py` | reports, attachments, sandbox, metrics, notifications, agents |
+| Demo sign-in prototype | `server/signin_demo.py`, `web/signin/` | demo mode only |
+| Global language | `web/shared/lang.js` | `mira-lang`, EN/AR, RTL |
+Database migration 5 (`raqeeb/db.py`) adds the new tables.

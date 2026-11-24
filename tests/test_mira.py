@@ -177,11 +177,13 @@ def test_discovery_records_new_duplicates_missing_keys_and_failures(c, monkeypat
     assert (r1["status"], r1["new_indicators"]) == ("ok", 2) and (r2["new_indicators"], r2["duplicates"]) == (0, 2)
     monkeypatch.delenv("MIRA_PHISHTANK_APP_KEY", raising=False)
     assert discovery.collect("phishtank")["status"] == "blocked_missing_key"
+    monkeypatch.delenv("MIRA_URLHAUS_AUTH_KEY", raising=False)
+    assert discovery.collect("urlhaus_recent")["status"] == "blocked_missing_key"
 
     def boom(url, timeout=20):
         raise ConnectionError("network unreachable")
     monkeypatch.setattr(discovery, "safe_get", boom)
-    f = discovery.collect("urlhaus_recent")
+    f = discovery.collect("phishing_database_today")
     assert f["status"] == "failed" and "unreachable" in f["error"]
     st = c.get("/api/v1/intelligence/sources/status", headers=analyst(c)).json()["discovery"]
     assert {s["id"]: s["health"] for s in st["sources"]}["openphish"] == "healthy"
