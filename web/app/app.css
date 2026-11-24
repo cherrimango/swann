@@ -356,3 +356,6 @@ textarea:focus, input:focus, select:focus { border-color: #fff; box-shadow: 0 0 
 .oa summary { font-weight: 700; font-size: 16.5px; cursor: pointer; }
 .oa ul { margin: 4px 0 8px; padding-inline-start: 18px; font-size: 14.5px; }
 .ocr-text { white-space: pre-wrap; font-size: 13px; background: rgba(0,0,0,.25); padding: 8px; border-radius: 8px; max-height: 200px; overflow: auto; }
+.input-tools { display: flex; gap: 14px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.input-tools .hint { font-size: 12.5px; margin-inline-start: auto; }
+.v-copy .copy-btn { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.35); padding: 6px 12px; font-size: 13.5px; }

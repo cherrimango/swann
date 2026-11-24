@@ -170,6 +170,23 @@ function localRule(input) {
 const looksLikeLink = s => !/\s/.test(s.trim()) && /[.]/.test(s);
 let lastInput = '', lastResult = null;
 $('#check-form').addEventListener('submit', e => { e.preventDefault(); check($('#input').value); });
+// Enter scans, Shift+Enter adds a line. Clipboard events are left alone so Cmd/Ctrl+V, right-click and mobile paste work natively.
+$('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); check($('#input').value); } });
+const clipLabels = () => ({ ok: t('copied'), err: t('copyFail'), button: t('copy') });
+$('#paste-btn').addEventListener('click', async () => {
+  const v = await SawnnClip.paste({ err: t('pasteFail') });
+  if (v !== null) { $('#input').value = v.trim(); $('#input').focus(); }
+});
+$('#clear-btn').addEventListener('click', () => { $('#input').value = ''; $('#input').focus(); });
+function copyRow(r, submitted) {
+  const L = clipLabels(), row = h('div', { class: 'copy-row' });
+  row.append(SawnnClip.button('', submitted, { ...L, button: t('copyLink'), what: submitted }));
+  const final = r?.final_url || r?.redirects?.final_url;
+  if (final && final !== r.normalised_url) row.append(SawnnClip.button('', final, { ...L, button: t('copyFinal') }));
+  const hops = r?.redirects?.hops;
+  if (hops?.length) row.append(SawnnClip.button('', () => [`${t('submitted')}: ${submitted}`, ...hops.map(x => `${x.hop}. ${x.status ?? ''} ${x.url}`)].join('\n'), { ...L, button: t('copyChain') }));
+  return row;
+}
 async function scanLink(url) {
   const r = await api('/api/v1/scan', { body: { url, mode: 'quick' } });
   const blocked = r.signature_result?.matches?.some(m => m.source === 'raqeeb_published') || !!localRule(url);
@@ -217,6 +234,7 @@ function showVerdict(r) {
   $('#v-advice').textContent = ({ scam: t('adviceScam'), suspicious: t('adviceWarn'), safe: t('adviceSafe'), unclear: t('adviceUnclear') })[tone] +
     (r.confidence ? ` ${t('confidence', r.confidence)}.` : '');
   $('#v-block').textContent = t('blockForMe'); $('#v-block').disabled = false;
+  $('#v-copy')?.replaceChildren(r.kind === 'link' ? copyRow(r.report, lastInput) : '');
   sheet.hidden = false; sheet.scrollTop = 0;
   if (tone === 'scam') navigator.vibrate?.([120, 60, 120]);
 }
@@ -368,7 +386,7 @@ function renderChecker() {
   const k = CK_KEYS[ckType], box = $('#checker');
   if (ckType === 'image') return renderImageChecker(box);
   const multi = ['message', 'ad'].includes(ckType);
-  const input = multi ? h('textarea', { id: 'ck-in', rows: 4, placeholder: t(`ph${k}`) }) : h('input', { id: 'ck-in', placeholder: t(`ph${k}`), inputmode: ckType === 'phone' ? 'tel' : 'url' });
+  const input = multi ? h('textarea', { id: 'ck-in', rows: 4, placeholder: t(`ph${k}`) }) : h('input', { id: 'ck-in', type: 'text', placeholder: t(`ph${k}`), inputmode: ckType === 'phone' ? 'tel' : 'url', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'go' });
   const out = h('div', { id: 'ck-out', class: 'ck-out', 'aria-live': 'polite' });
   const file = ckType === 'ad' ? h('label', { class: 'file' }, h('span', {}, t('attachAd')), h('input', { id: 'ck-file', type: 'file', accept: 'image/png,image/jpeg,image/webp' })) : null;
   const deep = ['website', 'payment', 'qr'].includes(ckType) ? h('label', { class: 'check' }, h('input', { type: 'checkbox', id: 'ck-deep' }), h('span', {}, t('deep'))) : null;
@@ -395,7 +413,7 @@ async function runChecker() {
       const lines = [r.detected_brand && tone !== 'safe' ? t('pretends', r.detected_brand) : null, ...r.strongest_indicators.map(detail),
         t('confidence', r.assessment_confidence), t('completeness', Math.round(r.analysis_completeness * 100)),
         r.final_url && r.final_url !== r.normalised_url ? `${t('goesTo')}: ${r.final_url}` : null, ckType === 'payment' ? t('payWarn') : null];
-      out.replaceChildren(resultCard(tone, v === 'blocked' ? t('blocked') : t(v), lines, h('div', {}, redirectList(r),
+      out.replaceChildren(resultCard(tone, v === 'blocked' ? t('blocked') : t(v), lines, h('div', {}, copyRow(r, val), redirectList(r),
         h('div', { class: 'two' }, h('button', { class: 'soft', onclick: () => { $('#r-text').value = val; selectType(ckType === 'qr' ? 'qr' : 'website'); go('report'); } }, t('reportToMIRA')),
           h('button', { class: 'soft', onclick: () => preview(val, out) }, t('preview'))))));
     } else if (ckType === 'message') {

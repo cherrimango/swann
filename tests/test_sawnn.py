@@ -195,14 +195,102 @@ def test_discovery_records_new_duplicates_missing_keys_and_failures(c, monkeypat
 
 
 # ---------- agents, sandbox config, models, reports ----------
-def test_fourteen_agents_with_structured_results(c):
+def test_sixteen_agents_run_through_the_orchestrator_with_handoffs(c):
     h = analyst(c)
     lst = c.get("/api/v1/agents", headers=h).json()
-    assert len(lst) == 14
-    r = c.post("/api/v1/agents/phishing/run", json={"input": "http://adcb-secure-login.top/verify"}, headers=h).json()
-    assert set(r) >= {"agent", "task", "result", "evidence", "confidence", "source", "timestamp", "limitations", "recommended_action"}
-    assert r["result"]["verdict"] in ("MALICIOUS", "SUSPICIOUS")
-    assert c.post("/api/v1/agents/seasonal/run", json={}, headers=h).status_code == 200
+    assert len(lst) == 16 and {"url_analysis", "sentiment_social_engineering"} <= {a["id"] for a in lst}
+    w = c.post("/api/v1/agents/url_analysis/run", json={"input": "http://adcb-secure-login.top/verify"}, headers=h).json()
+    agents = [t["agent"] for t in w["tasks"]]
+    assert agents[:2] == ["url_analysis", "phishing_intelligence"] and "uae_brand_impersonation" in agents
+    for t in w["tasks"]:
+        assert t["status"] == "completed" and t["duration_ms"] is not None and t["id"].startswith("TSK-")
+        assert set(t) >= {"agent", "status", "input_refs", "findings", "evidence", "confidence", "sources", "errors", "recommended_action"}
+    pi = next(t for t in w["tasks"] if t["agent"] == "phishing_intelligence")
+    assert pi["parent_id"] == w["tasks"][0]["id"] and pi["findings"]["verdict"] in ("MALICIOUS", "SUSPICIOUS")
+    assert w["status"] == "completed"
+    act = c.get("/api/v1/agents/activity", headers=h).json()
+    assert any(a["agent"] == "phishing_intelligence" and a["completed"] >= 1 for a in act["agents"])
+    assert c.post("/api/v1/agents/seasonal/run", json={}, headers=h).json()["status"] == "completed"
+
+
+def test_failing_agent_is_recorded_not_hidden(c):
+    from raqeeb import orchestrator
+    w = orchestrator.run_sync("manual", {"url": ""}, "test", "url_analysis")
+    t = w["tasks"][0]
+    assert t["status"] == "failed" and t["errors"] and w["status"] == "failed"
+
+
+def test_citizen_report_enters_the_agent_pipeline(c):
+    from raqeeb import orchestrator
+    r = c.post("/api/v1/reports", data={"type": "sms", "text": "Your account will be suspended today. Pay the fine now: http://adpolice-fines.top/pay"},
+               headers=citizen(c)).json()
+    assert r["workflow_id"]
+    orchestrator.drain()
+    w = orchestrator.workflow(r["workflow_id"])
+    agents = {t["agent"] for t in w["tasks"]}
+    assert {"message_intelligence", "sentiment_social_engineering", "url_analysis", "phishing_intelligence"} <= agents
+
+
+def test_discovery_pipeline_creates_investigations_and_notifies(c, monkeypatch):
+    from raqeeb import discovery, orchestrator
+    events = []
+    orchestrator.set_notifier(lambda ev, data: events.append((ev, data)))
+    feed = "http://uaepass-renew-account.top/login\nhttps://www.wikipedia.org/wiki/Abu_Dhabi\n"
+    monkeypatch.setattr(discovery, "safe_get", lambda url, timeout=20, headers=None: (None, [], feed))
+    assert discovery.collect("openphish")["new_indicators"] >= 1
+    q = orchestrator.process_discoveries(10)
+    orchestrator.drain()
+    w = orchestrator.workflow(q["workflow_id"])
+    assert w["tasks"][0]["agent"] == "global_threat_hunter"
+    st = discovery.status()
+    assert st["processing"]["by_status"].get("processed", 0) >= 2 and st["processing"]["investigations_created"] >= 1
+    from raqeeb.db import db, one
+    ind = one(db().execute("SELECT * FROM indicators WHERE value LIKE '%uaepass-renew-account%'"))
+    assert ind["verdict"] in ("MALICIOUS", "SUSPICIOUS") and ind["threat_id"]
+    t = one(db().execute("SELECT status, source FROM threats WHERE id=?", (ind["threat_id"],)))
+    assert t["status"] == "new" and "Discovery Engine" in t["source"]  # analysts decide; nothing is auto-approved
+    assert any(ev == "discovery_alert" for ev, _ in events)
+    wiki = one(db().execute("SELECT * FROM indicators WHERE value LIKE '%wikipedia%'"))
+    assert wiki["threat_id"] is None
+    orchestrator.set_notifier(None)
+
+
+def test_scheduler_runs_jobs_and_records_failures(c, monkeypatch):
+    from raqeeb import discovery, orchestrator
+
+    def offline(url, timeout=20, headers=None):
+        raise ConnectionError("network unreachable")
+    monkeypatch.setattr(discovery, "safe_get", offline)
+    r = orchestrator.run_job("feeds_high_priority")
+    assert r["status"] in ("failed", "partial") and r["error"]
+    assert orchestrator.run_job("campaign_correlation")["status"] == "ok"
+    st = c.get("/api/v1/scheduler", headers=analyst(c)).json()
+    jobs = {j["name"]: j for j in st["jobs"]}
+    assert jobs["feeds_high_priority"]["last_status"] in ("failed", "partial") and jobs["feeds_high_priority"]["next_run"]
+    assert st["running"] is False  # tests run with the scheduler thread off, and the API says so
+
+
+def test_social_engineering_analysis_en_ar_is_supporting_only(c):
+    from raqeeb.messages import check_message
+    from raqeeb.sentiment import analyse
+    en = analyse("URGENT: your account will be suspended within 24 hours. Pay the fee now and do not tell anyone.")
+    assert en["language"] == "en" and {"suspension", "deadline", "payment", "secrecy"} <= {i["category"] for i in en["indicators"]}
+    assert en["pressure_with_action"] and en["sentiment"]["label"] == "negative"
+    ar = analyse("تم إيقاف حسابك. ادفع الغرامة خلال 24 ساعة وشارك رمز التحقق")
+    assert ar["language"] == "ar" and {"suspension", "payment", "credentials"} <= {i["category"] for i in ar["indicators"]}
+    # pressure wording alone never reaches SUSPICIOUS
+    m = check_message("Urgent!!! Final warning, act immediately, danger, your account is at risk")
+    assert m["risk_score"] < 35 and m["social_engineering"]["manipulation_score"] > 0
+    r = c.post("/api/v1/analysis/social-engineering", json={"text": "مبروك! لقد فزت بجائزة"}).json()
+    assert r["language"] == "ar" and any(i["category"] == "reward" for i in r["indicators"])
+
+
+def test_invisible_characters_from_copied_links_are_removed():
+    from raqeeb.link import pipeline, url_validator
+    v = url_validator.validate("\u200ehttps://uaepass-verify.top/login\u200f")
+    assert v["normalised_url"] == "https://uaepass-verify.top/login" and v["flags"]["invisible_characters"]
+    r = pipeline.analyse("\u202ehttps://example-login.top/pay", "quick")
+    assert any(e["signal"] == "rtl_override" for e in r["evidence"])
 
 
 def test_sandbox_configuration_is_for_officials_only(c):

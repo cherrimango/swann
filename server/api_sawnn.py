@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from pydantic import BaseModel, Field
 
 from raqeeb import agents as core_agents
-from raqeeb import alerts, attachments, auth, community, discovery, sawnn_agents
+from raqeeb import alerts, attachments, auth, community, discovery, orchestrator, sawnn_agents
 from raqeeb.db import db, rows
 from raqeeb.engine import MODELS
 from raqeeb.link import pipeline, sandbox_config, source_registry
@@ -112,6 +112,7 @@ def intelligence_sources_status(user=Depends(require("view_investigations"))):
 @router.post("/intelligence/discovery/run")
 async def discovery_run(user=Depends(require("run_hunt"))):
     res = await asyncio.to_thread(discovery.run_all)
+    await asyncio.to_thread(orchestrator.process_discoveries, 100)
     db().execute("INSERT INTO audit (action, detail, ts, actor) VALUES (?,?,strftime('%s','now'),?)",
                  ("discovery_run", json.dumps([{k: r[k] for k in ("source", "status", "new_indicators")} for r in res]), user["email"]))
     db().commit()
@@ -228,7 +229,7 @@ def notification_subscriptions(body: SubsIn, user=Depends(require_user)):
 # ---------- agents ----------
 @router.get("/agents")
 def agent_catalogue(user=Depends(require("view_command"))):
-    recent = rows(db().execute("SELECT agent, COUNT(*) n, MAX(created) last FROM findings GROUP BY agent"))
+    recent = rows(db().execute("SELECT agent, COUNT(*) n, MAX(finished) last FROM agent_tasks GROUP BY agent"))
     stats = {r["agent"]: r for r in recent}
     return [a | {"runs": stats.get(a["id"], {}).get("n", 0), "last_run": stats.get(a["id"], {}).get("last")} for a in sawnn_agents.catalogue()]
 
@@ -239,10 +240,51 @@ class AgentIn(BaseModel):
 
 @router.post("/agents/{agent_id}/run")
 async def agent_run(agent_id: str, body: AgentIn, request: Request, user=Depends(require("view_investigations"))):
+    """Runs the agent and its hand-offs through the orchestrator; returns the workflow with every task record."""
     try:
         return await asyncio.to_thread(sawnn_agents.run, agent_id, body.input)
     except KeyError as e:
         raise HTTPException(404, "Unknown agent") from e
+
+
+@router.get("/agents/activity")
+def agent_activity(user=Depends(require("view_command"))):
+    return orchestrator.activity()
+
+
+@router.get("/agents/workflows/{wid}")
+def agent_workflow(wid: str, user=Depends(require("view_investigations"))):
+    w = orchestrator.workflow(wid)
+    if not w:
+        raise HTTPException(404, "No such workflow")
+    return w
+
+
+@router.get("/scheduler")
+def scheduler(user=Depends(require("view_command"))):
+    return orchestrator.scheduler_status()
+
+
+@router.post("/scheduler/{job}/run")
+async def scheduler_run(job: str, user=Depends(require("run_hunt"))):
+    if job not in orchestrator.job_specs():
+        raise HTTPException(404, "Unknown job")
+    r = await asyncio.to_thread(orchestrator.run_job, job)
+    db().execute("INSERT INTO audit (action, detail, ts, actor) VALUES (?,?,strftime('%s','now'),?)",
+                 ("scheduler_run", json.dumps({"job": job, "status": r["status"]}), user["email"]))
+    db().commit()
+    return r
+
+
+class AnalyseTextIn(BaseModel):
+    text: str = Field(min_length=1, max_length=6000)
+
+
+@router.post("/analysis/social-engineering", dependencies=[Depends(rate("check"))])
+def social_engineering(body: AnalyseTextIn):
+    """Sentiment and manipulation tactics in English or Arabic text (supporting evidence only)."""
+    from raqeeb.sentiment import analyse
+    return analyse(body.text)
 
 
 _ = (Form,)

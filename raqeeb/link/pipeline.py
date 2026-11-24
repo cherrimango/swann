@@ -32,7 +32,7 @@ def new_id() -> str:
     return f"SCAN-{dt.datetime.now(dt.timezone.utc):%Y%m%d}-{secrets.token_hex(3).upper()}"
 
 
-def analyse(url: str, mode: str = "quick", scan_id: str | None = None) -> dict:
+def analyse(url: str, mode: str = "quick", scan_id: str | None = None, skip_sources: tuple = ()) -> dict:
     t0 = time.time()
     scan_id = scan_id or new_id()
     v = url_validator.validate(url)
@@ -42,7 +42,7 @@ def analyse(url: str, mode: str = "quick", scan_id: str | None = None) -> dict:
     reg = official_domains.match(v)
     stages["registry"] = "complete"
     deep = mode == "deep"
-    sig = signatures.check(v, external=deep)
+    sig = signatures.check(v, external=deep, skip=skip_sources)
     stages["signatures"] = "complete" if not sig["errors"] else "partial"
     core = core_scan(v["normalised_url"])
     m = ml.predict(v["normalised_url"])

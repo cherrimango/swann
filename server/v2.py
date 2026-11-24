@@ -482,6 +482,10 @@ async def citizen_report(request: Request, type: str = Form("auto"), text: str =
         imp = {}
     r = await asyncio.to_thread(community.submit, user, type, text, emirate or (user or {}).get("emirate"), attachment,
                                 imp if isinstance(imp, dict) else {}, ip_hash(client_ip(request)), ocr)
+    from raqeeb import orchestrator
+    wf = orchestrator.on_citizen_report(r, (text + "\n" + ocr).strip())
+    if wf:
+        r["workflow_id"] = wf
     await hub.send("citizen_report", {"ref": r["ref"], "type": r["type"], "risk": r["risk"], "severity": r["severity"],
                                       "emirate": emirate, "threats": r["threat_refs"]})
     if r["risk"] and r["risk"] >= 50:

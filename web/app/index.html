@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/static/app/app.css">
 </head>
 <body>
-<div class="aurora" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><i></i></div>
 <header class="bar">
   <span class="mark"><img class="mark-logo" src="/static/shared/sawnn-mark.png" alt="" width="201" height="211"><span class="mark-en">SAWNN</span><span class="mark-ar" lang="ar">صون</span></span>
   <div class="langs" role="group" aria-label="Language">
@@ -37,6 +37,7 @@
         <button class="go" type="submit" data-i="checkBtn">Check it</button>
         <button id="qr-btn" class="icon-btn" type="button" data-i="qrBtn">Scan QR</button>
       </div>
+      <div class="input-tools"><button id="paste-btn" class="link" type="button" data-i="pasteBtn">Paste</button><button id="clear-btn" class="link" type="button" data-i="clearBtn">Clear</button><span class="hint" data-i="enterHint">Press Enter to check · Shift+Enter for a new line</span></div>
     </form>
     <div id="qr-box" class="qr-box" hidden>
       <video id="qr-video" playsinline muted></video>
@@ -214,6 +215,7 @@
     <div id="v-twin" class="v-twin"></div>
     <ul id="v-reasons" class="v-reasons"></ul>
     <p id="v-advice" class="v-advice"></p>
+    <div id="v-copy" class="v-copy"></div>
     <div class="v-actions">
       <button id="v-report" class="go light" data-i="reportToMIRA">Report to SAWNN</button>
       <button id="v-block" class="soft light" data-i="blockForMe">Block for me</button>
@@ -270,6 +272,7 @@
 </section>
 
 <script src="/static/app/i18n.js"></script>
+<script src="/static/shared/clip.js"></script>
 <script src="/static/app/app.js"></script>
 </body>
 </html>

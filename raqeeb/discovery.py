@@ -19,6 +19,9 @@ from .urlparse import parse
 SOURCES = {
     "openphish": {"name": "OpenPhish community feed", "url": "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
                   "format": "lines", "key_env": None, "terms": "OpenPhish community feed, non-commercial", "min_interval_min": 60},
+    "phishing_database_hour": {"name": "Phishing.Database — new links, last hour",
+                               "url": "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-links-NEW-last-hour.txt",
+                               "format": "lines", "key_env": None, "terms": "MIT licence", "min_interval_min": 15},
     "phishing_database_today": {"name": "Phishing.Database — new links today",
                                 "url": "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-links-NEW-today.txt",
                                 "format": "lines", "key_env": None, "terms": "MIT licence", "min_interval_min": 60},
@@ -77,8 +80,8 @@ def collect(source_id: str) -> dict:
                     if cur.rowcount:
                         rec["duplicates"] += 1
                     else:
-                        db().execute("INSERT INTO indicators (value, kind, source, first_seen, last_seen) VALUES (?,?,?,?,?)",
-                                     (val, "url", source_id, now, now))
+                        db().execute("INSERT INTO indicators (value, kind, source, first_seen, last_seen, registered_domain) VALUES (?,?,?,?,?,?)",
+                                     (val, "url", source_id, now, now, p.registered_domain))
                         rec["new_indicators"] += 1
                 rec["collected"] = len(urls)
                 db().commit()
@@ -111,9 +114,16 @@ def status() -> dict:
                     "health": "never run" if not last else ("healthy" if last["status"] == "ok" else last["status"])})
     totals = one(db().execute("""SELECT COUNT(*) total, SUM(verified) verified,
         SUM(CASE WHEN first_seen > ? THEN 1 ELSE 0 END) new_24h FROM indicators""", (time.time() - 86400,)))
-    return {"sources": out, "scheduler": {"enabled": os.environ.get("SAWNN_DISCOVERY_ENABLED") == "1",
-                                          "interval_min": _sched["interval_min"], "next_run": _sched["next_run"],
-                                          "running": bool(_sched["thread"] and _sched["thread"].is_alive())},
+    from .orchestrator import scheduler_status
+    sch = scheduler_status()
+    proc = {r["status"]: r["n"] for r in rows(db().execute("SELECT status, COUNT(*) n FROM indicators GROUP BY status"))}
+    verd = {r["verdict"]: r["n"] for r in rows(db().execute("SELECT verdict, COUNT(*) n FROM indicators WHERE verdict IS NOT NULL GROUP BY verdict"))}
+    lat = one(db().execute("SELECT AVG(processed - first_seen) a FROM indicators WHERE processed IS NOT NULL"))
+    doms = one(db().execute("SELECT COUNT(DISTINCT registered_domain) n FROM indicators WHERE first_seen > ?", (time.time() - 86400,)))
+    threats = db().execute("SELECT COUNT(*) FROM indicators WHERE threat_id IS NOT NULL").fetchone()[0]
+    return {"sources": out, "scheduler": sch, "processing": {"by_status": proc, "by_verdict": verd,
+            "avg_latency_s": round(lat["a"], 1) if lat and lat["a"] is not None else None, "new_domains_24h": doms["n"] if doms else 0,
+            "investigations_created": threats},
             "indicators": {"total": totals["total"] or 0, "verified": totals["verified"] or 0,
                            "unverified": (totals["total"] or 0) - (totals["verified"] or 0), "new_24h": totals["new_24h"] or 0},
             "recent_runs": rows(db().execute("SELECT * FROM discovery_runs ORDER BY id DESC LIMIT 30")),
@@ -126,19 +136,29 @@ def lookup(url_or_host: str) -> dict | None:
     return one(db().execute("SELECT * FROM indicators WHERE value = ? OR value = ? LIMIT 1", (val, "http://" + p.host)))
 
 
-def start_scheduler():
-    if os.environ.get("SAWNN_DISCOVERY_ENABLED") != "1" or (_sched["thread"] and _sched["thread"].is_alive()):
-        return
-    interval = max(15, int(os.environ.get("SAWNN_DISCOVERY_INTERVAL_MIN", "60")))
-    _sched["interval_min"] = interval
+def health_check() -> dict:
+    """Lightweight reachability check of every source (no ingestion)."""
+    import requests
+    out = []
+    for sid, src in SOURCES.items():
+        key = os.environ.get(src["key_env"]) if src["key_env"] else None
+        if src["key_env"] and not key:
+            out.append({"source": sid, "status": "blocked_missing_key", "error": f"set {src['key_env']}"})
+            continue
+        t0 = time.time()
+        try:
+            from .security import check_url
+            url = src["url"].format(key=key or "")
+            check_url(url)
+            r = requests.head(url, timeout=6, allow_redirects=False, headers={src["key_header"]: key} if src.get("key_header") and key else {})
+            out.append({"source": sid, "status": "ok" if r.status_code < 400 or r.status_code == 405 else "failed",
+                        "http_status": r.status_code, "ms": round((time.time() - t0) * 1000), "error": None if r.status_code < 400 or r.status_code == 405 else f"HTTP {r.status_code}"})
+        except Exception as e:  # noqa: BLE001
+            out.append({"source": sid, "status": "failed", "error": str(e).splitlines()[0][:200] if str(e) else e.__class__.__name__})
+    return {"runs": out}
 
-    def loop():
-        while True:
-            try:
-                run_all()
-            except Exception:  # noqa: BLE001 - keep the scheduler alive; failures are in discovery_runs
-                pass
-            _sched["next_run"] = time.time() + interval * 60
-            time.sleep(interval * 60)
-    _sched["thread"] = threading.Thread(target=loop, daemon=True, name="sawnn-discovery")
-    _sched["thread"].start()
+
+def start_scheduler():
+    """Kept for compatibility: the SAWNN orchestrator scheduler now runs all monitoring jobs."""
+    from .orchestrator import start_scheduler as s
+    s()

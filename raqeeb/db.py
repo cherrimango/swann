@@ -88,6 +88,29 @@ MIGRATIONS = [
         times_seen INTEGER NOT NULL DEFAULT 1, verified INTEGER NOT NULL DEFAULT 0, brand TEXT);
     CREATE INDEX idx_indicators_last ON indicators(last_seen);
     """,
+    # 6 — SAWNN: agent orchestration, scheduler, discovery processing, model evaluations
+    """
+    CREATE TABLE agent_tasks (id TEXT PRIMARY KEY, workflow_id TEXT NOT NULL, parent_id TEXT, agent TEXT NOT NULL, status TEXT NOT NULL,
+        input TEXT, input_refs TEXT, created REAL, started REAL, finished REAL, duration_ms REAL, findings TEXT, evidence TEXT,
+        confidence REAL, sources TEXT, errors TEXT, recommended_action TEXT, handoffs TEXT, depth INTEGER NOT NULL DEFAULT 0);
+    CREATE INDEX idx_tasks_status ON agent_tasks(status, created);
+    CREATE INDEX idx_tasks_workflow ON agent_tasks(workflow_id);
+    CREATE TABLE workflows (id TEXT PRIMARY KEY, kind TEXT NOT NULL, origin TEXT, status TEXT NOT NULL, created REAL, finished REAL,
+        summary TEXT);
+    CREATE TABLE scheduler_jobs (name TEXT PRIMARY KEY, interval_s INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, last_run REAL,
+        last_status TEXT, last_duration_ms REAL, last_error TEXT, last_result TEXT, next_run REAL, runs INTEGER NOT NULL DEFAULT 0,
+        failures INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE scheduler_runs (id INTEGER PRIMARY KEY, job TEXT, started REAL, finished REAL, status TEXT, result TEXT, error TEXT);
+    ALTER TABLE indicators ADD COLUMN status TEXT NOT NULL DEFAULT 'unprocessed';
+    ALTER TABLE indicators ADD COLUMN verdict TEXT;
+    ALTER TABLE indicators ADD COLUMN risk REAL;
+    ALTER TABLE indicators ADD COLUMN registered_domain TEXT;
+    ALTER TABLE indicators ADD COLUMN processed REAL;
+    ALTER TABLE indicators ADD COLUMN workflow_id TEXT;
+    ALTER TABLE indicators ADD COLUMN threat_id TEXT;
+    CREATE INDEX idx_indicators_status ON indicators(status);
+    CREATE TABLE model_evals (id INTEGER PRIMARY KEY, created REAL, kind TEXT, n INTEGER, result TEXT);
+    """,
 ]
 
 

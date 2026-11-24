@@ -4,7 +4,7 @@ const CT = {
   en: {},
   ar: {
     wsOps: 'العمليات', wsIntel: 'الاستخبارات', wsInv: 'التحقيقات', wsResp: 'الاستجابة', wsSys: 'النظام', full: 'ملء الشاشة',
-    nOverview: 'نظرة عامة', nBriefing: 'تقارير الاستخبارات', nDemo: 'سيناريو العرض', nFeed: 'استخبارات التهديدات المباشرة',
+    nOverview: 'نظرة عامة', nBriefing: 'تقارير الاستخبارات', nDemo: 'بيانات العرض', nFeed: 'استخبارات التهديدات المباشرة',
     nDiscovery: 'محرك اكتشاف التهديدات', nCampaigns: 'حملات الاحتيال', nForecast: 'الاستخبارات الموسمية', nDomain: 'تحليل الروابط والنطاقات',
     nThreats: 'التحقق من التهديدات', nReports: 'بلاغات المواطنين', nAgents: 'وكلاء الذكاء الاصطناعي', nSandbox: 'إعدادات البيئة المعزولة',
     nAlerts: 'تنبيهات المواطنين', nProtection: 'الحظر والتوزيع', nCommunity: 'الحماة والمجتمع', nModels: 'النماذج والتقييم',
@@ -233,3 +233,7 @@ function headings() {
 }
 document.addEventListener('sawnn:lang', () => { headings(); const on = $('.view.on'); if (on) loaders[on.id.slice(2)]?.().catch(() => {}); });
 headings();
+
+/* URL box helpers: native Cmd/Ctrl+V, right-click and Enter keep working; these buttons are extras */
+$('#scan-paste')?.addEventListener('click', async () => { const v = await SawnnClip.paste(); if (v !== null) { $('#scan-url').value = v.trim(); $('#scan-url').focus(); } });
+$('#scan-clear')?.addEventListener('click', () => { $('#scan-url').value = ''; $('#scan-url').focus(); });

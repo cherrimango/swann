@@ -87,8 +87,11 @@ async def lifespan(_app):
         print("DEMO MODE: demo accounts are active (admin@sawnn.demo, analyst@sawnn.demo, citizen@sawnn.demo)")
     seed()
     protection.latest()
-    from raqeeb import discovery
-    discovery.start_scheduler()
+    from raqeeb import orchestrator
+    loop = asyncio.get_running_loop()
+    orchestrator.set_notifier(lambda ev, data: asyncio.run_coroutine_threadsafe(hub.send(ev, data), loop))
+    orchestrator.start_worker()
+    orchestrator.start_scheduler()
     task = asyncio.create_task(_expiry_loop())
     yield
     task.cancel()

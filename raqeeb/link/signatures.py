@@ -122,9 +122,12 @@ def _discovery(v):
              "first_seen": _iso(r["first_seen"]), "match_type": "exact URL", "reliability": "medium"}]
 
 
-def check(v: dict, external: bool = True) -> dict:
+def check(v: dict, external: bool = True, skip: tuple = ()) -> dict:
     checked, matches, errors, skipped = [], [], {}, []
     for name, fn in (("raqeeb_published", _published), ("raqeeb_threats", _threats), ("public_feeds", _feeds), ("sawnn_discovery", _discovery)):
+        if name in skip:
+            skipped.append({"source": name, "reason": "excluded: this is the record being analysed"})
+            continue
         try:
             matches += fn(v)
             checked.append(name)

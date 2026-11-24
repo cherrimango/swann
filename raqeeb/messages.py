@@ -75,9 +75,18 @@ def check_message(text: str) -> dict:
     risk = max(link_risk, min(95.0, script_score * (1.4 if urls else 0.9) + (10 if named and urls else 0)))
     if link_risk >= 50:
         risk = max(risk, min(100.0, link_risk + script_score * 0.15))
+    from .sentiment import analyse as social_engineering
+    se = social_engineering(text)
+    # Supporting evidence only: manipulation wording adds weight when there is something to act on (a link, a brand,
+    # or a known scam script); on its own it can lift a message to at most 30 (below SUSPICIOUS).
+    boost = 18.0 * se["manipulation_score"] + (6.0 if se["pressure_with_action"] else 0.0)
+    if urls or named or hits:
+        risk = min(100.0, risk + boost) if risk >= 20 else max(risk, min(34.0, risk + boost))
+    else:
+        risk = max(risk, min(30.0, boost))
     verdict = "scam" if risk >= 50 else ("suspicious" if risk >= 35 else
                                          "inconclusive" if any(r["verdict"] == "inconclusive" for r in link_results) else "looks safe")
-    return {"verdict": verdict, "risk_score": round(risk, 1), "links": link_results, "script_signals": hits,
+    return {"verdict": verdict, "risk_score": round(risk, 1), "links": link_results, "script_signals": hits, "social_engineering": se,
             "brands_named": named, "advice_en": _advice(verdict, hits, "en"), "advice_ar": _advice(verdict, hits, "ar")}
 
 

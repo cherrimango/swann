@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/static/command/command.css">
 </head>
 <body class="signed-out">
-<div class="aurora" aria-hidden="true"></div>
+<div class="aurora" aria-hidden="true"><i></i></div>
 
 <!-- SIGN IN -->
 <section id="login" class="login">
@@ -58,7 +58,7 @@
 <nav class="rail" aria-label="Sections in this workspace">
   <button data-ws="ops" data-view="overview" class="on" data-t="nOverview">Overview</button>
   <button data-ws="ops" data-view="briefing" data-t="nBriefing">Intelligence reports</button>
-  <button data-ws="ops" data-view="demo" id="nav-demo" hidden data-t="nDemo">Demo scenario</button>
+  <button data-ws="ops" data-view="demo" id="nav-demo" hidden data-t="nDemo">Demo data</button>
   <button data-ws="intel" data-view="feed" data-perm="view_investigations" data-t="nFeed">Live threat intelligence</button>
   <button data-ws="intel" data-view="discovery" data-t="nDiscovery">Threat discovery engine</button>
   <button data-ws="intel" data-view="campaigns" data-perm="view_investigations" data-t="nCampaigns">Scam campaigns</button>
@@ -150,7 +150,8 @@
     <form id="scan-form" class="scan-form">
       <label for="scan-url" class="sr">URL to investigate</label>
       <div class="scan-row">
-        <input id="scan-url" type="text" placeholder="Paste a URL, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" required>
+        <input id="scan-url" type="text" placeholder="Paste a URL, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+        <button type="button" id="scan-paste" class="ghost">Paste</button><button type="button" id="scan-clear" class="ghost">Clear</button>
         <div class="seg" role="radiogroup" aria-label="Scan depth"><button type="button" data-mode="quick" class="on" role="radio" aria-checked="true">Quick</button><button type="button" data-mode="deep" role="radio" aria-checked="false">Deep</button></div>
         <button type="submit" class="primary">Investigate</button>
       </div>
@@ -303,11 +304,10 @@
 
   <!-- DEMO SCENARIO -->
   <section id="v-demo" class="view">
-    <div class="view-head"><div><h2 class="glass-h">Demo scenario: fake winter camping promotion</h2>
-      <p class="sub">Clearly labelled demonstration data. Step 1 is a simulated discovery; every later step runs SAWNN’s real engine and workflow, and the checklist below is read from the database.</p></div>
+    <div class="view-head"><div><h2 class="glass-h">Demo data</h2>
+      <p class="sub">Load or remove the clearly labelled demonstration records (demo mode only). Presenter instructions are in docs/SAWNN_DEMO_GUIDE.md, not in the application.</p></div>
       <div class="actions-inline"><button id="demo-seed" class="primary" data-perm="approve_threat">Run steps 1–5</button><button id="demo-reset" class="ghost danger" data-perm="approve_threat">Remove demo data</button></div></div>
     <ol id="demo-steps" class="steps"></ol>
-    <article class="panel" id="demo-kit"></article>
   </section>
 </main>
 
@@ -336,6 +336,7 @@
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
 <script src="/static/shared/lang.js"></script>
+<script src="/static/shared/clip.js"></script>
 <script src="/static/command/command.js"></script>
 <script src="/static/command/sawnn.js"></script>
 </body>

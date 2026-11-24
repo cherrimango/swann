@@ -14,24 +14,4 @@ const T = {
   },
 };
 SawnnLang.mount(T);
-(async () => {
-  try {
-    const d = await (await fetch('/api/public/demo')).json();
-    if (!d.enabled) return;
-    const list = document.getElementById('demo-list');
-    const ar = () => SawnnLang.get() === 'ar';
-    for (const a of d.accounts) {
-      const li = document.createElement('li');
-      const b = document.createElement('b'); b.textContent = a.label;
-      const e = document.createElement('code'); e.textContent = a.email;
-      const p = document.createElement('code'); p.textContent = a.password;
-      const go = document.createElement('a');
-      go.href = (a.app === 'command' ? '/command' : '/app') + '#demo=' + encodeURIComponent(a.email);
-      go.textContent = a.app === 'command' ? (ar() ? 'الدخول إلى كوماند بهذا الحساب' : 'Sign in to Command as this user')
-        : (ar() ? 'فتح بروتكت بهذا الحساب' : 'Open Protect as this user');
-      li.append(b, e, p, go);
-      list.append(li);
-    }
-    document.getElementById('demo').hidden = false;
-  } catch { /* offline: the doors still work */ }
-})();
+// Demo accounts and presenter steps are documented in docs/SAWNN_DEMO_GUIDE.md, not shown on the website.

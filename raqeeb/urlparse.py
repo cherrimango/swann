@@ -86,8 +86,13 @@ class ParsedURL:
     is_punycode: bool
 
 
+# Invisible formatting characters that ride along when a link is copied from Arabic chats, SMS or PDFs
+# (LRM/RLM marks, bidi embeddings and isolates, zero-width spaces, BOM). They are never valid in a URL.
+INVISIBLE_RX = re.compile("[\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff\u00ad]")
+
+
 def normalise(raw: str) -> str:
-    u = (raw or "").strip().strip('"').strip("'")
+    u = INVISIBLE_RX.sub("", raw or "").strip().strip('"').strip("'").strip("<>")
     u = re.sub(r"\s+", "", u)
     u = u.replace("[.]", ".").replace("hxxp", "http")
     if not re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", u):

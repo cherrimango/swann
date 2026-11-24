@@ -482,7 +482,11 @@ async function renderScan(r, box) {
   const p = (title, ...kids) => h('article', { class: 'panel' }, h('h3', {}, title), ...kids);
   const rd = dom.rdap || {}, dns = dom.dns || {}, cert = dom.certificate || {};
   const related = await api(`/api/threats?q=${encodeURIComponent(r.registered_domain)}`).catch(() => []);
-  box.replaceChildren(banner, stages, twin || '', redirectTimeline(r),
+  const rd0 = r.redirects || {};
+  const copies = h('div', { class: 'copy-row' }, SawnnClip.button('', r.submitted_url, { button: 'Copy submitted URL' }),
+    r.final_url ? SawnnClip.button('', r.final_url, { button: 'Copy final destination' }) : null,
+    rd0.hops?.length ? SawnnClip.button('', () => [`Submitted: ${r.submitted_url}`, ...rd0.hops.map(x => `${x.hop}. ${x.status ?? ''} ${x.type} ${x.url}`), `Stopped: ${rd0.stopped_reason}`].join('\n'), { button: 'Copy redirect chain' }) : null);
+  box.replaceChildren(banner, copies, stages, twin || '', redirectTimeline(r),
     h('div', { class: 'report-grid' },
       p('Identity', kv([['Submitted', h('span', { class: 'mono' }, r.submitted_url)], ['Normalised', h('span', { class: 'mono' }, r.normalised_url)],
         ['Final destination', r.final_url ? h('span', { class: 'mono' }, r.final_url) : r.mode === 'deep' ? 'Not reached: the site could not be visited' : 'Not followed (quick scan)'], ['Registered domain', r.registered_domain],
@@ -747,21 +751,10 @@ $('#org-form').addEventListener('submit', async e => {
   } catch (err) { toast('Couldn’t save the organisation', err.message); }
 });
 
-/* ---------------- demo scenario ---------------- */
-const STEP_WHO = { verify: 'Analyst: Threat Verification', approve: 'Official: Threat Verification', distribute: 'Official: approve global block',
-  citizen_check: 'Citizen: paste the link in PROTECT', community: 'Citizen: report the advert in PROTECT', command_update: 'Analyst: verify the new report' };
+/* ---------------- demo data (status only; presenter instructions live in docs/SAWNN_DEMO_GUIDE.md) ---------------- */
 loaders.demo = async () => {
   const st = await api('/api/demo/status');
-  $('#demo-steps').replaceChildren(...st.steps.map(s => h('li', { class: s.done ? 'done' : '' }, h('span', {}, s.title), h('span', { class: 'who-does' }, s.done ? 'Done' : STEP_WHO[s.id] || 'Automatic (steps 1–5)'))));
-  const sc = st.scenario;
-  const copy = (label, text) => [h('p', { class: 'meta' }, label), h('div', { class: 'copy' }, h('pre', { class: 'text' }, text),
-    h('button', { class: 'ghost small', onclick: () => { navigator.clipboard?.writeText(text); toast('Copied'); } }, 'Copy'))];
-  $('#demo-kit').replaceChildren(h('h3', {}, 'Presenter kit'),
-    st.threat_id ? h('p', {}, 'Main threat: ', h('button', { class: 'ghost small', onclick: () => { show('threats'); openThreat(st.threat_id); } }, st.threat_id),
-      st.campaign_id ? ` · campaign ${st.campaign_id}` : '') : h('p', { class: 'meta' }, 'Run steps 1–5 to create the scenario.'),
-    ...copy('Step 9: the citizen pastes this payment link in PROTECT', sc.payment_link),
-    ...copy('Step 10: the citizen reports this advertisement in PROTECT (type: Scam advertisement)', sc.ad_text),
-    h('p', { class: 'meta' }, 'All domains, numbers and messages in this scenario are invented for the demonstration and marked as demo data.'));
+  $('#demo-steps').replaceChildren(...st.steps.map(s => h('li', { class: s.done ? 'done' : '' }, h('span', {}, s.title), h('span', { class: 'who-does' }, s.done ? 'Recorded' : 'Not yet'))));
 };
 $('#demo-seed').addEventListener('click', e => act(e.currentTarget, async () => { await api('/api/demo/seed', {}); loaders.demo(); loadCounters(); }, 'Steps 1–5 done'));
 $('#demo-reset').addEventListener('click', e => {

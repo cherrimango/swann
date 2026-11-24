@@ -29,7 +29,10 @@ def validate(raw: str) -> dict:
     if not isinstance(raw, str) or not raw.strip():
         raise InvalidURL("Enter a URL")
     original = raw
-    s = raw.strip().strip("'\"<>")
+    from ..urlparse import INVISIBLE_RX
+    invisible = bool(INVISIBLE_RX.search(raw))
+    override = bool(re.search("[\u202e\u2067]", raw))  # right-to-left override / isolate: a known spoofing trick
+    s = INVISIBLE_RX.sub("", raw).strip().strip("'\"<>")
     if len(s) > MAX_LEN:
         raise InvalidURL("URL is too long to analyse")
     s = s.replace("hxxp", "http").replace("[.]", ".").replace("(.)", ".")
@@ -76,7 +79,7 @@ def validate(raw: str) -> dict:
     homoglyph_skeleton = host_unicode.translate(CONFUSABLES)
     labels = [l for l in host_ascii.split(".") if l]
     flags = {
-        "ip_address": is_ip,
+        "ip_address": is_ip, "invisible_characters": invisible, "rtl_override": override,
         "embedded_credentials": bool(parts.username or parts.password),
         "at_symbol": "@" in (parts.netloc + path),
         "punycode": "xn--" in host_ascii,

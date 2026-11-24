@@ -49,6 +49,11 @@ def aggregate(r: dict) -> dict:
                                x["code"], x["en"], x["ar"], "risk", st, "medium"))
             strong += st >= 0.8
 
+    fl = r["validation"]["flags"]
+    if fl.get("rtl_override"):
+        evidence.append(ev("static", "rtl_override", "Link contains a right-to-left override character, a trick used to disguise addresses",
+                           "يحتوي الرابط على محرف عكس الاتجاه، وهي حيلة لإخفاء العنوان الحقيقي", "risk", 0.6, "high"))
+        score = max(score, 45.0)
     if sig["matches"]:
         for m in sig["matches"]:
             name = SOURCE_NAMES.get(m["source"], m["source"])
@@ -57,8 +62,13 @@ def aggregate(r: dict) -> dict:
                                "مدرج كتهديد في " + ("قائمة الحماية المنشورة في صون" if m["source"] == "raqeeb_published" else
                                                     "سجلات التهديدات الموثّقة في صون" if m["source"] == "raqeeb_threats" else name),
                                "risk", 1.0, "high"))
-        score = max(score, 97.0 if any(m["source"].startswith("raqeeb") for m in sig["matches"]) else 95.0)
-        strong += 2
+        strong_matches = [m for m in sig["matches"] if m["source"] != "sawnn_discovery"]
+        if strong_matches:
+            score = max(score, 97.0 if any(m["source"].startswith("raqeeb") for m in strong_matches) else 95.0)
+            strong += 2
+        else:  # only an unverified feed indicator from the discovery engine: a lead, not proof
+            score = max(score, 60.0)
+            strong += 1
 
     if ml["available"]:
         agree = (ml["prediction"] == "phishing") == (score >= 50)
@@ -134,7 +144,8 @@ def aggregate(r: dict) -> dict:
     completeness = round(completeness, 2)
 
     official = reg["official_domain_match"]
-    if sig["matches"] or official:
+    strong_sig = any(m["source"] != "sawnn_discovery" for m in sig["matches"])
+    if strong_sig or official:
         confidence = "HIGH"
     elif score >= 75:
         confidence = "HIGH" if strong >= 2 or (ml["available"] and ml["prediction"] == "phishing") else "MEDIUM"
@@ -142,12 +153,12 @@ def aggregate(r: dict) -> dict:
         confidence = "MEDIUM" if ml["available"] and completeness >= 0.5 else "LOW"
     else:
         confidence = "MEDIUM" if strong >= 1 or (ml["available"] and (ml["prediction"] == "phishing") == (score >= 50)) else "LOW"
-    if completeness < 0.4 and confidence == "HIGH" and not (sig["matches"] or official):
+    if completeness < 0.4 and confidence == "HIGH" and not (strong_sig or official):
         confidence = "MEDIUM"
 
     lvl = level(score)
     shortener_unresolved = r["validation"]["flags"]["shortener"] and not (sb.get("available") and sb.get("final_url"))
-    if sig["matches"] or lvl == "CRITICAL":
+    if any(m["source"] != "sawnn_discovery" for m in sig["matches"]) or lvl == "CRITICAL":
         verdict = "MALICIOUS"
     elif lvl == "HIGH":
         verdict = "SUSPICIOUS"
