@@ -1,4 +1,4 @@
-"""MIRA scoring engine: allowlist + brand impersonation rules + ML model -> risk score with reasons (EN/AR)."""
+"""SAWNN scoring engine: allowlist + brand impersonation rules + ML model -> risk score with reasons (EN/AR)."""
 import gzip
 import os
 from pathlib import Path
@@ -58,7 +58,7 @@ def user_content(p) -> bool:
 
 _model = None
 _threat = None
-MODELS = Path(os.environ.get("MIRA_MODEL_PATH") or Path(__file__).resolve().parent.parent / "models")
+MODELS = Path(os.environ.get("SAWNN_MODEL_PATH") or Path(__file__).resolve().parent.parent / "models")
 
 
 def threat_lists():
@@ -206,7 +206,7 @@ def scan_many(urls: list[str], use_threat_intel: bool = True) -> list[dict]:
         risk = float(np.clip(risk, 0, 100))
         trusted = bool(off) or any(r["code"] in ("popular_domain", "regional_brand", "restricted_registry") for r in reasons)
         # "safe" only for official or well-established domains; everything else low-risk is "inconclusive":
-        # absence of warning signs in the address alone is not evidence of safety (MIRA rule).
+        # absence of warning signs in the address alone is not evidence of safety (SAWNN rule).
         verdict = "phishing" if risk >= 50 else ("suspicious" if risk >= 35 else ("safe" if trusted else "inconclusive"))
         out.append({
             "url": raw, "label": int(risk >= 50), "verdict": verdict, "risk_score": round(risk, 1),

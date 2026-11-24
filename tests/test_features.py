@@ -35,7 +35,7 @@ def test_same_kit_on_two_domains_is_one_campaign():
 def test_antibody_reaches_blocklist_and_phones():
     from server.app import app
     with TestClient(app) as c:
-        token = c.post("/api/auth/login", json={"email": "admin@mira.local", "password": "test-admin-password"}).json()["token"]
+        token = c.post("/api/auth/login", json={"email": "admin@sawnn.local", "password": "test-admin-password"}).json()["token"]
         h = {"Authorization": f"Bearer {token}"}
         assert c.post("/api/antibody", json={"domain": "test-scam-domain.top"}).status_code == 401
         with c.websocket_connect("/ws") as ws:

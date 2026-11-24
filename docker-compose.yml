@@ -1,4 +1,4 @@
-# MIRA with Docker (not built in the hackathon environment; see README "Deployment").
+# SAWNN with Docker (not built in the hackathon environment; see README "Deployment").
 #   docker compose up --build        then open http://localhost:8000
 # The database, keys and evidence live in the named volume, never in the image.
 services:
@@ -7,7 +7,7 @@ services:
     ports: ["8000:8000"]
     env_file: [.env]
     environment:
-      MIRA_DB: /srv/raqeeb/data/raqeeb.db
+      SAWNN_DB: /srv/raqeeb/data/raqeeb.db
     volumes:
       - raqeeb-data:/srv/raqeeb/data
       - raqeeb-evidence:/srv/raqeeb/evidence

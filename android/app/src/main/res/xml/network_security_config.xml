@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Demo build: the MIRA server runs on a laptop on the same Wi-Fi over plain HTTP, and its LAN address changes per
-     venue. For a production release set cleartextTrafficPermitted="false" and serve MIRA over HTTPS only. -->
+<!-- Demo build: the SAWNN server runs on a laptop on the same Wi-Fi over plain HTTP, and its LAN address changes per
+     venue. For a production release set cleartextTrafficPermitted="false" and serve SAWNN over HTTPS only. -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

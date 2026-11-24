@@ -6,7 +6,7 @@ body { color: #EEF2FA; min-height: 100vh; }
 .emblem img { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 28px rgba(185, 200, 230, .25)); }
 /* the one moving element: a slow scan line passing over the eye */
 .sweep { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0 46%, rgba(230, 57, 70, .55) 50%, transparent 54% 100%);
-         mix-blend-mode: screen; -webkit-mask: url(/static/shared/mira-mark.png) center / contain no-repeat; mask: url(/static/shared/mira-mark.png) center / contain no-repeat;
+         mix-blend-mode: screen; -webkit-mask: url(/static/shared/sawnn-mark.png) center / contain no-repeat; mask: url(/static/shared/sawnn-mark.png) center / contain no-repeat;
          background-size: 100% 260%; animation: sweep 5.5s cubic-bezier(.45, 0, .2, 1) infinite; }
 @keyframes sweep { 0% { background-position: 0 100%; } 60%, 100% { background-position: 0 0; } }
 .hero h1 { font: 700 clamp(32px, 4.6vw, 56px)/1.08 var(--font-ui); letter-spacing: -.8px; margin: 0 0 18px; max-width: 18ch; }

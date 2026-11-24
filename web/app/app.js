@@ -1,4 +1,4 @@
-// MIRA PROTECT (installable web app). All text from the network is inserted with textContent, never as HTML.
+// SAWNN PROTECT (installable web app). All text from the network is inserted with textContent, never as HTML.
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
@@ -17,9 +17,9 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 
-// MIRA ships English and Arabic. Urdu strings stay in i18n.js (inactive) so another language can be switched on by adding it here.
+// SAWNN ships English and Arabic. Urdu strings stay in i18n.js (inactive) so another language can be switched on by adding it here.
 const LANGS = ['en', 'ar'];
-let lang = LANGS.includes(localStorage.getItem('mira-lang')) ? localStorage.getItem('mira-lang') : 'en';
+let lang = LANGS.includes(localStorage.getItem('sawnn-lang')) ? localStorage.getItem('sawnn-lang') : 'en';
 let TOKEN = localStorage.getItem('raqeeb_token');
 let ME = null, META = null, PROFILE = null, DEMO = { enabled: false, accounts: [] };
 const t = (k, ...a) => { const v = T[lang][k] ?? T.en[k]; return typeof v === 'function' ? v(...a) : v; };
@@ -87,7 +87,7 @@ function applyLang() {
   syncAuthForm(); renderSuggest(); renderQuickKinds(); renderHello();
   for (const fn of [loadSeason, loadMyReports, loadBlocks, loadFamily, loadCommunity, loadProfile, loadEmergency]) fn().catch(() => {});
 }
-$$('.langs button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('mira-lang', lang); applyLang(); }));
+$$('.langs button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('sawnn-lang', lang); applyLang(); }));
 
 /* ---------------- tabs and sheets ---------------- */
 function go(tab, scrollId) {
@@ -266,7 +266,7 @@ function renderAlerts() {
   $('#alerts').replaceChildren(...(ALERTS.length ? ALERTS.slice(0, 3).map(alertItem) : [empty()]));
   $('#alerts-full').replaceChildren(...(ALERTS.length ? ALERTS.map(alertItem) : [empty()]));
 }
-/* official citizen alerts published from MIRA Command (approved by an administrator) */
+/* official citizen alerts published from SAWNN Command (approved by an administrator) */
 let OFFICIAL = [];
 async function loadOfficial() {
   try { OFFICIAL = (await api('/api/v1/notifications')).alerts || []; } catch { OFFICIAL = []; }
@@ -666,7 +666,7 @@ function syncAuthForm() {
 }
 async function signIn(body, register) {
   const r = await api(`/api/auth/${register ? 'register' : 'login'}`, { body });
-  if (r.user.role !== 'citizen') throw new Error('Officials sign in to MIRA COMMAND.');
+  if (r.user.role !== 'citizen') throw new Error('Officials sign in to SAWNN COMMAND.');
   setToken(r.token); ME = r.user; PROFILE = null;
   reconnect(); loadProfile(); loadMyReports(); renderHello();
 }

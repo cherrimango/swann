@@ -1,4 +1,4 @@
-"""MIRA regression tests: the SAFE-verdict repair, redirects, attachments, citizen alerts, discovery, agents,
+"""SAWNN regression tests: the SAFE-verdict repair, redirects, attachments, citizen alerts, discovery, agents,
 sandbox configuration and the demo sign-in prototype."""
 import io
 
@@ -10,7 +10,7 @@ from raqeeb.security import limiter
 
 @pytest.fixture()
 def c(monkeypatch):
-    monkeypatch.setenv("MIRA_DEMO", "1")
+    monkeypatch.setenv("SAWNN_DEMO", "1")
     limiter.reset()
     from server.app import app
     with TestClient(app) as client:
@@ -23,15 +23,15 @@ def tok(c, email, pw):
 
 
 def admin(c):
-    return tok(c, "admin@mira.demo", "MiraDemo2026!")
+    return tok(c, "admin@sawnn.demo", "SawnnDemo2026!")
 
 
 def analyst(c):
-    return tok(c, "analyst@mira.demo", "AnalystDemo2026!")
+    return tok(c, "analyst@sawnn.demo", "AnalystDemo2026!")
 
 
 def citizen(c):
-    return tok(c, "citizen@mira.demo", "CitizenDemo2026!")
+    return tok(c, "citizen@sawnn.demo", "CitizenDemo2026!")
 
 
 # ---------- detection repair ----------
@@ -175,9 +175,9 @@ def test_discovery_records_new_duplicates_missing_keys_and_failures(c, monkeypat
     r1 = discovery.collect("openphish")
     r2 = discovery.collect("openphish")
     assert (r1["status"], r1["new_indicators"]) == ("ok", 2) and (r2["new_indicators"], r2["duplicates"]) == (0, 2)
-    monkeypatch.delenv("MIRA_PHISHTANK_APP_KEY", raising=False)
+    monkeypatch.delenv("SAWNN_PHISHTANK_APP_KEY", raising=False)
     assert discovery.collect("phishtank")["status"] == "blocked_missing_key"
-    monkeypatch.delenv("MIRA_URLHAUS_AUTH_KEY", raising=False)
+    monkeypatch.delenv("SAWNN_URLHAUS_AUTH_KEY", raising=False)
     assert discovery.collect("urlhaus_recent")["status"] == "blocked_missing_key"
 
     def boom(url, timeout=20):
@@ -190,7 +190,7 @@ def test_discovery_records_new_duplicates_missing_keys_and_failures(c, monkeypat
     # a discovered indicator now matches in signature checks, marked as not analyst-verified
     from raqeeb.link import pipeline
     rep = pipeline.analyse("http://new-scam-1.top/a", "quick")
-    m = [x for x in rep["signature_result"]["matches"] if x["source"] == "mira_discovery"]
+    m = [x for x in rep["signature_result"]["matches"] if x["source"] == "sawnn_discovery"]
     assert m and "not yet analyst-verified" in m[0]["classification"]
 
 
@@ -214,7 +214,7 @@ def test_sandbox_configuration_is_for_officials_only(c):
 
 def test_models_metrics_and_reports_endpoints(c):
     m = c.get("/api/v1/models/metrics").json()
-    assert m["deployed"]["mode"] == "url" and m["evaluation_mira"]["evaluation"]["main"]["recall"] > 0
+    assert m["deployed"]["mode"] == "url" and m["evaluation_sawnn"]["evaluation"]["main"]["recall"] > 0
     cit = citizen(c)
     r = c.post("/api/v1/reports", data={"type": "sms", "text": "Pay your fine at http://adpolice-fines.top/pay"}, headers=cit).json()
     assert r["ref"]
@@ -225,18 +225,18 @@ def test_models_metrics_and_reports_endpoints(c):
 # ---------- demo sign-in prototype ----------
 def test_demo_signin_prototype_issues_one_time_session(c):
     s = c.post("/api/signin-demo/start").json()
-    assert s["simulated"] and s["qr_payload"].startswith("MIRA-DEMO-SIGNIN:")
+    assert s["simulated"] and s["qr_payload"].startswith("SAWNN-DEMO-SIGNIN:")
     assert c.get(f"/api/signin-demo/{s['request_id']}").json()["state"] == "waiting"
     assert c.post(f"/api/signin-demo/{s['request_id']}/respond", json={"account": "analyst", "approve": True}).status_code == 400  # no consent
     c.post(f"/api/signin-demo/{s['request_id']}/respond", json={"account": "analyst", "approve": True, "consent": True})
     p = c.get(f"/api/signin-demo/{s['request_id']}").json()
     assert p["app"] == "command" and p["token"]
-    assert c.get("/api/auth/me", headers={"Authorization": "Bearer " + p["token"]}).json()["email"] == "analyst@mira.demo"
+    assert c.get("/api/auth/me", headers={"Authorization": "Bearer " + p["token"]}).json()["email"] == "analyst@sawnn.demo"
     assert "token" not in c.get(f"/api/signin-demo/{s['request_id']}").json()  # cannot be replayed
 
 
 def test_demo_signin_disabled_outside_demo_mode(monkeypatch):
-    monkeypatch.delenv("MIRA_DEMO", raising=False)
+    monkeypatch.delenv("SAWNN_DEMO", raising=False)
     from server.app import app
     with TestClient(app) as client:
         assert client.post("/api/signin-demo/start").status_code == 403
@@ -246,4 +246,4 @@ def test_pages_served_and_no_old_branding(c):
     for path in ("/", "/command", "/app", "/signin"):
         html = c.get(path).text
         assert "RAQEEB" not in html and "رقيب" not in html and "mark-flag" not in html
-    assert c.get("/static/shared/mira-mark.png").status_code == 200
+    assert c.get("/static/shared/sawnn-mark.png").status_code == 200

@@ -1,4 +1,4 @@
-"""Build MIRA's versioned training dataset from every available source, with provenance on every row.
+"""Build SAWNN's versioned training dataset from every available source, with provenance on every row.
 
 Sources (place the raw files in data/raw/; data/download.py fetches the public feeds):
   url_dataset.csv     attached labelled URL dataset (url,type = legitimate|phishing), 450,176 rows
@@ -98,7 +98,7 @@ def main():
 
     fresh = [norm(u) for u in lines(RAW / "openphish.txt")]
     fresh = sorted({u for u in fresh if u})
-    version = "mira-ds-" + hashlib.sha256("\n".join(sorted(df.url)).encode()).hexdigest()[:10]
+    version = "sawnn-ds-" + hashlib.sha256("\n".join(sorted(df.url)).encode()).hexdigest()[:10]
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / f"{version}.csv.gz"
     df.to_csv(path, index=False, compression="gzip")

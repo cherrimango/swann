@@ -116,8 +116,8 @@ def test_sandbox_finds_brand_credential_page(monkeypatch):
     allow = lambda u: None  # noqa: E731 - the real check refuses loopback; this test page lives on loopback
     monkeypatch.setattr(sandbox, "check_url", allow)
     monkeypatch.setattr(security, "check_url", allow)
-    if shutil.which("google-chrome") and not os.environ.get("MIRA_CHROMIUM"):
-        monkeypatch.setenv("MIRA_CHROMIUM", shutil.which("google-chrome"))
+    if shutil.which("google-chrome") and not os.environ.get("SAWNN_CHROMIUM"):
+        monkeypatch.setenv("SAWNN_CHROMIUM", shutil.which("google-chrome"))
     r = pipeline.analyse(url, "deep")
     srv.shutdown()
     w = r["website_analysis"]
@@ -169,7 +169,7 @@ def test_v1_registry_admin_only(c):
     cit = c.post("/api/auth/register", json={"email": f"x{secrets.token_hex(3)}@example.ae", "password": "citizen-pass-1"}).json()["token"]
     body = {"name": "Test Authority", "domains": ["test-authority.example"]}
     assert c.post("/api/v1/organizations", json=body, headers={"Authorization": f"Bearer {cit}"}).status_code == 403
-    adm = _login(c, "admin@mira.local", "test-admin-password")
+    adm = _login(c, "admin@sawnn.local", "test-admin-password")
     o = c.post("/api/v1/organizations", json=body, headers=adm).json()
     assert o["domains"][0]["status"] == "unverified_candidate"
     # an unverified domain is never used to call a link safe

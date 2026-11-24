@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#06122B">
-<title>MIRA · Demo sign-in prototype</title>
+<title>SAWNN · Demo sign-in prototype</title>
 <link rel="icon" href="/static/app/icon-192.png">
 <link rel="stylesheet" href="/static/shared/tokens.css">
 <link rel="stylesheet" href="/static/signin/signin.css">
 </head>
 <body>
 <div class="aurora" aria-hidden="true"></div>
-<div class="proto-band" role="note"><b data-t="band">MIRA demonstration prototype — simulated sign-in.</b> <span data-t="bandD">This is not UAE PASS and is not connected to it. Never enter real credentials, Emirates ID numbers or one-time codes here.</span></div>
+<div class="proto-band" role="note"><b data-t="band">SAWNN demonstration prototype — simulated sign-in.</b> <span data-t="bandD">This is not UAE PASS and is not connected to it. Never enter real credentials, Emirates ID numbers or one-time codes here.</span></div>
 <header class="head">
-  <a class="mark" href="/"><img class="mark-logo" src="/static/shared/mira-mark.png" alt="" width="201" height="211"><span class="mark-en">MIRA</span><span class="mark-ar" lang="ar">ميرا</span></a>
+  <a class="mark" href="/"><img class="mark-logo" src="/static/shared/sawnn-mark.png" alt="" width="201" height="211"><span class="mark-en">SAWNN</span><span class="mark-ar" lang="ar">صون</span></a>
   <nav class="seg" aria-label="Prototype sections">
     <button data-pane="signin" class="on" data-t="tabSignin">Sign-in prototype</button>
     <button data-pane="sim" data-t="tabSim">Security simulator</button>
@@ -27,13 +27,13 @@
   <section id="p-signin" class="pane on">
     <div class="flow">
       <div class="card glass">
-        <h1 data-t="h1">Sign in to MIRA</h1>
-        <p class="sub" data-t="sub">With a digital identity app, you scan a code and approve on your phone. This prototype shows that journey with MIRA demo accounts only.</p>
+        <h1 data-t="h1">Sign in to SAWNN</h1>
+        <p class="sub" data-t="sub">With a digital identity app, you scan a code and approve on your phone. This prototype shows that journey with SAWNN demo accounts only.</p>
         <button id="go" class="primary" data-t="go">Sign in with digital ID (demo)</button>
         <div id="qr-step" class="qr-step" hidden>
           <div class="qr-wrap"><img id="qr" alt="Demo sign-in code" width="220" height="220"><span class="qr-tag" data-t="qrTag">DEMO</span></div>
           <p class="state" id="state" role="status"></p>
-          <p class="hint" data-t="qrHint">Scan with the demo phone on the right, or use its buttons. The code only contains a MIRA demo request ID.</p>
+          <p class="hint" data-t="qrHint">Scan with the demo phone on the right, or use its buttons. The code only contains a SAWNN demo request ID.</p>
           <button id="restart" class="ghost" data-t="restart" hidden>Start again</button>
         </div>
         <p class="alt"><span data-t="alt">Prefer email and password?</span> <a href="/command" data-t="altC">Command sign-in</a> · <a href="/app" data-t="altP">Protect</a></p>
@@ -43,10 +43,10 @@
           <p class="ph-app" data-t="phApp">Demo identity app (simulated)</p>
           <div id="ph-idle"><p data-t="phIdle">Waiting for a sign-in request…</p></div>
           <div id="ph-req" hidden>
-            <p class="ph-title" data-t="phTitle">MIRA wants to sign you in</p>
+            <p class="ph-title" data-t="phTitle">SAWNN wants to sign you in</p>
             <label class="ph-lbl" for="acct" data-t="phAcct">Demo account</label>
             <select id="acct"><option value="citizen" data-t="aCit">Citizen</option><option value="analyst" data-t="aAna">Cybercrime analyst</option><option value="admin" data-t="aAdm">Command administrator</option></select>
-            <label class="consent"><input type="checkbox" id="consent"> <span data-t="consent">Share my demo name and role with MIRA</span></label>
+            <label class="consent"><input type="checkbox" id="consent"> <span data-t="consent">Share my demo name and role with SAWNN</span></label>
             <div class="ph-btns"><button id="deny" class="ghost" data-t="deny">Decline</button><button id="approve" class="primary" data-t="approve">Approve</button></div>
           </div>
           <div id="ph-done" hidden><p id="ph-done-t"></p></div>
@@ -59,7 +59,7 @@
   <section id="p-sim" class="pane">
     <div class="sim-head">
       <h1 data-t="simH">Spot a fake sign-in</h1>
-      <p class="sub" data-t="simSub">Each step shows a trick criminals use to imitate a national sign-in, and what MIRA detects. Every domain below is fictional; the link checks run on MIRA's real engine.</p>
+      <p class="sub" data-t="simSub">Each step shows a trick criminals use to imitate a national sign-in, and what SAWNN detects. Every domain below is fictional; the link checks run on SAWNN's real engine.</p>
     </div>
     <ol id="steps" class="steps"></ol>
   </section>

@@ -1,4 +1,4 @@
-"""MIRA API v1 additions: attachments, reports, sandbox, model metrics, threat discovery, citizen alerts, agents.
+"""SAWNN API v1 additions: attachments, reports, sandbox, model metrics, threat discovery, citizen alerts, agents.
 
 Every route reuses the same service functions the apps use (no parallel logic), and every route that touches
 investigations, evidence or publishing is behind a role permission. OpenAPI docs: /docs (Swagger) and /redoc.
@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from pydantic import BaseModel, Field
 
 from raqeeb import agents as core_agents
-from raqeeb import alerts, attachments, auth, community, discovery, mira_agents
+from raqeeb import alerts, attachments, auth, community, discovery, sawnn_agents
 from raqeeb.db import db, rows
 from raqeeb.engine import MODELS
 from raqeeb.link import pipeline, sandbox_config, source_registry
@@ -19,7 +19,7 @@ from .deps import current_user, rate, require, require_user
 from .hub import hub
 from .v2 import citizen_report, citizen_report_view
 
-router = APIRouter(prefix="/api/v1", tags=["MIRA"])
+router = APIRouter(prefix="/api/v1", tags=["SAWNN"])
 
 
 # ---------- attachments ----------
@@ -89,7 +89,7 @@ def sandbox_result(scan_id: str, user=Depends(require("view_evidence"))):
 @router.get("/models/metrics")
 def models_metrics():
     out = {}
-    for name in ("evaluation_mira.json", "evaluation_verdicts.json"):
+    for name in ("evaluation_sawnn.json", "evaluation_verdicts.json"):
         f = MODELS / name
         out[name.removesuffix(".json")] = json.loads(f.read_text()) if f.exists() else None
     meta = json.loads((MODELS / "meta.json").read_text())
@@ -230,7 +230,7 @@ def notification_subscriptions(body: SubsIn, user=Depends(require_user)):
 def agent_catalogue(user=Depends(require("view_command"))):
     recent = rows(db().execute("SELECT agent, COUNT(*) n, MAX(created) last FROM findings GROUP BY agent"))
     stats = {r["agent"]: r for r in recent}
-    return [a | {"runs": stats.get(a["id"], {}).get("n", 0), "last_run": stats.get(a["id"], {}).get("last")} for a in mira_agents.catalogue()]
+    return [a | {"runs": stats.get(a["id"], {}).get("n", 0), "last_run": stats.get(a["id"], {}).get("last")} for a in sawnn_agents.catalogue()]
 
 
 class AgentIn(BaseModel):
@@ -240,7 +240,7 @@ class AgentIn(BaseModel):
 @router.post("/agents/{agent_id}/run")
 async def agent_run(agent_id: str, body: AgentIn, request: Request, user=Depends(require("view_investigations"))):
     try:
-        return await asyncio.to_thread(mira_agents.run, agent_id, body.input)
+        return await asyncio.to_thread(sawnn_agents.run, agent_id, body.input)
     except KeyError as e:
         raise HTTPException(404, "Unknown agent") from e
 

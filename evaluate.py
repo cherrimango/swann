@@ -1,4 +1,4 @@
-"""Evaluate the full MIRA engine on any labelled CSV (url,label with 1 = phishing).
+"""Evaluate the full SAWNN engine on any labelled CSV (url,label with 1 = phishing).
 
     python evaluate.py data/uae_eval.csv
     python evaluate.py data/raw/phiusiil_urls.csv --sample 20000 --no-threat-intel

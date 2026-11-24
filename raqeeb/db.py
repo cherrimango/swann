@@ -5,11 +5,11 @@ import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = Path(os.environ.get("MIRA_DB", ROOT / "data" / "raqeeb.db"))
+DB_PATH = Path(os.environ.get("SAWNN_DB", ROOT / "data" / "raqeeb.db"))
 LOCK = threading.RLock()
 
 MIGRATIONS = [
-    # 1 — MIRA 1.0 schema (unchanged so existing databases keep working)
+    # 1 — SAWNN 1.0 schema (unchanged so existing databases keep working)
     """
     CREATE TABLE IF NOT EXISTS feed (id INTEGER PRIMARY KEY, url TEXT UNIQUE, host TEXT, brand TEXT, risk REAL,
         verdict TEXT, source TEXT, reason TEXT, ts REAL);
@@ -18,7 +18,7 @@ MIGRATIONS = [
     CREATE TABLE IF NOT EXISTS blocklist (domain TEXT PRIMARY KEY, reason TEXT, brand TEXT, added_by TEXT, ts REAL);
     CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY, action TEXT, detail TEXT, ts REAL);
     """,
-    # 2 — MIRA 2.0: accounts, threat intelligence, community, rewards, protection distribution
+    # 2 — SAWNN 2.0: accounts, threat intelligence, community, rewards, protection distribution
     """
     ALTER TABLE audit ADD COLUMN actor TEXT;
     CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT UNIQUE NOT NULL, pw_hash TEXT NOT NULL, role TEXT NOT NULL,
@@ -68,7 +68,7 @@ MIGRATIONS = [
     ALTER TABLE threats ADD COLUMN demo INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE citizen_reports ADD COLUMN details TEXT;
     """,
-    # 5 — MIRA: citizen-alert workflow, attachment analysis, threat discovery engine
+    # 5 — SAWNN: citizen-alert workflow, attachment analysis, threat discovery engine
     """
     CREATE TABLE citizen_alerts (id TEXT PRIMARY KEY, status TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1,
         severity TEXT NOT NULL, category TEXT NOT NULL, audience TEXT NOT NULL, channels TEXT NOT NULL, content TEXT NOT NULL,

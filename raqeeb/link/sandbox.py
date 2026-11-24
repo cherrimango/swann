@@ -20,7 +20,7 @@ from ..urlparse import parse
 
 UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
       "Version/17.5 Mobile/15E148 Safari/604.1")
-NAV_TIMEOUT_MS = int(os.environ.get("MIRA_SANDBOX_TIMEOUT") or 15000)
+NAV_TIMEOUT_MS = int(os.environ.get("SAWNN_SANDBOX_TIMEOUT") or 15000)
 PAYMENT_RX = re.compile(r"card|cc-?num|cvv|cvc|expiry|exp-?date|iban|account.?number|بطاقة", re.I)
 
 EXTRACT_JS = r"""() => {
@@ -74,7 +74,7 @@ def _browser(url: str, shot: Path | None) -> dict:
     t0 = time.time()
     chain, blocked, downloads = [], [], []
     with sync_playwright() as pw:
-        exe = os.environ.get("MIRA_CHROMIUM")
+        exe = os.environ.get("SAWNN_CHROMIUM")
         b = pw.chromium.launch(executable_path=exe or None, args=["--no-sandbox"] if exe else [])
         try:
             ctx = b.new_context(user_agent=UA, viewport={"width": 390, "height": 844}, accept_downloads=False,
@@ -136,8 +136,8 @@ def _static(url: str) -> dict:
 
 def analyse(url: str, shot: Path | None = None) -> dict:
     """Visit the URL. Never raises: failures are returned with available=False and the error."""
-    if os.environ.get("MIRA_SANDBOX_ENABLED", "1").lower() in ("0", "false", "no"):
-        return {"available": False, "error": "sandbox disabled by MIRA_SANDBOX_ENABLED"}
+    if os.environ.get("SAWNN_SANDBOX_ENABLED", "1").lower() in ("0", "false", "no"):
+        return {"available": False, "error": "sandbox disabled by SAWNN_SANDBOX_ENABLED"}
     try:
         check_url(url)
     except UnsafeTarget as e:

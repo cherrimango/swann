@@ -351,8 +351,8 @@
   "threshold_strict": 0.972605,
   "max_fpr_target": 0.01,
   "trained_at": "2026-11-24 20:52",
-  "model_version": "mira-url-202611242052",
-  "dataset_version": "mira-ds-946b39760a",
+  "model_version": "sawnn-url-202611242052",
+  "dataset_version": "sawnn-ds-946b39760a",
   "rows": {
     "train": 589723,
     "val": 77359,

@@ -1,4 +1,4 @@
-# MIRA server image. Includes Chromium (for deep scans) and Tesseract with English + Arabic (for screenshot OCR).
+# SAWNN server image. Includes Chromium (for deep scans) and Tesseract with English + Arabic (for screenshot OCR).
 # Status: written for deployment; not built in the hackathon environment (no Docker daemon there).
 FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-ara libgomp1 \

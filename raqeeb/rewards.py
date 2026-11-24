@@ -1,4 +1,4 @@
-"""MIRA Guardians: points for verified, original, useful contributions only.
+"""SAWNN Guardians: points for verified, original, useful contributions only.
 
 Points are written to a ledger with a UNIQUE(user, reason, threat) key, so the same contribution can never be paid
 twice, and they are reversed if the threat is later marked a false positive.
@@ -9,17 +9,17 @@ import time
 
 from .db import LOCK, db, one, rows
 
-POINTS = {  # configurable: MIRA_POINTS='{"new_website": 20, ...}'
+POINTS = {  # configurable: SAWNN_POINTS='{"new_website": 20, ...}'
     "new_website": 20, "verified_phone": 15, "verified_ad": 25, "verified_sms": 15, "verified_email": 15,
     "useful_evidence": 10, "campaign_connection": 30, "independent_confirmation": 10, "high_impact_campaign": 50,
     "learning": 5,
 }
-POINTS.update(json.loads(os.environ.get("MIRA_POINTS") or "{}"))
+POINTS.update(json.loads(os.environ.get("SAWNN_POINTS") or "{}"))
 
 LEVELS = [(0, "Observer"), (50, "Scout"), (150, "Defender"), (400, "Sentinel"), (900, "Guardian"),
-          (2000, "Elite Guardian"), (5000, "MIRA Champion")]
+          (2000, "Elite Guardian"), (5000, "SAWNN Champion")]
 LEVELS_AR = {"Observer": "مراقب", "Scout": "مستكشف", "Defender": "مدافع", "Sentinel": "حارس يقظ", "Guardian": "حامٍ",
-             "Elite Guardian": "حامي النخبة", "MIRA Champion": "بطل ميرا"}
+             "Elite Guardian": "حامي النخبة", "SAWNN Champion": "بطل صون"}
 BADGES = {
     "first_verified": ("First Verified Report", "أول بلاغ موثّق"),
     "phishing_hunter": ("Phishing Hunter", "صياد التصيّد"),

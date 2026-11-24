@@ -1,10 +1,10 @@
-"""End-to-end evaluation of MIRA's verdicts (not just the model) on the held-out test split, plus a before/after
+"""End-to-end evaluation of SAWNN's verdicts (not just the model) on the held-out test split, plus a before/after
 comparison with RAQEEB 2.1 on exactly the same URLs.
 
-    python evaluate_mira.py                      # new engine only
-    python evaluate_mira.py --old /tmp/old21     # also run RAQEEB 2.1 from a git worktree of commit 570ab57
+    python evaluate_sawnn.py                      # new engine only
+    python evaluate_sawnn.py --old /tmp/old21     # also run RAQEEB 2.1 from a git worktree of commit 570ab57
 
-Threat-feed look-ups are switched off for this measurement: the phishing test URLs come from the same feeds that MIRA
+Threat-feed look-ups are switched off for this measurement: the phishing test URLs come from the same feeds that SAWNN
 uses for signature matching, so leaving them on would measure a list look-up, not detection. In production the feeds
 are on and catch every listed URL.
 
@@ -44,7 +44,7 @@ def run(code_dir: Path, urls: list[str], tag: str) -> list[str]:
     inp, outp, scr = Path(f"/tmp/eval_{tag}_in.json"), Path(f"/tmp/eval_{tag}_out.json"), Path(f"/tmp/eval_{tag}.py")
     inp.write_text(json.dumps(urls))
     scr.write_text(SCRIPT)
-    env = {"PATH": "/usr/bin:/bin", "MIRA_DB": f"/tmp/eval_{tag}.db", "RAQEEB_DB": f"/tmp/eval_{tag}.db", "HOME": "/tmp"}
+    env = {"PATH": "/usr/bin:/bin", "SAWNN_DB": f"/tmp/eval_{tag}.db", "RAQEEB_DB": f"/tmp/eval_{tag}.db", "HOME": "/tmp"}
     subprocess.run([sys.executable, str(scr), str(code_dir), str(inp), str(outp)], cwd=str(code_dir), env=env, check=True)
     return json.loads(outp.read_text())
 
@@ -69,14 +69,14 @@ def main():
     ap.add_argument("--n", type=int, default=2500, help="URLs per class from the test split")
     ap.add_argument("--old", help="path to a RAQEEB 2.1 checkout for the before/after comparison")
     a = ap.parse_args()
-    from train_mira import sample_and_split
+    from train_sawnn import sample_and_split
     _, _, _, _, test = sample_and_split()
     rng = np.random.RandomState(7)
     sel = np.concatenate([rng.choice(np.where(test.label.values == c)[0], a.n, replace=False) for c in (1, 0)])
     sub = test.iloc[sel]
     urls = ["http://" + u for u in sub.url]
     labels = sub.label.tolist()
-    res = {"test_split": "domain-grouped held-out test split from train_mira.py (no registered domain seen in training)",
+    res = {"test_split": "domain-grouped held-out test split from train_sawnn.py (no registered domain seen in training)",
            "n_per_class": a.n, "threat_feeds": "off (see module docstring)", "mode": "quick scan (link analysis only)"}
     t0 = time.time()
     res["mira"] = table(run(ROOT, urls, "mira"), labels)

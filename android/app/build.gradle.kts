@@ -12,7 +12,7 @@ android {
         targetSdk = 34
         versionCode = 2
         versionName = "2.0"
-        // Laptop running the MIRA server on the same Wi-Fi. Change before building, or edit in the app.
+        // Laptop running the SAWNN server on the same Wi-Fi. Change before building, or edit in the app.
         buildConfigField("String", "SERVER", "\"http://192.168.1.10:8000\"")
         // Optional: pin the protection-package public key (GET /api/protection/public-key). Empty = pin on first sync.
         buildConfigField("String", "PROTECTION_KEY", "\"${project.findProperty("raqeebProtectionKey") ?: ""}\"")

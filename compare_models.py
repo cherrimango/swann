@@ -1,4 +1,4 @@
-"""Compare MIRA's production model (char n-gram LR stacked into LightGBM) with a Random Forest baseline and
+"""Compare SAWNN's production model (char n-gram LR stacked into LightGBM) with a Random Forest baseline and
 XGBoost, on exactly the same data and the same domain-grouped split as train.py.
 
 Nothing is deployed by this script: it writes the measured results to models/evaluation.json so they can be shown

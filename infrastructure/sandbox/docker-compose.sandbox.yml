@@ -14,7 +14,7 @@ services:
     cpus: 1.0
     networks: [sandbox-egress]
     environment:
-      MIRA_SANDBOX_TIMEOUT: "15000"
+      SAWNN_SANDBOX_TIMEOUT: "15000"
 networks:
   sandbox-egress:
     driver: bridge

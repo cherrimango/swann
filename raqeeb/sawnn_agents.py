@@ -1,9 +1,9 @@
-"""The fourteen MIRA agents behind one contract.
+"""The fourteen SAWNN agents behind one contract.
 
 Every agent returns the same envelope:
     agent, task, result, evidence, confidence (0-1 or null), source, timestamp (UTC ISO), limitations, recommended_action
 Agents analyse and recommend. None of them can approve a threat, block anything globally or publish an alert: those
-actions stay with authorised people in MIRA Command. Each agent wraps a real MIRA component; an agent whose input or
+actions stay with authorised people in SAWNN Command. Each agent wraps a real SAWNN component; an agent whose input or
 data is missing says so in `limitations` instead of producing a result.
 """
 import datetime as dt
@@ -38,7 +38,7 @@ def threat_hunter(_=None):
     lim = [] if healthy else ["No feed has been collected successfully yet; run the Threat Discovery Engine."]
     return _env("Global Threat Hunter", "Collect new phishing indicators from permitted public feeds",
                 {"indicators_total": st["indicators"]["total"], "new_last_24h": st["indicators"]["new_24h"], "healthy_sources": healthy},
-                {"latest_indicators": new}, None, "MIRA Threat Discovery Engine", lim + ["Feed indicators are unverified leads."],
+                {"latest_indicators": new}, None, "SAWNN Threat Discovery Engine", lim + ["Feed indicators are unverified leads."],
                 "Review new UAE-relevant indicators in Live threat intelligence.")
 
 
@@ -65,7 +65,7 @@ def brand_impersonation(url):
            "No impersonation found in the address; a deep scan checks the page itself.")
     return _env("UAE Brand Impersonation", f"Check {url[:120]}", res, {"host": p.host, "registered_domain": p.registered_domain},
                 0.85 if hits and hits[0].kind in ("host_keyword", "homoglyph", "typosquat") else (0.5 if hits else None),
-                "MIRA brand registry (raqeeb/brands.json)", ["Only brands in the verified registry are recognised."], act)
+                "SAWNN brand registry (raqeeb/brands.json)", ["Only brands in the verified registry are recognised."], act)
 
 
 def message(text):
@@ -74,7 +74,7 @@ def message(text):
     m, f = core.message_agent(text)
     return _env("Message Intelligence", "Analyse a message", {"verdict": m["verdict"], "risk_score": m["risk_score"]},
                 {"script_signals": m["script_signals"], "links": [{"url": l["url"], "verdict": l["verdict"]} for l in m["links"]]},
-                f.confidence, "MIRA scam-script rules (EN/AR) + link engine", ["Rules cover known scam scripts; new wording may be missed."],
+                f.confidence, "SAWNN scam-script rules (EN/AR) + link engine", ["Rules cover known scam scripts; new wording may be missed."],
                 m["advice_en"])
 
 
@@ -83,16 +83,16 @@ def advertisement(text):
         return _env("Advertisement Intelligence", "Analyse an advert", None, {}, None, "Advert rules", ["Give the advert text."], "")
     m = core.check_message(text) if hasattr(core, "check_message") else {"links": []}
     out, f = core.ad_agent(text, m.get("links", []))
-    return _env("Advertisement Intelligence", "Analyse an advert", out, f.evidence, f.confidence, "MIRA advert rules",
+    return _env("Advertisement Intelligence", "Analyse an advert", out, f.evidence, f.confidence, "SAWNN advert rules",
                 ["Text rules only; images need the attachment analyser."], f.next_action or "Report the advert to the platform.")
 
 
 def phone(number):
     if not number:
-        return _env("Phone Intelligence", "Check a phone number", None, {}, None, "MIRA threat records", ["Give a phone number."], "")
+        return _env("Phone Intelligence", "Check a phone number", None, {}, None, "SAWNN threat records", ["Give a phone number."], "")
     out, f = core.phone_agent(number)
-    return _env("Phone Intelligence", f"Check {number[:30]}", out, f.evidence, f.confidence, "MIRA threat records and citizen reports",
-                ["MIRA detects reported numbers; it never places or screens calls from the server."], f.next_action)
+    return _env("Phone Intelligence", f"Check {number[:30]}", out, f.evidence, f.confidence, "SAWNN threat records and citizen reports",
+                ["SAWNN detects reported numbers; it never places or screens calls from the server."], f.next_action)
 
 
 def qr(payload):
@@ -111,7 +111,7 @@ def sandbox(scan_id):
     from .link import pipeline
     r = pipeline.get(scan_id or "") if scan_id else None
     if not r or r.get("mode") != "deep":
-        return _env("Sandbox Analysis", "Summarise a deep scan", None, {}, None, "MIRA sandbox", ["Give the scan ID of a completed deep scan."], "")
+        return _env("Sandbox Analysis", "Summarise a deep scan", None, {}, None, "SAWNN sandbox", ["Give the scan ID of a completed deep scan."], "")
     sb = r.get("website_analysis") or {}
     return _env("Sandbox Analysis", f"Summarise {scan_id}", {"verdict": r.get("verdict"), "analysis_status": r.get("analysis_status"),
                 "final_url": r.get("final_url"), "password_fields": sb.get("password_fields"), "payment_fields": sb.get("payment_fields")},
@@ -136,7 +136,7 @@ def campaigns(_=None):
     g = core.correlate()
     camps = g.get("campaigns", []) if isinstance(g, dict) else []
     return _env("Campaign Correlation", "Group related threats into campaigns", {"campaigns": len(camps)}, {"campaigns": camps[:20]}, None,
-                "MIRA threat records", ["Links threats by shared domains, numbers, kits and message text only."], "Investigate the largest campaigns first.")
+                "SAWNN threat records", ["Links threats by shared domains, numbers, kits and message text only."], "Investigate the largest campaigns first.")
 
 
 def seasonal(_=None):
@@ -149,18 +149,18 @@ def seasonal(_=None):
 def community(_=None):
     q = rows(db().execute("SELECT status, COUNT(*) n FROM citizen_reports GROUP BY status"))
     return _env("Community Intelligence", "Citizen report health", {"reports_by_status": {r["status"]: r["n"] for r in q}}, {}, None,
-                "MIRA Protect reports", ["Citizen reports are untrusted until reviewed and never retrain models automatically."],
+                "SAWNN Protect reports", ["Citizen reports are untrusted until reviewed and never retrain models automatically."],
                 "Review reports waiting in the queue.")
 
 
 def briefing(period="day"):
     b = core.briefing_agent(period if period in ("day", "week", "month") else "day")
-    return _env("Intelligence Briefing", f"{period} briefing", b, {}, None, "MIRA records", ["Summarises recorded data only."], "Share with the duty officer.")
+    return _env("Intelligence Briefing", f"{period} briefing", b, {}, None, "SAWNN records", ["Summarises recorded data only."], "Share with the duty officer.")
 
 
 def distribution(_=None):
     d = core.distribution_agent()
-    return _env("Protection Distribution", "Threats ready for blocking", {"ready": len(d)}, {"threats": d[:30]}, None, "MIRA threat records",
+    return _env("Protection Distribution", "Threats ready for blocking", {"ready": len(d)}, {"threats": d[:30]}, None, "SAWNN threat records",
                 ["Recommends only. Publishing protection needs an authorised approver."], "Open Blocking & distribution to approve.")
 
 

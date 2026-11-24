@@ -1,4 +1,4 @@
-// MIRA Command 2.0. Every value from threats, reports and feeds is attacker-controlled text,
+// SAWNN Command 2.0. Every value from threats, reports and feeds is attacker-controlled text,
 // so the DOM is built with textContent only (never innerHTML with data).
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -78,7 +78,7 @@ $('#login-form').addEventListener('submit', async e => {
   $('#login-error').textContent = '';
   try {
     const r = await api('/api/auth/login', { email: $('#l-email').value, password: $('#l-pass').value });
-    if (r.user.role === 'citizen') { $('#login-error').textContent = 'This account is a citizen account. Use MIRA Protect at /app.'; return; }
+    if (r.user.role === 'citizen') { $('#login-error').textContent = 'This account is a citizen account. Use SAWNN Protect at /app.'; return; }
     TOKEN = r.token; sessionStorage.setItem('raqeeb_cmd_token', TOKEN);
     start();
   } catch (err) { $('#login-error').textContent = err.message; }
@@ -196,7 +196,7 @@ loaders.overview = async () => {
   $('#ov-activity').replaceChildren(...(act.length ? act.map(i => h('li', {}, h('time', {}, clock(i.ts)),
     h('div', {}, h('b', {}, i.title), i.demo ? h('span', { class: 'pill demo', style: 'margin-left:8px' }, 'Demo') : null, h('span', { class: 'meta' }, i.detail))))
     : [h('li', {}, h('span', {}), h('span', { class: 'meta' }, 'No activity yet. Run a hunt, or wait for citizen reports.'))]));
-  $('#ov-sub').textContent = `Signed in as ${ME.display_name}${ME.display_name !== ME.role_name ? ` (${ME.role_name})` : ''}. Live state of MIRA across the UAE.`;
+  $('#ov-sub').textContent = `Signed in as ${ME.display_name}${ME.display_name !== ME.role_name ? ` (${ME.role_name})` : ''}. Live state of SAWNN across the UAE.`;
 };
 
 /* ---------------- threats workspace ---------------- */
@@ -264,7 +264,7 @@ async function openThreat(id) {
     const box2 = h('div', { class: 'block-box' });
     if (t.block_status === 'global') {
       const b = h('button', { class: 'ghost', onclick: () => act(b, async () => { await api(`/api/threats/${t.id}/unblock`, { status: 'none', note: 'lifted by approver' }); openThreat(t.id); loadCounters(); }, 'Block lifted') }, 'Lift block');
-      box2.append(h('p', {}, `Blocked for every MIRA user as a ${t.block_scope} rule until ${when(t.block_expires)}.`), b);
+      box2.append(h('p', {}, `Blocked for every SAWNN user as a ${t.block_scope} rule until ${when(t.block_expires)}.`), b);
     } else if (t.policy.can_block_globally) {
       const b = h('button', { class: 'primary', onclick: () => act(b, async () => { await api(`/api/threats/${t.id}/block`, { expiry_days: +days.value }); openThreat(t.id); loadCounters(); }, 'Published to every phone') }, 'Approve global block');
       box2.append(h('p', {}, `Will block the ${scope[0]} “${scope[1]}” for everyone and publish a new signed version.`), days, b);
@@ -666,7 +666,7 @@ loaders.briefing = async () => {
   const b = await api(`/api/intel/briefing?period=${bPeriod}`);
   const list = (title, items, fn) => [h('h3', { class: 'section-h' }, title), h('ul', {}, items.length ? items.map(i => h('li', {}, fn(i))) : [h('li', {}, 'None.')])];
   $('#b-body').replaceChildren(
-    h('p', { class: 'meta' }, `Generated ${when(b.generated)} · ${b.summary_source === 'llm' ? 'written by the configured AI model from MIRA data' : 'written by MIRA’s rule-based briefing agent'}`),
+    h('p', { class: 'meta' }, `Generated ${when(b.generated)} · ${b.summary_source === 'llm' ? 'written by the configured AI model from SAWNN data' : 'written by SAWNN’s rule-based briefing agent'}`),
     h('p', {}, b.summary),
     h('dl', { class: 'kpis' }, [['New threats', b.new_threats], ['Confirmed', b.confirmed], ['Citizen reports', b.citizen_reports], ['Awaiting review', b.awaiting_review], ['Awaiting block decision', b.awaiting_block_approval], ['Blocked now', b.blocked_now]]
       .map(([k, v]) => h('div', {}, h('dt', {}, k), h('dd', {}, v)))),
@@ -688,7 +688,7 @@ loaders.agents = async () => {
   const [list, rows] = await Promise.all([api('/api/intel/agents'), api('/api/intel/findings')]);
   const llm = list.find(x => 'llm_enabled' in x);
   $('#a-list').replaceChildren(...list.filter(x => x.id).map(a => h('div', {}, h('b', {}, a.id.replace(/_/g, ' ')), h('span', { class: 'meta' }, AGENT_INFO[a.id]), h('div', { class: 'meta' }, `${a.findings} findings recorded`))),
-    h('div', {}, h('b', {}, 'Optional AI model'), h('span', { class: 'meta' }, llm?.llm_enabled ? 'Connected: briefings are written by the configured model.' : 'Not configured. Everything runs on MIRA’s own code.')));
+    h('div', {}, h('b', {}, 'Optional AI model'), h('span', { class: 'meta' }, llm?.llm_enabled ? 'Connected: briefings are written by the configured model.' : 'Not configured. Everything runs on SAWNN’s own code.')));
   $('#a-rows').replaceChildren(...rows.slice(0, 80).map(f => h('tr', {}, h('td', {}, f.agent.replace(/_/g, ' ')), h('td', {}, f.subject), h('td', {}, `${Math.round(f.confidence * 100)}%`),
     h('td', {}, f.reasoning), h('td', {}, f.next_action || '–'), h('td', {}, ago(f.created)))));
 };
@@ -809,7 +809,7 @@ function connect() {
       loadCounters();
       if (onView('threats')) loaders.threats();
     } else if (event === 'protection') {
-      toast(`Protection v${data.version} published`, `${data.rules} rules now on every MIRA device`);
+      toast(`Protection v${data.version} published`, `${data.rules} rules now on every SAWNN device`);
       loadCounters();
       if (onView('protection')) loaders.protection();
     }

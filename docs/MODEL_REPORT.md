@@ -1,28 +1,28 @@
-# MIRA model and detection evaluation report
+# SAWNN model and detection evaluation report
 
 Every number in this report was produced by the scripts named next to it, on 24 November 2026, and is stored in
-`models/evaluation_mira.json` (URL model) and `models/evaluation_verdicts.json` (end-to-end verdicts).
-Nothing was estimated or rounded up. MIRA does **not** reach the 99.9% target; the actual results and the next steps are below.
+`models/evaluation_sawnn.json` (URL model) and `models/evaluation_verdicts.json` (end-to-end verdicts).
+Nothing was estimated or rounded up. SAWNN does **not** reach the 99.9% target; the actual results and the next steps are below.
 
 Reproduce:
 
 ```bash
 python data/build_dataset.py                 # 1. versioned dataset          (~2 min)
-python train_mira.py                         # 2. train + evaluate the model (~10 min, 2 CPUs)
+python train_sawnn.py                         # 2. train + evaluate the model (~10 min, 2 CPUs)
 git worktree add /tmp/old21 570ab57          # 3. RAQEEB 2.1 for the before/after comparison
-python evaluate_mira.py --old /tmp/old21     # 4. end-to-end verdicts         (~2 min)
+python evaluate_sawnn.py --old /tmp/old21     # 4. end-to-end verdicts         (~2 min)
 ```
 
 ## 1. Why phishing sites were marked SAFE (root causes, all fixed)
 
-| # | Cause in RAQEEB 2.1 | Fix in MIRA | File |
+| # | Cause in RAQEEB 2.1 | Fix in SAWNN | File |
 |---|---|---|---|
-| 1 | The model only saw the **hostname**. Phishing hosted in a path (`hacked-site.com/wp-content/dropbox/login`) looked identical to the legitimate site. Hostname recall was 52.8% on this test set. | New model reads the full canonical URL (host + path + query). | `train_mira.py`, `raqeeb/model.py`, `raqeeb/features.py` |
+| 1 | The model only saw the **hostname**. Phishing hosted in a path (`hacked-site.com/wp-content/dropbox/login`) looked identical to the legitimate site. Hostname recall was 52.8% on this test set. | New model reads the full canonical URL (host + path + query). | `train_sawnn.py`, `raqeeb/model.py`, `raqeeb/features.py` |
 | 2 | **Popular-domain cap**: any registered domain in the top-10k list was capped at risk 20 (regional brand sites at 30), so phishing on Google Sites/Docs/Forms, SharePoint, Blogspot, hosting providers or hacked popular sites came out SAFE. `google.com` is the single largest phishing domain in the attached dataset (1,315 rows). | User-content platforms (Google Docs/Sites/Forms, SharePoint, OneDrive, Dropbox, cloud storage, hosting providers, site builders) never get the cap. A popular domain whose page the model flags at the strict operating point becomes SUSPICIOUS ("possible compromised page or open redirect"). | `raqeeb/engine.py` (`USER_CONTENT_HOSTS`, `user_content`) |
 | 3 | **SAFE by default**: a low score with ML available returned SAFE even in a quick scan with no domain, sandbox or threat-intel evidence. | SAFE now needs positive evidence: an official-registry match, a well-established domain with a benign model result, a .gov.ae/.ac.ae/.sch.ae/.mil.ae restricted-zone domain, or a completed deep scan. Everything else is INCONCLUSIVE with the reason. Sandbox failure can never yield SAFE. | `raqeeb/link/risk.py`, `raqeeb/engine.py`, `raqeeb/messages.py` |
 | 4 | A shortcut in the new data: in `url_dataset.csv` 99.8% of legitimate URLs start with `https://www.` but only 6.2% of phishing URLs use HTTPS. A model trained on raw URLs would learn "HTTPS = safe". | Every URL is canonicalised (no scheme, no leading `www.`) in training and in inference. | `raqeeb/features.py::canonical` |
 
-Regression tests for each cause: `tests/test_mira.py` (`test_psl_brand_text_in_subdomain_is_not_official`,
+Regression tests for each cause: `tests/test_sawnn.py` (`test_psl_brand_text_in_subdomain_is_not_official`,
 `test_unknown_benign_looking_site_is_inconclusive_not_safe`, `test_phishing_on_user_content_platforms_is_not_capped_as_popular`,
 `test_hosting_provider_subdomain_is_not_safe`, `test_sandbox_failure_never_yields_safe`, `test_canonical_form_removes_scheme_shortcut`).
 
@@ -44,7 +44,7 @@ Regression tests for each cause: `tests/test_mira.py` (`test_psl_brand_text_in_s
 | Language | 113 rows contain Arabic script or punycode (103 phishing, 10 legitimate); otherwise Latin-script URLs |
 | UAE share | 142 `.ae` URLs (132 phishing, 10 legitimate); about 277 rows mention UAE brands or places. **Very little UAE coverage** |
 
-## 3. Training dataset `mira-ds-946b39760a`
+## 3. Training dataset `sawnn-ds-946b39760a`
 
 Built by `data/build_dataset.py` (manifest: `data/processed/manifest.json`).
 
@@ -67,7 +67,7 @@ hostname source → 821,678 URLs. **Split by registered domain** (`GroupShuffleS
 
 ## 4. Model
 
-`mira-url-202611242052`: char 3–5-gram hashing + TF-IDF + logistic regression (out-of-fold, 3 folds) stacked into LightGBM
+`sawnn-url-202611242052`: char 3–5-gram hashing + TF-IDF + logistic regression (out-of-fold, 3 folds) stacked into LightGBM
 over 35 handcrafted URL features, then isotonic calibration on validation. Thresholds chosen on validation:
 **0.8497** (validation FPR ≤ 1%, used for decisions) and **0.9726** (FPR ≤ 0.1%, used before questioning a popular domain).
 Latency: 0.79 ms per URL (batch of 299).
@@ -82,9 +82,9 @@ Operating threshold 0.8497 unless stated.
 | Random Forest, handcrafted features | 0.708 | 0.992 | 0.433 | 0.603 | 0.35% | 0.906 | 0.927 |
 | XGBoost, handcrafted features | 0.667 | 0.999 | 0.350 | 0.518 | 0.05% | 0.920 | 0.937 |
 | Char n-gram LR only | 0.877 | 0.987 | 0.769 | 0.865 | 1.05% | 0.972 | 0.977 |
-| **MIRA stacked + calibrated (deployed)** | **0.879** | **0.997** | **0.766** | **0.866** | **0.25%** | **0.979** | **0.981** |
-| MIRA at 0.1%-FPR point (0.9726) | 0.786 | 1.000 | 0.581 | 0.735 | 0.02% | | |
-| MIRA at 0.5 | 0.921 | 0.979 | 0.864 | 0.918 | 1.97% | | |
+| **SAWNN stacked + calibrated (deployed)** | **0.879** | **0.997** | **0.766** | **0.866** | **0.25%** | **0.979** | **0.981** |
+| SAWNN at 0.1%-FPR point (0.9726) | 0.786 | 1.000 | 0.581 | 0.735 | 0.02% | | |
+| SAWNN at 0.5 | 0.921 | 0.979 | 0.864 | 0.918 | 1.97% | | |
 
 Confusion matrix (deployed threshold): TN 75,382 · FP 190 · FN 18,499 · TP 60,525. FNR 23.4%.
 
@@ -103,17 +103,17 @@ Breakdown:
 
 ## 6. End-to-end verdicts (what citizens and analysts actually see)
 
-`evaluate_mira.py`: 2,500 phishing + 2,500 legitimate URLs drawn from the test split, quick scan, threat feeds **off**
+`evaluate_sawnn.py`: 2,500 phishing + 2,500 legitimate URLs drawn from the test split, quick scan, threat feeds **off**
 (the test phishing URLs come from the same feeds, so leaving them on would measure a look-up). Same URLs for both versions.
 
 | | Phishing → SAFE | Phishing → MALICIOUS/SUSPICIOUS | Legitimate → MALICIOUS/SUSPICIOUS | Legitimate → SAFE |
 |---|---|---|---|---|
 | RAQEEB 2.1 | **24.96%** | 74.8% | 15.5% | 84.5% |
-| **MIRA** | **0.12%** | 86.8% | 2.3% | 22.6% |
-| MIRA, UAE set (53 phishing / 60 legitimate) | 0.0% | 100% | 5.0% | 73.3% |
+| **SAWNN** | **0.12%** | 86.8% | 2.3% | 22.6% |
+| SAWNN, UAE set (53 phishing / 60 legitimate) | 0.0% | 100% | 5.0% | 73.3% |
 
 The rest is INCONCLUSIVE: 13.1% of phishing and 75.1% of legitimate URLs in a quick scan. That is the intended behaviour
-of the MIRA rule (unknown sites are not SAFE). A deep scan or an analyst resolves them.
+of the SAWNN rule (unknown sites are not SAFE). A deep scan or an analyst resolves them.
 
 ## 7. Error analysis
 
@@ -130,7 +130,7 @@ of the MIRA rule (unknown sites are not SAFE). A deep scan or an analyst resolve
 1. **Not 99.9%.** Measured recall at the operating point is 76.6% (URL model) and 86.8% flagged end-to-end on unseen domains.
 2. Labels are from public feeds and the attached file; they were not manually re-verified.
 3. No per-row timestamps, so no true temporal split; the OpenPhish snapshot is the closest fresh-threat check.
-4. UAE coverage is thin (113-URL hand-labelled set). Next: collect verified UAE phishing from MIRA analyst decisions
+4. UAE coverage is thin (113-URL hand-labelled set). Next: collect verified UAE phishing from SAWNN analyst decisions
    (never raw citizen reports) and from abuse.ch/PhishTank once keys are configured.
 5. Data to add toward 10M: Tranco list (legitimate domains, with research licence), Common Crawl URL index samples for
    legitimate full URLs with modern paths, PhishTank and URLhaus exports (free keys). Each needs licence review first.

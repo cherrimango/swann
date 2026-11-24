@@ -1,4 +1,4 @@
-"""MIRA 2.0 acceptance tests: accounts and roles, citizen reporting, verification workflow, community
+"""SAWNN 2.0 acceptance tests: accounts and roles, citizen reporting, verification workflow, community
 corroboration, rewards, protection distribution, forecasting and security. Run: pytest -q"""
 import base64
 import io
@@ -34,11 +34,11 @@ def login(c, email, password):
 
 
 def admin(c):
-    return login(c, "admin@mira.local", "test-admin-password")
+    return login(c, "admin@sawnn.local", "test-admin-password")
 
 
 def official(c, role):
-    email, pw = f"{role}-{secrets.token_hex(3)}@mira.local", "official-pass-123"
+    email, pw = f"{role}-{secrets.token_hex(3)}@sawnn.local", "official-pass-123"
     assert c.post("/api/admin/users", json={"email": email, "password": pw, "role": role}, headers=admin(c)).status_code == 200
     return login(c, email, pw)
 
@@ -66,10 +66,10 @@ def test_roles_and_registration(c):
     assert me["role"] == "super_admin" and "approve_block" in me["permissions"]
     h = citizen(c)
     assert c.get("/api/auth/me", headers=h).json()["role"] == "citizen"
-    assert c.post("/api/auth/login", json={"email": "admin@mira.local", "password": "wrong"}).status_code == 401
+    assert c.post("/api/auth/login", json={"email": "admin@sawnn.local", "password": "wrong"}).status_code == 401
 
 
-# 2. RBAC: citizens can't open MIRA Command; a read-only supervisor can view but not decide.
+# 2. RBAC: citizens can't open SAWNN Command; a read-only supervisor can view but not decide.
 def test_rbac(c):
     h = citizen(c)
     assert c.get("/api/threats", headers=h).status_code == 403
@@ -243,7 +243,7 @@ def test_leaderboard_privacy(c):
 # 17. Levels follow the published thresholds.
 def test_levels():
     from raqeeb.rewards import level
-    assert level(0)["name"] == "Observer" and level(50)["name"] == "Scout" and level(5000)["name"] == "MIRA Champion"
+    assert level(0)["name"] == "Observer" and level(50)["name"] == "Scout" and level(5000)["name"] == "SAWNN Champion"
     assert level(149)["next"] == {"name": "Defender", "at": 150}
 
 

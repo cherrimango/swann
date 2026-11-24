@@ -1,7 +1,7 @@
-"""Train MIRA's full-URL model on the versioned dataset from data/build_dataset.py and write an honest evaluation.
+"""Train SAWNN's full-URL model on the versioned dataset from data/build_dataset.py and write an honest evaluation.
 
     python data/build_dataset.py      # once: builds data/processed/<version>.csv.gz
-    python train_mira.py              # trains, evaluates, writes models/ and models/evaluation_mira.json
+    python train_sawnn.py              # trains, evaluates, writes models/ and models/evaluation_sawnn.json
 
 Design:
 - Every URL is put in canonical form (no scheme, no leading www.) so "https" cannot act as a label shortcut.
@@ -10,7 +10,7 @@ Design:
   handcrafted URL features + the stage-1 score. Probabilities are calibrated with isotonic regression on validation.
 - Decision threshold: highest recall with validation FPR <= --max-fpr (default 1%).
 - Baselines on the same split: char-LR only, Random Forest and XGBoost on handcrafted features, and the previous
-  MIRA 2.1 hostname-only model (models_v21_host/), so improvement is measured, not asserted.
+  SAWNN 2.1 hostname-only model (models_v21_host/), so improvement is measured, not asserted.
 - Extra test sets never used in training: the OpenPhish snapshot (fresh phishing) and data/uae_eval.csv.
 """
 import argparse
@@ -55,7 +55,7 @@ def metrics(y, p, t):
 
 
 def sample_and_split(dataset=None, cap_phishdb=180_000, cap_hosts=100_000, seed=42):
-    """Deterministic sample + domain-grouped split, shared by train_mira.py and evaluate_mira.py."""
+    """Deterministic sample + domain-grouped split, shared by train_sawnn.py and evaluate_sawnn.py."""
     man = json.loads((PROC / "manifest.json").read_text())
     path = Path(dataset) if dataset else ROOT / man["file"]
     df = pd.read_csv(path)
@@ -144,7 +144,7 @@ def main():
     print(f"[{time.time()-t0:.0f}s] baselines done", flush=True)
 
     meta = {"mode": "url", "canonical": True, "calibration": cal, "threshold": round(thr, 6), "threshold_strict": round(thr_strict, 6),
-            "max_fpr_target": a.max_fpr, "trained_at": time.strftime("%Y-%m-%d %H:%M"), "model_version": f"mira-url-{time.strftime('%Y%m%d%H%M')}",
+            "max_fpr_target": a.max_fpr, "trained_at": time.strftime("%Y-%m-%d %H:%M"), "model_version": f"sawnn-url-{time.strftime('%Y%m%d%H%M')}",
             "dataset_version": man["version"], "rows": {"train": len(train), "val": len(val), "test": len(test)},
             "test_metrics": ev["main"], "best_iteration": booster.best_iteration,
             "data_sources": sorted(df.source.unique().tolist()),
@@ -177,7 +177,7 @@ def main():
                "No timestamps in the attached dataset, so a true temporal split is not possible; the OpenPhish snapshot is the closest fresh-threat check.",
                "UAE evaluation set is small (113 URLs) and hand-labelled.",
                "These are URL-only metrics. Deep scans add DNS, TLS, sandbox and visual evidence that this table does not measure."]}
-    (MODEL_DIR / "evaluation_mira.json").write_text(json.dumps(out, indent=2))
+    (MODEL_DIR / "evaluation_sawnn.json").write_text(json.dumps(out, indent=2))
     print(json.dumps({k: ev[k] for k in ("main", "strict_0.1pct_fpr")}, indent=1))
     print(json.dumps({k: {m: v.get(m) for m in ("recall", "fpr", "f1", "roc_auc")} for k, v in base.items()}, indent=1))
     print(json.dumps({k: ev[k] for k in ("openphish_fresh_unseen",) if k in ev}), ev["uae_eval_model_only"]["recall"], ev["uae_eval_model_only"]["fpr"])

@@ -1,7 +1,7 @@
-"""Hackathon demonstration mode (MIRA_DEMO=1): demo accounts and the seeded "fake winter camping promotion" scenario.
+"""Hackathon demonstration mode (SAWNN_DEMO=1): demo accounts and the seeded "fake winter camping promotion" scenario.
 
 Everything created here is marked as demonstration data (threats.demo = 1, sources say "DEMO SEED", accounts end in
-@mira.demo). The discovery in step 1 is simulated; every analysis after it is MIRA's real engine running on the
+@sawnn.demo). The discovery in step 1 is simulated; every analysis after it is SAWNN's real engine running on the
 seeded indicators. Steps 6-11 are done live by the presenter in COMMAND and PROTECT; their progress is read from the
 database, not pretended.
 """
@@ -14,11 +14,11 @@ from .db import db, one, rows
 from .link import pipeline
 
 DEMO_ACCOUNTS = [  # demonstration-only credentials; never use them outside a demo
-    {"label": "Command administrator", "email": "admin@mira.demo", "password": "MiraDemo2026!", "role": "super_admin",
+    {"label": "Command administrator", "email": "admin@sawnn.demo", "password": "SawnnDemo2026!", "role": "super_admin",
      "name": "Demo Administrator", "app": "command"},
-    {"label": "Cybercrime analyst", "email": "analyst@mira.demo", "password": "AnalystDemo2026!", "role": "cyber_analyst",
+    {"label": "Cybercrime analyst", "email": "analyst@sawnn.demo", "password": "AnalystDemo2026!", "role": "cyber_analyst",
      "name": "Demo Analyst", "app": "command"},
-    {"label": "Citizen", "email": "citizen@mira.demo", "password": "CitizenDemo2026!", "role": "citizen",
+    {"label": "Citizen", "email": "citizen@sawnn.demo", "password": "CitizenDemo2026!", "role": "citizen",
      "name": "Demo Citizen", "app": "protect", "emirate": "Abu Dhabi"},
 ]
 SCENARIO = {
@@ -41,14 +41,14 @@ STEPS = [
     ("verify", "An analyst reviews the evidence and marks it Analyst verified"),
     ("approve", "An authorised official approves it (Officially approved)"),
     ("distribute", "Global block approved: a new signed protection version reaches every device"),
-    ("citizen_check", "A citizen pastes the payment link in MIRA PROTECT and is warned"),
+    ("citizen_check", "A citizen pastes the payment link in SAWNN PROTECT and is warned"),
     ("community", "The citizen reports the related advert; the community agent links it to the campaign"),
     ("command_update", "COMMAND shows the new evidence, the points awarded and the campaign timeline"),
 ]
 
 
 def enabled() -> bool:
-    return os.environ.get("MIRA_DEMO", "").lower() in ("1", "true", "yes")
+    return os.environ.get("SAWNN_DEMO", "").lower() in ("1", "true", "yes")
 
 
 def ensure_accounts():
@@ -109,7 +109,7 @@ def seed() -> dict:
     ensure_accounts()
     helpers = []
     for i in range(1, 3):
-        email = f"helper{i}@mira.demo"
+        email = f"helper{i}@sawnn.demo"
         if not _user(email):
             auth.create_user(email, f"demo-helper-{i}-pass", "citizen", f"Demo Helper {i}", "Dubai" if i == 1 else "Sharjah", True)
         helpers.append(_user(email))
@@ -139,7 +139,7 @@ DEMO_SCAN_ID = "SCAN-DEMO-REDIRECT1"
 
 
 def _seed_mira_samples() -> list[str]:
-    """Synthetic, clearly labelled samples for the MIRA screens that need a live network to fill on their own:
+    """Synthetic, clearly labelled samples for the SAWNN screens that need a live network to fill on their own:
     a deep-scan report with a redirect chain, and citizen alerts at two workflow stages."""
     from . import alerts
     from .link import pipeline, redirects
@@ -159,7 +159,7 @@ def _seed_mira_samples() -> list[str]:
         pipeline.save(rep, None)
         out.append(f"Synthetic deep-scan sample {DEMO_SCAN_ID} with a {len(chain) - 1}-hop redirect chain")
     if not one(db().execute("SELECT id FROM citizen_alerts WHERE demo = 1")):
-        analyst, admin = _user("analyst@mira.demo"), _user("admin@mira.demo")
+        analyst, admin = _user("analyst@sawnn.demo"), _user("admin@sawnn.demo")
         d = alerts.ai_draft("seasonal", ["TAMM"], ["Asks for a 'camping permit fee' by card"])
         a = alerts.create({"category": "seasonal", "severity": "high", "content": d["content"], "brands": ["TAMM"],
                            "audience": {"kind": "all"}, "channels": ["in_app", "sms"], "expires_in_days": 30}, analyst, True, demo=True)
@@ -186,7 +186,7 @@ def status() -> dict:
         done["approve"] = any(h.get("to") == "confirmed_malicious" for h in t["history"])
         done["distribute"] = t["block_status"] == "global"
         done["citizen_check"] = bool(one(db().execute("SELECT value FROM metrics WHERE key='demo_citizen_check'")))
-        c1 = _user("citizen@mira.demo")
+        c1 = _user("citizen@sawnn.demo")
         if c1:
             done["community"] = bool(one(db().execute("SELECT id FROM citizen_reports WHERE user_id=? AND raw_text LIKE '%desertcamp%'", (c1["id"],))))
             done["command_update"] = done["community"] and bool(one(db().execute(
@@ -202,7 +202,7 @@ def note_citizen_check(text: str):
 
 def reset():
     """Remove all demo-seeded records (threats, reports, findings, demo-account activity). Real data is untouched."""
-    demo_users = [r["id"] for r in rows(db().execute("SELECT id FROM users WHERE email LIKE '%@mira.demo'"))]
+    demo_users = [r["id"] for r in rows(db().execute("SELECT id FROM users WHERE email LIKE '%@sawnn.demo'"))]
     ids = {r["id"] for r in rows(db().execute("SELECT id FROM threats WHERE demo=1"))}
     by_users: dict[str, set] = {}
     for r in rows(db().execute("SELECT user_id, threat_ids FROM citizen_reports WHERE threat_ids IS NOT NULL")):

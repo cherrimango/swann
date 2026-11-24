@@ -1,4 +1,4 @@
-"""Attachment analysis for MIRA Protect: screenshots, photos, QR images, PDFs and text files.
+"""Attachment analysis for SAWNN Protect: screenshots, photos, QR images, PDFs and text files.
 
 Uploads are never executed or opened by anything that could run their content:
 - The type is decided from the file's own bytes (magic numbers), not its name or the browser's claim.
@@ -8,7 +8,7 @@ Uploads are never executed or opened by anything that could run their content:
 - Nothing is written to disk in clear text. The report stores a SHA-256 of the upload, not the file.
 
 Pipeline: validate -> decode QR codes (OpenCV) -> OCR (Tesseract eng+ara) -> extract URLs, phone numbers, e-mail
-addresses -> scan every URL with the shared MIRA engine -> analyse the text as a message -> structured report.
+addresses -> scan every URL with the shared SAWNN engine -> analyse the text as a message -> structured report.
 """
 import hashlib
 import io

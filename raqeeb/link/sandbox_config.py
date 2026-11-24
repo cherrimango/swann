@@ -1,4 +1,4 @@
-"""MIRA sandbox configuration and analysis parameters (Command page "Sandbox Configuration & Analysis Parameters").
+"""SAWNN sandbox configuration and analysis parameters (Command page "Sandbox Configuration & Analysis Parameters").
 
 CONFIG describes how the sandbox is actually set up, read from the same constants and environment the sandbox uses,
 so the page cannot drift from the code. collected(report) says, for one scan, which parameters were really collected.
@@ -14,24 +14,24 @@ def _docker_available() -> bool:
 
 
 def config() -> dict:
-    exe = os.environ.get("MIRA_CHROMIUM")
+    exe = os.environ.get("SAWNN_CHROMIUM")
     try:
         import playwright  # noqa: F401
         pw = True
     except ImportError:
         pw = False
-    enabled = os.environ.get("MIRA_SANDBOX_ENABLED", "1") not in ("0", "false", "no")
-    timeout_ms = int(os.environ.get("MIRA_SANDBOX_TIMEOUT", sandbox.NAV_TIMEOUT_MS))
+    enabled = os.environ.get("SAWNN_SANDBOX_ENABLED", "1") not in ("0", "false", "no")
+    timeout_ms = int(os.environ.get("SAWNN_SANDBOX_TIMEOUT", sandbox.NAV_TIMEOUT_MS))
     groups = [
         ("Navigation", [
-            ("Navigation timeout", f"{timeout_ms / 1000:.0f} s", "MIRA_SANDBOX_TIMEOUT"),
+            ("Navigation timeout", f"{timeout_ms / 1000:.0f} s", "SAWNN_SANDBOX_TIMEOUT"),
             ("Wait for load state", "DOMContentLoaded, then 1.5 s for client-side redirects and scripts", None),
             ("Maximum redirect hops analysed", str(redirects.MAX_HOPS), None),
             ("Redirect types recorded", "HTTP 301/302/303/307/308 and client-side (JavaScript / meta refresh)", None),
         ]),
         ("Browser", [
             ("Engine", "Chromium via Playwright" if pw else "Playwright not installed: static HTTP fetch fallback", None),
-            ("Executable", exe or "Playwright's bundled Chromium", "MIRA_CHROMIUM"),
+            ("Executable", exe or "Playwright's bundled Chromium", "SAWNN_CHROMIUM"),
             ("User agent", sandbox.UA, None),
             ("Viewport", "390 × 844 (mobile, as most scam links arrive on phones)", None),
             ("JavaScript", "enabled", None),
@@ -45,9 +45,9 @@ def config() -> dict:
             ("Downloads", "refused; the file name is recorded as evidence", None),
             ("Uploads", "none; the sandbox never submits forms or types data", None),
             ("Isolation", "hardened Docker container available" if _docker_available() else
-             "process-level isolation on the MIRA server (no Docker daemon available here); see infrastructure/sandbox for the "
+             "process-level isolation on the SAWNN server (no Docker daemon available here); see infrastructure/sandbox for the "
              "container profile intended for production", None),
-            ("Enabled", "yes" if enabled else "no", "MIRA_SANDBOX_ENABLED"),
+            ("Enabled", "yes" if enabled else "no", "SAWNN_SANDBOX_ENABLED"),
         ]),
         ("Page content collected", [
             ("Title, meta description, visible text", "first 5,000 characters of visible text", None),

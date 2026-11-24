@@ -1,6 +1,6 @@
 {
-  "name": "MIRA Protect",
-  "short_name": "MIRA",
+  "name": "SAWNN Protect",
+  "short_name": "SAWNN",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
@@ -41,7 +41,7 @@
       "url": "/app#report"
     },
     {
-      "name": "Ask MIRA",
+      "name": "Ask SAWNN",
       "short_name": "Ask",
       "url": "/app#ask"
     }

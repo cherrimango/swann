@@ -36,7 +36,7 @@ def require(perm: str):
 
 def require_official(user: dict = Depends(require_user)) -> dict:
     if user["role"] not in auth.OFFICIAL_ROLES:
-        raise HTTPException(403, "MIRA Command is for authorised officials")
+        raise HTTPException(403, "SAWNN Command is for authorised officials")
     return user
 
 

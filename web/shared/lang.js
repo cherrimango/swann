@@ -1,8 +1,8 @@
-// MIRA global language: English or Arabic (more can be added to LANGS). One stored choice ("mira-lang") drives the
-// entry screen, MIRA Command, MIRA Protect and the sign-in prototype. Arabic switches the whole document to RTL.
+// SAWNN global language: English or Arabic (more can be added to LANGS). One stored choice ("sawnn-lang") drives the
+// entry screen, SAWNN Command, SAWNN Protect and the sign-in prototype. Arabic switches the whole document to RTL.
 (function () {
   const LANGS = { en: { dir: 'ltr', label: 'English' }, ar: { dir: 'rtl', label: 'العربية' } };
-  const KEY = 'mira-lang';
+  const KEY = 'sawnn-lang';
   function get() {
     let v = null;
     try { v = localStorage.getItem(KEY); } catch { /* storage unavailable */ }
@@ -28,11 +28,11 @@
     if (!LANGS[lang]) return;
     try { localStorage.setItem(KEY, lang); } catch { /* ignore */ }
     apply(dict, lang);
-    document.dispatchEvent(new CustomEvent('mira:lang', { detail: lang }));
+    document.dispatchEvent(new CustomEvent('sawnn:lang', { detail: lang }));
   }
   function mount(dict) {
     document.querySelectorAll('.langs button[data-lang]').forEach(b => b.addEventListener('click', () => set(b.dataset.lang, dict)));
     apply(dict, get());
   }
-  window.MiraLang = { LANGS, get, set, apply, mount, t: (dict, k) => ((dict[get()] || {})[k] ?? (dict.en || {})[k] ?? k) };
+  window.SawnnLang = { LANGS, get, set, apply, mount, t: (dict, k) => ((dict[get()] || {})[k] ?? (dict.en || {})[k] ?? k) };
 })();

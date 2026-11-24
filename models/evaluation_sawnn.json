@@ -1,6 +1,6 @@
 {
-  "model_version": "mira-url-202611242052",
-  "dataset_version": "mira-ds-946b39760a",
+  "model_version": "sawnn-url-202611242052",
+  "dataset_version": "sawnn-ds-946b39760a",
   "dataset_manifest": "data/processed/manifest.json",
   "split": "GroupShuffleSplit by registered domain: 70% train / 10% validation / 20% test",
   "evaluation": {

@@ -1,4 +1,4 @@
-"""Redirect-chain analysis for the MIRA sandbox.
+"""Redirect-chain analysis for the SAWNN sandbox.
 
 Input: the navigation responses the sandbox recorded (status + URL for every main-frame navigation, including
 client-side JavaScript / meta-refresh redirects, which show up as further navigations with status 200).

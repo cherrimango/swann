@@ -1,5 +1,5 @@
 {
-  "test_split": "domain-grouped held-out test split from train_mira.py (no registered domain seen in training)",
+  "test_split": "domain-grouped held-out test split from train_sawnn.py (no registered domain seen in training)",
   "n_per_class": 2500,
   "threat_feeds": "off (see module docstring)",
   "mode": "quick scan (link analysis only)",

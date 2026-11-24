@@ -1,4 +1,4 @@
-// MIRA Command: language switching, and the MIRA workspaces (discovery engine, sandbox parameters, citizen alerts,
+// SAWNN Command: language switching, and the SAWNN workspaces (discovery engine, sandbox parameters, citizen alerts,
 // models, fourteen agents). Uses the helpers defined in command.js (h, $, $$, api, toast, act?, loaders, can, show).
 const CT = {
   en: {},
@@ -12,9 +12,9 @@ const CT = {
     email: 'البريد الإلكتروني', password: 'كلمة المرور', signIn: 'تسجيل الدخول', signOut: 'تسجيل الخروج',
   },
 };
-MiraLang.mount(CT);
-const L = (en, ar) => (MiraLang.get() === 'ar' ? ar : en);
-const localTime = ts => ts ? new Date(ts * 1000).toLocaleString(MiraLang.get() === 'ar' ? 'ar-AE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '–';
+SawnnLang.mount(CT);
+const L = (en, ar) => (SawnnLang.get() === 'ar' ? ar : en);
+const localTime = ts => ts ? new Date(ts * 1000).toLocaleString(SawnnLang.get() === 'ar' ? 'ar-AE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '–';
 const busy = async (btn, fn) => { btn.disabled = true; try { return await fn(); } catch (e) { toast(L('Action failed', 'فشل الإجراء'), e.message); } finally { btn.disabled = false; } };
 
 // sortable tables: click a header to sort by that column
@@ -37,7 +37,7 @@ loaders.discovery = async () => {
     .map(([a, b]) => h('div', {}, h('dt', {}, a), h('dd', {}, b))));
   const sc = d.scheduler;
   $('#d-sched').textContent = sc.enabled ? L(`Scheduled every ${sc.interval_min} min · next run ${localTime(sc.next_run)}`, `مجدول كل ${sc.interval_min} دقيقة · التشغيل التالي ${localTime(sc.next_run)}`)
-    : L('Scheduler off (set MIRA_DISCOVERY_ENABLED=1). Collections run when you press Collect now.', 'الجدولة متوقفة (اضبط MIRA_DISCOVERY_ENABLED=1).');
+    : L('Scheduler off (set SAWNN_DISCOVERY_ENABLED=1). Collections run when you press Collect now.', 'الجدولة متوقفة (اضبط SAWNN_DISCOVERY_ENABLED=1).');
   $('#d-rows').replaceChildren(...d.sources.map(s => h('tr', {}, h('td', {}, s.name), h('td', {}, h('span', { class: `health ${s.health.replace(/\s/g, '_')}` }, s.health === 'blocked_missing_key' ? L(`needs ${s.requires_key}`, `يتطلب ${s.requires_key}`) : s.health)),
     h('td', { 'data-v': s.last_success || 0 }, localTime(s.last_success)), h('td', { 'data-v': s.last_run?.finished || 0 }, localTime(s.last_run?.finished)),
     h('td', {}, s.last_run?.collected ?? '–'), h('td', {}, s.last_run?.new_indicators ?? '–'), h('td', {}, s.last_run?.duplicates ?? '–'), h('td', {}, s.indicators_stored), h('td', { class: 'meta' }, s.terms))));
@@ -161,7 +161,7 @@ window.newAlertFromThreat = t => { show('alerts'); editAlert({ category: 'phishi
 /* ---------------- models ---------------- */
 loaders.models = async () => {
   const m = await api('/api/v1/models/metrics');
-  const ev = m.evaluation_mira?.evaluation, vd = m.evaluation_verdicts;
+  const ev = m.evaluation_sawnn?.evaluation, vd = m.evaluation_verdicts;
   const pct = x => x == null ? '–' : `${(x * 100).toFixed(2)}%`;
   const row = (name, x) => h('tr', {}, h('td', {}, name), ...['precision', 'recall', 'f1', 'fpr', 'roc_auc', 'pr_auc'].map(k => h('td', { 'data-v': x?.[k] ?? -1 }, x?.[k] == null ? '–' : ['fpr'].includes(k) ? pct(x[k]) : x[k])));
   const verdictRow = (name, v) => v ? h('tr', {}, h('td', {}, name), h('td', {}, pct(v.phishing_marked_safe)), h('td', {}, pct(v.phishing_flagged_malicious_or_suspicious)),
@@ -172,15 +172,15 @@ loaders.models = async () => {
     vd ? h('article', { class: 'panel' }, h('h3', {}, L('End-to-end verdicts, before and after', 'النتائج الكاملة قبل وبعد')),
       h('p', { class: 'meta' }, `${vd.n_per_class} ${L('phishing and', 'تصيد و')} ${vd.n_per_class} ${L('legitimate URLs from the held-out test split; threat feeds off so detection is measured, not list look-ups.', 'رابطاً مشروعاً من مجموعة الاختبار المعزولة.')}`),
       h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['', L('Phishing marked SAFE', 'تصيد صُنّف آمناً'), L('Phishing flagged', 'تصيد تم رصده'), L('Legitimate flagged', 'مشروع تم رصده خطأً'), L('Legitimate marked SAFE', 'مشروع صُنّف آمناً')].map(x => h('th', {}, x)))),
-        h('tbody', {}, verdictRow(L('Previous version (2.1)', 'الإصدار السابق (2.1)'), vd.raqeeb_2_1), verdictRow('MIRA', vd.mira), verdictRow(L('MIRA · UAE set', 'ميرا · مجموعة الإمارات'), vd.uae_eval_mira)))) : null,
+        h('tbody', {}, verdictRow(L('Previous version (2.1)', 'الإصدار السابق (2.1)'), vd.raqeeb_2_1), verdictRow('SAWNN', vd.mira), verdictRow(L('SAWNN · UAE set', 'صون · مجموعة الإمارات'), vd.uae_eval_mira)))) : null,
     ev ? h('article', { class: 'panel' }, h('h3', {}, L('URL model on the held-out test split', 'نموذج الروابط على مجموعة الاختبار')),
       h('table', { class: 'table sortable' }, h('thead', {}, h('tr', {}, ['Model', 'Precision', 'Recall', 'F1', 'FPR', 'ROC-AUC', 'PR-AUC'].map(x => h('th', {}, x)))),
-        h('tbody', {}, row(L('MIRA stacked model (deployed)', 'نموذج ميرا المنشور'), ev.main), row(L('MIRA at 0.1% FPR operating point', 'ميرا عند نقطة 0.1%'), ev['strict_0.1pct_fpr']),
+        h('tbody', {}, row(L('SAWNN stacked model (deployed)', 'نموذج صون المنشور'), ev.main), row(L('SAWNN at 0.1% FPR operating point', 'صون عند نقطة 0.1%'), ev['strict_0.1pct_fpr']),
           ...Object.entries(ev.baselines_same_test_set).map(([k, v]) => row(k === 'raqeeb_2_1_hostname_model' ? L('previous version 2.1, hostname model', 'الإصدار السابق 2.1') : k.replaceAll('_', ' '), v)))),
       h('p', { class: 'meta' }, `${L('Unseen OpenPhish snapshot recall', 'الاستدعاء على لقطة OpenPhish جديدة')}: ${pct(ev.openphish_fresh_unseen?.recall_at_threshold)} (n=${ev.openphish_fresh_unseen?.n}) · ${L('latency', 'زمن الاستجابة')} ${ev.openphish_fresh_unseen?.latency_ms_per_url} ms/URL`),
       h('details', {}, h('summary', {}, L('By source and by URL shape', 'حسب المصدر وشكل الرابط')), h('table', { class: 'table' }, h('tbody', {},
         Object.entries({ ...ev.by_source, ...ev.with_path_vs_hostname_only }).map(([k, v]) => h('tr', {}, h('td', {}, k), h('td', {}, `n=${v.n}`), h('td', {}, `recall ${v.recall}`), h('td', {}, `FPR ${pct(v.fpr)}`))))))) : null,
-    h('article', { class: 'panel' }, h('h3', {}, L('Limitations', 'القيود')), h('ul', { class: 'limits' }, (m.evaluation_mira?.limitations || []).map(x => h('li', {}, x)))));
+    h('article', { class: 'panel' }, h('h3', {}, L('Limitations', 'القيود')), h('ul', { class: 'limits' }, (m.evaluation_sawnn?.limitations || []).map(x => h('li', {}, x)))));
 };
 
 /* ---------------- fourteen agents ---------------- */
@@ -208,7 +208,7 @@ loaders.overview = async () => {
   const [m, src, scans] = await Promise.all([api('/api/v1/models/metrics').catch(() => null), api('/api/v1/intelligence/sources/status').catch(() => null),
     api('/api/v1/scans').catch(() => [])]);
   const deep = scans.filter(s => s.mode === 'deep'), done = deep.filter(s => s.status === 'complete');
-  const vd = m?.evaluation_verdicts?.mira, ev = m?.evaluation_mira?.evaluation?.main;
+  const vd = m?.evaluation_verdicts?.mira, ev = m?.evaluation_sawnn?.evaluation?.main;
   const srcs = src?.discovery?.sources || [];
   const tile = (k, v, note, cls = '') => h('div', { class: `ov-tile ${cls}` }, h('span', { class: 'ov-k' }, k), h('b', {}, v), h('span', { class: 'meta' }, note));
   $('#ov-mira').replaceChildren(
@@ -228,8 +228,8 @@ function headings() {
   $$('.view').forEach(v => {
     const h2 = v.querySelector('h2'); if (!h2) return;
     h2.dataset.en = h2.dataset.en || h2.textContent;
-    h2.textContent = MiraLang.get() === 'ar' ? (VIEW_AR[v.id.slice(2)] || h2.dataset.en) : h2.dataset.en;
+    h2.textContent = SawnnLang.get() === 'ar' ? (VIEW_AR[v.id.slice(2)] || h2.dataset.en) : h2.dataset.en;
   });
 }
-document.addEventListener('mira:lang', () => { headings(); const on = $('.view.on'); if (on) loaders[on.id.slice(2)]?.().catch(() => {}); });
+document.addEventListener('sawnn:lang', () => { headings(); const on = $('.view.on'); if (on) loaders[on.id.slice(2)]?.().catch(() => {}); });
 headings();

@@ -82,7 +82,7 @@ def safe_get(url: str, headers=None, timeout=8, max_redirects=6):
 def _fernet() -> Fernet:
     KEYS.mkdir(parents=True, exist_ok=True)
     f = KEYS / "evidence.key"
-    key = os.environ.get("MIRA_EVIDENCE_KEY", "").encode() or (f.read_bytes() if f.exists() else b"")
+    key = os.environ.get("SAWNN_EVIDENCE_KEY", "").encode() or (f.read_bytes() if f.exists() else b"")
     if not key:
         key = Fernet.generate_key()
         f.write_bytes(key)
@@ -172,7 +172,7 @@ LIMITS = {
     "check": (180, 60),
     "upload": (20, 600),
 }
-LIMITS.update({k: tuple(v) for k, v in json.loads(os.environ.get("MIRA_RATE_LIMITS") or "{}").items()})
+LIMITS.update({k: tuple(v) for k, v in json.loads(os.environ.get("SAWNN_RATE_LIMITS") or "{}").items()})
 
 
 def ip_hash(ip: str) -> str:

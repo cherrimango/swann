@@ -10,7 +10,7 @@ over the HIGH boundary on their own; a stage that failed lowers completeness and
 """
 import os
 
-LEVELS = [int(x) for x in os.environ.get("MIRA_RISK_LEVELS", "25,50,75").split(",")]
+LEVELS = [int(x) for x in os.environ.get("SAWNN_RISK_LEVELS", "25,50,75").split(",")]
 STAGE_WEIGHTS = {"validation": 0.05, "static": 0.10, "registry": 0.10, "signatures": 0.15, "ml": 0.15,
                  "domain": 0.15, "sandbox": 0.20, "visual": 0.10}
 
@@ -22,10 +22,10 @@ def level(score: float | None) -> str:
     return "LOW" if score < low else "MODERATE" if score < mod else "HIGH" if score < high else "CRITICAL"
 
 
-SOURCE_NAMES = {"raqeeb_published": "MIRA's published protection list", "raqeeb_threats": "MIRA's verified threat records",
+SOURCE_NAMES = {"raqeeb_published": "SAWNN's published protection list", "raqeeb_threats": "SAWNN's verified threat records",
                 "public_feeds": "public phishing feeds (OpenPhish / Phishing.Database)", "google_web_risk": "Google Web Risk",
                 "virustotal": "VirusTotal", "urlhaus": "URLhaus",
-                "mira_discovery": "MIRA Threat Discovery Engine (feed indicator)"}
+                "sawnn_discovery": "SAWNN Threat Discovery Engine (feed indicator)"}
 
 
 def ev(stage, signal, en, ar, direction, strength, reliability):
@@ -54,8 +54,8 @@ def aggregate(r: dict) -> dict:
             name = SOURCE_NAMES.get(m["source"], m["source"])
             evidence.append(ev("signatures", m["source"], f"Listed as {m['classification']} in {name}"
                                + (f" ({m['reference']})" if m.get("reference") else ""),
-                               "مدرج كتهديد في " + ("قائمة الحماية المنشورة في ميرا" if m["source"] == "raqeeb_published" else
-                                                    "سجلات التهديدات الموثّقة في ميرا" if m["source"] == "raqeeb_threats" else name),
+                               "مدرج كتهديد في " + ("قائمة الحماية المنشورة في صون" if m["source"] == "raqeeb_published" else
+                                                    "سجلات التهديدات الموثّقة في صون" if m["source"] == "raqeeb_threats" else name),
                                "risk", 1.0, "high"))
         score = max(score, 97.0 if any(m["source"].startswith("raqeeb") for m in sig["matches"]) else 95.0)
         strong += 2
@@ -157,7 +157,7 @@ def aggregate(r: dict) -> dict:
     elif lvl == "MODERATE":
         verdict = "SUSPICIOUS" if confidence != "LOW" else "INCONCLUSIVE"
     else:
-        # MIRA rule: SAFE needs positive evidence, never just the absence of warnings. HTTPS, a valid certificate, an old
+        # SAWNN rule: SAFE needs positive evidence, never just the absence of warnings. HTTPS, a valid certificate, an old
         # domain, no threat-feed listing or a failed sandbox are not enough. Accepted grounds: an official registry match,
         # a well-established domain with a benign model result, or a deep scan whose live-page analysis completed.
         benign_ml = ml["available"] and ml["prediction"] != "phishing"
@@ -169,7 +169,7 @@ def aggregate(r: dict) -> dict:
             verdict = "INCONCLUSIVE"
             why = ("the live page could not be analysed" if stages.get("sandbox") in ("unavailable", "failed") else
                    "only the link itself was analysed" if stages.get("sandbox") == "not_run" else "the evidence is incomplete")
-            limitations.append(f"No malicious indicators were found, but MIRA cannot call this site safe: {why}, and the domain is "
+            limitations.append(f"No malicious indicators were found, but SAWNN cannot call this site safe: {why}, and the domain is "
                                "neither official nor well established. Treat it with care.")
     if verdict == "SAFE":
         limitations.append("SAFE means no significant malicious indicators were found, not a guarantee.")

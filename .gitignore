@@ -19,3 +19,4 @@ data/raqeeb.db-shm
 data/processed/
 data/mira.db*
 models_v21_host/threat_*
+data/sawnn.db*

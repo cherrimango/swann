@@ -1,11 +1,11 @@
-"""MIRA Global Threat Discovery Engine: scheduled, incremental collection from permitted public threat feeds.
+"""SAWNN Global Threat Discovery Engine: scheduled, incremental collection from permitted public threat feeds.
 
 Only sources whose terms allow automated download are polled, at their documented update interval or slower. There is
 no indiscriminate crawling. Each run is recorded (start, finish, status, collected, new, duplicates, error) so source
 health is visible in Command. New indicators are stored as UNVERIFIED leads: they feed signature matching for deep
 scans and analyst review, and never trigger a global block on their own.
 
-Scheduling: start_scheduler() runs inside the server when MIRA_DISCOVERY_ENABLED=1, every MIRA_DISCOVERY_INTERVAL_MIN
+Scheduling: start_scheduler() runs inside the server when SAWNN_DISCOVERY_ENABLED=1, every SAWNN_DISCOVERY_INTERVAL_MIN
 minutes (default 60). Command administrators can also run a collection now. Times are stored in UTC epoch seconds.
 """
 import os
@@ -23,10 +23,10 @@ SOURCES = {
                                 "url": "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-links-NEW-today.txt",
                                 "format": "lines", "key_env": None, "terms": "MIT licence", "min_interval_min": 60},
     "urlhaus_recent": {"name": "URLhaus recent URLs (abuse.ch)", "url": "https://urlhaus-api.abuse.ch/v1/urls/recent/",
-                       "format": "urlhaus_json", "key_env": "MIRA_URLHAUS_AUTH_KEY", "key_header": "Auth-Key",
+                       "format": "urlhaus_json", "key_env": "SAWNN_URLHAUS_AUTH_KEY", "key_header": "Auth-Key",
                        "terms": "abuse.ch terms of use; free Auth-Key required since 30 June 2025", "min_interval_min": 5},
     "phishtank": {"name": "PhishTank online-valid", "url": "https://data.phishtank.com/data/{key}/online-valid.csv",
-                  "format": "phishtank_csv", "key_env": "MIRA_PHISHTANK_APP_KEY", "terms": "PhishTank developer terms (free key)",
+                  "format": "phishtank_csv", "key_env": "SAWNN_PHISHTANK_APP_KEY", "terms": "PhishTank developer terms (free key)",
                   "min_interval_min": 60},
 }
 _lock = threading.Lock()
@@ -111,7 +111,7 @@ def status() -> dict:
                     "health": "never run" if not last else ("healthy" if last["status"] == "ok" else last["status"])})
     totals = one(db().execute("""SELECT COUNT(*) total, SUM(verified) verified,
         SUM(CASE WHEN first_seen > ? THEN 1 ELSE 0 END) new_24h FROM indicators""", (time.time() - 86400,)))
-    return {"sources": out, "scheduler": {"enabled": os.environ.get("MIRA_DISCOVERY_ENABLED") == "1",
+    return {"sources": out, "scheduler": {"enabled": os.environ.get("SAWNN_DISCOVERY_ENABLED") == "1",
                                           "interval_min": _sched["interval_min"], "next_run": _sched["next_run"],
                                           "running": bool(_sched["thread"] and _sched["thread"].is_alive())},
             "indicators": {"total": totals["total"] or 0, "verified": totals["verified"] or 0,
@@ -127,9 +127,9 @@ def lookup(url_or_host: str) -> dict | None:
 
 
 def start_scheduler():
-    if os.environ.get("MIRA_DISCOVERY_ENABLED") != "1" or (_sched["thread"] and _sched["thread"].is_alive()):
+    if os.environ.get("SAWNN_DISCOVERY_ENABLED") != "1" or (_sched["thread"] and _sched["thread"].is_alive()):
         return
-    interval = max(15, int(os.environ.get("MIRA_DISCOVERY_INTERVAL_MIN", "60")))
+    interval = max(15, int(os.environ.get("SAWNN_DISCOVERY_INTERVAL_MIN", "60")))
     _sched["interval_min"] = interval
 
     def loop():
@@ -140,5 +140,5 @@ def start_scheduler():
                 pass
             _sched["next_run"] = time.time() + interval * 60
             time.sleep(interval * 60)
-    _sched["thread"] = threading.Thread(target=loop, daemon=True, name="mira-discovery")
+    _sched["thread"] = threading.Thread(target=loop, daemon=True, name="sawnn-discovery")
     _sched["thread"].start()

@@ -1,4 +1,4 @@
-/* MIRA COMMAND: a security-operations workspace. Darker than Protect, denser type, glass panels over the aurora.
+/* SAWNN COMMAND: a security-operations workspace. Darker than Protect, denser type, glass panels over the aurora.
    Red marks danger and active work; green is reserved for safe/healthy status. */
 :root {
   --bg: var(--navy-990);
@@ -374,7 +374,7 @@ pre.text { white-space: pre-wrap; max-height: 220px; overflow: auto; background:
 .hop-flag { font-size: 12px; color: var(--amber); }
 .warn-t { color: var(--amber); }
 
-/* MIRA workspaces */
+/* SAWNN workspaces */
 .health { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.08); }
 .health.healthy { background: rgba(34,181,115,.18); color: #8BE3B6; }
 .health.failed, .health.blocked_missing_key { background: rgba(230,57,70,.16); color: #FFB3B9; }

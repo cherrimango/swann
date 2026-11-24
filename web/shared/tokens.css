@@ -1,4 +1,4 @@
-/* MIRA (ميرا) design tokens, shared by the entry screen, MIRA Command and MIRA Protect.
+/* SAWNN (صون) design tokens, shared by the entry screen, SAWNN Command and SAWNN Protect.
    Palette: deep navy ground; white for structure; red = danger, green = safe, used only for meaning and never
    placed together as stripes (no flag motifs). Glass panels sit over a slow, dim aurora.
    Type: Roboto (EN) and Noto Kufi Arabic (AR) — the pairing named by the UAE Design System
@@ -67,7 +67,7 @@ button { cursor: pointer; }
   animation: aurora 38s ease-in-out infinite alternate; }
 @keyframes aurora { 0% { transform: translate3d(0, 0, 0) rotate(0deg); } 100% { transform: translate3d(-3vmax, 2vmax, 0) rotate(8deg); } }
 
-/* wordmark: the MIRA logo exactly as supplied (transparent margins trimmed), then the name */
+/* wordmark: the SAWNN logo exactly as supplied (transparent margins trimmed), then the name */
 .mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
 .mark-logo { height: 34px; width: auto; display: block; flex: none; }
 .mark-en { font: 700 19px/1 var(--font-en); letter-spacing: 4px; }

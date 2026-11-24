@@ -75,8 +75,8 @@ KNOWLEDGE = [
      "body_ar": "أغلق الخط واتصل أنت بالرقم الرسمي. المحتالون يزوّرون رقم المتصل ويضغطون عليك للتصرف فوراً.",
      "title_ur": "'پولیس' یا 'بینک' کی کالیں", "body_ur": "کال بند کریں اور خود آفیشل نمبر پر کال کریں۔ دھوکے باز کالر آئی ڈی جعلی بنا سکتے ہیں اور فوراً کچھ کرنے کا دباؤ ڈالتے ہیں۔"},
     {"id": "qr", "title_en": "QR codes can lie", "title_ar": "رموز QR قد تخدع",
-     "body_en": "A sticker over a parking or menu QR code can lead to a fake payment page. Scan it with MIRA first.",
-     "body_ar": "ملصق فوق رمز QR للمواقف أو قائمة الطعام قد يقود إلى صفحة دفع مزيفة. امسحه بميرا أولاً.",
+     "body_en": "A sticker over a parking or menu QR code can lead to a fake payment page. Scan it with SAWNN first.",
+     "body_ar": "ملصق فوق رمز QR للمواقف أو قائمة الطعام قد يقود إلى صفحة دفع مزيفة. امسحه بصون أولاً.",
      "title_ur": "کیو آر کوڈ دھوکہ دے سکتے ہیں", "body_ur": "پارکنگ یا مینو کے کیو آر کوڈ پر لگا اسٹیکر جعلی ادائیگی کے صفحے پر لے جا سکتا ہے۔ پہلے رقیب سے اسکین کریں۔"},
     {"id": "victim", "title_en": "If you already paid", "title_ar": "إذا كنت قد دفعت بالفعل",
      "body_en": "Call your bank immediately to block the card, then report to the police through their official channels. Speed matters.",
@@ -128,12 +128,12 @@ EMERGENCY = {
            "Don't share any more codes, passwords or card details.",
            "If money or an account is affected, call your bank now on the number printed on your card or in its official app.",
            "Keep the evidence: screenshots, numbers, links, receipts and the chat itself.",
-           "Report it through the police's official channels (in Abu Dhabi: Aman 8002626), then report it in MIRA."],
+           "Report it through the police's official channels (in Abu Dhabi: Aman 8002626), then report it in SAWNN."],
     "ar": ["أوقف التواصل مع المحتال المشتبه به. لا ترد ولا تضغط ولا تعاود الاتصال.",
            "لا تشارك أي رموز أو كلمات مرور أو بيانات بطاقة إضافية.",
            "إذا تأثر مالك أو حسابك، اتصل ببنكك الآن على الرقم المطبوع على بطاقتك أو في تطبيقه الرسمي.",
            "احتفظ بالأدلة: لقطات الشاشة والأرقام والروابط والإيصالات والمحادثة نفسها.",
-           "أبلغ عبر القنوات الرسمية للشرطة (في أبوظبي: خدمة أمان 8002626)، ثم أبلغ في ميرا."],
+           "أبلغ عبر القنوات الرسمية للشرطة (في أبوظبي: خدمة أمان 8002626)، ثم أبلغ في صون."],
     "ur": ["مشتبہ دھوکے باز سے بات بند کر دیں۔ جواب نہ دیں، کلک نہ کریں، واپس کال نہ کریں۔",
            "مزید کوئی کوڈ، پاس ورڈ یا کارڈ کی تفصیلات شیئر نہ کریں۔",
            "اگر رقم یا اکاؤنٹ متاثر ہوا ہے تو ابھی اپنے بینک کو کارڈ پر لکھے نمبر یا آفیشل ایپ سے کال کریں۔",
@@ -183,7 +183,7 @@ def safety_report(days: int = 30) -> dict:
                                                   AND brand != '' AND last_seen >= ? GROUP BY brand ORDER BY n DESC LIMIT 5""", (since,))),
         "by_category": rows(db().execute("""SELECT category, COUNT(*) n FROM threats WHERE status='confirmed_malicious'
                                             AND last_seen >= ? GROUP BY category ORDER BY n DESC""", (since,))),
-        "note": "Counts include only threats confirmed by analysts. They reflect MIRA's own records, not all scams in the UAE.",
+        "note": "Counts include only threats confirmed by analysts. They reflect SAWNN's own records, not all scams in the UAE.",
     }
 
 
@@ -203,7 +203,7 @@ def impact() -> dict:
         "guardians": q("SELECT COUNT(*) FROM users WHERE role='citizen'"),
         "points_awarded": q("SELECT COALESCE(SUM(delta),0) FROM points"),
         "protection_version": q("SELECT COALESCE(MAX(version),0) FROM protection_versions"),
-        "note": "Live counts from this MIRA instance. 'Checks matched block' counts lookups that hit a published rule; it does not prove a loss was prevented.",
+        "note": "Live counts from this SAWNN instance. 'Checks matched block' counts lookups that hit a published rule; it does not prove a loss was prevented.",
     }
 
 

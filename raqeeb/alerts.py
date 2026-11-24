@@ -25,7 +25,7 @@ CATEGORIES = {
     "seasonal": ("Seasonal scams", "احتيال موسمي"), "qr": ("QR code scams", "احتيال رموز QR"), "other": ("Other", "أخرى"),
 }
 SEVERITIES = ("low", "medium", "high", "critical")
-CHANNELS = {"in_app": None, "push": "MIRA_PUSH_PROVIDER_KEY", "email": "MIRA_EMAIL_PROVIDER_KEY", "sms": "MIRA_SMS_PROVIDER_KEY"}
+CHANNELS = {"in_app": None, "push": "SAWNN_PUSH_PROVIDER_KEY", "email": "SAWNN_EMAIL_PROVIDER_KEY", "sms": "SAWNN_SMS_PROVIDER_KEY"}
 FIELDS = ("title", "description", "warning_signs", "what_to_do", "never_share", "official_resources")
 STATUSES = ("draft", "in_review", "reviewed", "approved", "published", "withdrawn", "rejected")
 
@@ -193,9 +193,9 @@ def publish(aid, actor):
                 db().execute("INSERT INTO notifications (user_id, audience, kind, title, body, data, created) VALUES (?,?,?,?,?,?,?)",
                              (uid, "user", "citizen_alert", a["content"]["en"]["title"][:200], a["content"]["en"]["description"][:600],
                               json.dumps({"alert_id": aid}), now))
-            st, n, detail = "delivered_in_app", len(ids), "written to each recipient's MIRA Protect inbox; live sessions notified"
+            st, n, detail = "delivered_in_app", len(ids), "written to each recipient's SAWNN Protect inbox; live sessions notified"
         elif os.environ.get(CHANNELS[ch]):
-            # A provider adapter would be called here. No adapter ships with MIRA yet, so nothing is claimed as sent.
+            # A provider adapter would be called here. No adapter ships with SAWNN yet, so nothing is claimed as sent.
             st, n, detail = "provider_configured_adapter_missing", 0, f"{CHANNELS[ch]} is set but no {ch} adapter is implemented yet"
         else:
             st, n, detail = "not_configured", 0, f"set {CHANNELS[ch]} and add a provider adapter to send by {ch}"
@@ -271,7 +271,7 @@ def engage(aid, user, action):
 
 
 def ai_draft(category: str, brands: list[str], signals: list[str] | None = None) -> dict:
-    """Structured draft from MIRA's own guidance templates (and the optional LLM if configured). It is a draft: it is
+    """Structured draft from SAWNN's own guidance templates (and the optional LLM if configured). It is a draft: it is
     labelled as AI-generated and must be reviewed, translated and approved by people before anything is published."""
     if category not in CATEGORIES:
         raise AlertError("Unknown category")
@@ -279,22 +279,22 @@ def ai_draft(category: str, brands: list[str], signals: list[str] | None = None)
     brand = ", ".join(brands[:3]) if brands else ""
     en = {
         "title": f"Warning: {en_cat.lower()}" + (f" using the name of {brand}" if brand else ""),
-        "description": (f"MIRA analysts are seeing {en_cat.lower()}" + (f" that pretend to come from {brand}" if brand else "") +
+        "description": (f"SAWNN analysts are seeing {en_cat.lower()}" + (f" that pretend to come from {brand}" if brand else "") +
                         ". The messages look official and push you to act quickly."),
         "warning_signs": ["The link is not the organisation's official website", "You are rushed with a deadline or a fine",
                           "You are asked for card details, a one-time code or your password"] + (signals or [])[:3],
         "what_to_do": ["Do not open the link", "Open the service from its official app or by typing the official address",
-                       "Report the message in MIRA Protect"],
+                       "Report the message in SAWNN Protect"],
         "never_share": ["One-time codes (OTP)", "Card number, expiry date or CVV", "Your passwords"],
         "official_resources": ["Abu Dhabi Police Aman service: 8002626 or SMS 2828"],
     }
     ar = {
         "title": f"تحذير: {ar_cat}" + (f" باسم {brand}" if brand else ""),
-        "description": f"يرصد محللو ميرا {ar_cat}" + (f" تنتحل صفة {brand}" if brand else "") + ". تبدو الرسائل رسمية وتدفعك إلى التصرف بسرعة.",
+        "description": f"يرصد محللو صون {ar_cat}" + (f" تنتحل صفة {brand}" if brand else "") + ". تبدو الرسائل رسمية وتدفعك إلى التصرف بسرعة.",
         "warning_signs": ["الرابط ليس الموقع الرسمي للجهة", "يتم استعجالك بمهلة أو مخالفة", "يُطلب منك بيانات البطاقة أو رمز التحقق أو كلمة المرور"],
-        "what_to_do": ["لا تفتح الرابط", "افتح الخدمة من تطبيقها الرسمي أو بكتابة العنوان الرسمي", "أبلغ عن الرسالة في ميرا بروتكت"],
+        "what_to_do": ["لا تفتح الرابط", "افتح الخدمة من تطبيقها الرسمي أو بكتابة العنوان الرسمي", "أبلغ عن الرسالة في صون بروتكت"],
         "never_share": ["رموز التحقق لمرة واحدة", "رقم البطاقة وتاريخ الانتهاء ورمز CVV", "كلمات المرور"],
         "official_resources": ["خدمة أمان لشرطة أبوظبي: 8002626 أو رسالة نصية إلى 2828"],
     }
     return {"content": {"en": en, "ar": ar}, "ai_drafted": True,
-            "notice": "AI-assisted draft from MIRA's guidance templates. It is not an official statement: review, edit and approve it before publishing."}
+            "notice": "AI-assisted draft from SAWNN's guidance templates. It is not an official statement: review, edit and approve it before publishing."}

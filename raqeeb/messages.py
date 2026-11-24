@@ -87,9 +87,9 @@ def _advice(verdict, hits, lang):
         return "No scam signs found. Still open services from the official app, not from links." if lang == "en" \
             else "لا توجد علامات احتيال. افتح الخدمات من التطبيق الرسمي دائماً وليس من الروابط."
     if verdict == "inconclusive":
-        return ("No scam wording found, but the link goes to a site MIRA can't vouch for yet. Run a deep check or open the "
+        return ("No scam wording found, but the link goes to a site SAWNN can't vouch for yet. Run a deep check or open the "
                 "service from its official app.") if lang == "en" else \
-            "لا توجد عبارات احتيال، لكن الرابط يؤدي إلى موقع لا تستطيع ميرا التحقق منه بعد. افحصه فحصاً عميقاً أو افتح الخدمة من تطبيقها الرسمي."
+            "لا توجد عبارات احتيال، لكن الرابط يؤدي إلى موقع لا تستطيع صون التحقق منه بعد. افحصه فحصاً عميقاً أو افتح الخدمة من تطبيقها الرسمي."
     if "otp" in codes:
         return "Never share a code. No bank or government entity will ask for it." if lang == "en" \
             else "لا تشارك أي رمز. لا يطلبه أي بنك أو جهة حكومية."

@@ -4,7 +4,7 @@
     python hunter.py crtsh --days 7                  # new TLS certificates whose names contain UAE brand keywords
     python hunter.py stream                          # live Certificate Transparency stream (pip install certstream)
 
-Every candidate is scored by the MIRA engine and written to hunt_results.csv.
+Every candidate is scored by the SAWNN engine and written to hunt_results.csv.
 """
 import argparse
 import csv

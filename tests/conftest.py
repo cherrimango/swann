@@ -4,5 +4,5 @@ import tempfile
 from pathlib import Path
 
 _tmp = Path(tempfile.mkdtemp(prefix="raqeeb-test-"))
-os.environ["MIRA_DB"] = str(_tmp / "test.db")
-os.environ["MIRA_ADMIN_PASSWORD"] = "test-admin-password"
+os.environ["SAWNN_DB"] = str(_tmp / "test.db")
+os.environ["SAWNN_ADMIN_PASSWORD"] = "test-admin-password"

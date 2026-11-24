@@ -1,8 +1,8 @@
-"""MIRA server: MIRA Command (officials), MIRA Protect (citizens) and the intelligence API, with live updates.
+"""SAWNN server: SAWNN Command (officials), SAWNN Protect (citizens) and the intelligence API, with live updates.
 
     uvicorn server.app:app --host 0.0.0.0 --port 8000
-    open http://localhost:8000/          MIRA Command (sign in with an account from data/first_run_credentials.txt)
-    open http://<laptop-ip>:8000/app     MIRA Protect, the citizen app (same Wi-Fi)
+    open http://localhost:8000/          SAWNN Command (sign in with an account from data/first_run_credentials.txt)
+    open http://<laptop-ip>:8000/app     SAWNN Protect, the citizen app (same Wi-Fi)
 """
 import asyncio
 import csv
@@ -80,11 +80,11 @@ async def lifespan(_app):
     model()
     created = auth.bootstrap()
     if created:
-        print("MIRA Command accounts created. Credentials: data/first_run_credentials.txt")
+        print("SAWNN Command accounts created. Credentials: data/first_run_credentials.txt")
     from raqeeb import demo_scenario
     if demo_scenario.enabled():
         demo_scenario.ensure_accounts()
-        print("DEMO MODE: demo accounts are active (admin@mira.demo, analyst@mira.demo, citizen@mira.demo)")
+        print("DEMO MODE: demo accounts are active (admin@sawnn.demo, analyst@sawnn.demo, citizen@sawnn.demo)")
     seed()
     protection.latest()
     from raqeeb import discovery
@@ -94,19 +94,19 @@ async def lifespan(_app):
     task.cancel()
 
 
-app = FastAPI(title="MIRA API", version="3.0", lifespan=lifespan,
-              description="MIRA (ميرا) shared threat-intelligence backend for MIRA Protect and MIRA Command. "
+app = FastAPI(title="SAWNN API", version="3.0", lifespan=lifespan,
+              description="SAWNN (صون) shared threat-intelligence backend for SAWNN Protect and SAWNN Command. "
                           "See docs/API_GUIDE.md for configuration of every external service.")
-_origins = [o for o in os.environ.get("MIRA_CORS_ORIGINS", "").split(",") if o]
+_origins = [o for o in os.environ.get("SAWNN_CORS_ORIGINS", "").split(",") if o]
 if _origins:
     app.add_middleware(CORSMiddleware, allow_origins=_origins, allow_methods=["*"], allow_headers=["*"])
 app.mount("/static", StaticFiles(directory=WEB), name="static")
 app.include_router(v2_router)
 app.include_router(v1_router)
 app.include_router(demo_router)
-from .api_mira import router as mira_router  # noqa: E402
+from .api_sawnn import router as sawnn_router  # noqa: E402
 from .signin_demo import router as signin_router  # noqa: E402
-app.include_router(mira_router)
+app.include_router(sawnn_router)
 app.include_router(signin_router)
 
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
@@ -231,7 +231,7 @@ def api_batch(body: BatchIn, user=Depends(current_user)):
 
 @app.post("/api/check-message", dependencies=[Depends(rate("check"))])
 async def api_message(body: MessageIn, user=Depends(current_user)):
-    """Check a message. With report=true it is filed through the MIRA 2.0 citizen-report pipeline."""
+    """Check a message. With report=true it is filed through the SAWNN 2.0 citizen-report pipeline."""
     from raqeeb import community
     content.bump("checks")
     _demo_note(body.text)
@@ -434,7 +434,7 @@ def api_evidence_zip(case_id: str, user=Depends(require("view_evidence"))):
         for f in folder.iterdir():
             z.write(f, f.name)
     return Response(buf.getvalue(), media_type="application/zip",
-                    headers={"Content-Disposition": f'attachment; filename="mira-case-{case_id}.zip"'})
+                    headers={"Content-Disposition": f'attachment; filename="sawnn-case-{case_id}.zip"'})
 
 
 @app.get("/api/qr", include_in_schema=False)
@@ -456,7 +456,7 @@ def api_join_url():
         ip = "127.0.0.1"
     finally:
         s.close()
-    return {"url": f"http://{ip}:{os.environ.get('MIRA_PORT', '8000')}/app"}
+    return {"url": f"http://{ip}:{os.environ.get('SAWNN_PORT', '8000')}/app"}
 
 
 # ---------- live updates ----------

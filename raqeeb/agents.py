@@ -1,8 +1,8 @@
-"""MIRA Intelligence Engine: ten specialised agents with structured findings.
+"""SAWNN Intelligence Engine: ten specialised agents with structured findings.
 
 Every agent is deterministic code we own, so the system keeps working with no AI provider at all. An optional
-OpenAI-compatible endpoint (e.g. a local Ollama server) can write plainer-language summaries: set MIRA_LLM_URL
-and MIRA_LLM_MODEL. Agents never block anything or make official statements; they recommend, and the policy
+OpenAI-compatible endpoint (e.g. a local Ollama server) can write plainer-language summaries: set SAWNN_LLM_URL
+and SAWNN_LLM_MODEL. Agents never block anything or make official statements; they recommend, and the policy
 layer (raqeeb.protection) decides.
 """
 import datetime as dt
@@ -43,12 +43,12 @@ class Finding:
 
 # ---------- optional LLM adapter ----------
 def llm(prompt: str, max_tokens: int = 400) -> str | None:
-    url, model = os.environ.get("MIRA_LLM_URL"), os.environ.get("MIRA_LLM_MODEL", "llama3.1")
+    url, model = os.environ.get("SAWNN_LLM_URL"), os.environ.get("SAWNN_LLM_MODEL", "llama3.1")
     if not url:
         return None
     try:
         r = requests.post(url.rstrip("/") + "/v1/chat/completions", timeout=20,
-                          headers={"Authorization": f"Bearer {os.environ.get('MIRA_LLM_KEY', 'none')}"},
+                          headers={"Authorization": f"Bearer {os.environ.get('SAWNN_LLM_KEY', 'none')}"},
                           json={"model": model, "max_tokens": max_tokens, "temperature": 0.2,
                                 "messages": [{"role": "system", "content": "You write short, factual cyber-threat summaries for UAE police analysts. Never state guilt; describe evidence."},
                                              {"role": "user", "content": prompt}]})
@@ -343,11 +343,11 @@ def briefing_agent(period: str = "day") -> dict:
         b = data["top_brands"][0]
         actions.append(f"Consider a public alert: {b['brand']} is the most impersonated brand this {period} ({b['n']} threats).")
     data["recommended_actions"] = actions
-    text = (f"In the last {period}, MIRA recorded {data['new_threats']} new threats and {data['citizen_reports']} citizen reports. "
+    text = (f"In the last {period}, SAWNN recorded {data['new_threats']} new threats and {data['citizen_reports']} citizen reports. "
             f"{data['confirmed']} officially approved; {data['blocked_now']} currently blocked for all users. "
             + (f"Most impersonated: {', '.join(b['brand'] for b in data['top_brands'][:3])}. " if data["top_brands"] else ""))
-    data["summary"] = llm("Summarise this MIRA threat data for police analysts in 4 sentences:\n" + json.dumps(data, default=str)) or text
-    data["summary_source"] = "llm" if os.environ.get("MIRA_LLM_URL") and data["summary"] != text else "rules"
+    data["summary"] = llm("Summarise this SAWNN threat data for police analysts in 4 sentences:\n" + json.dumps(data, default=str)) or text
+    data["summary_source"] = "llm" if os.environ.get("SAWNN_LLM_URL") and data["summary"] != text else "rules"
     Finding("intelligence_briefing", f"{period} briefing", 1.0, data["summary"], {"period": period}).save()
     return data
 
