@@ -37,7 +37,7 @@ STEPS = [
     ("static", "Link Intelligence Engine analyses the domain and payment link"),
     ("visual", "Visual impersonation check against verified references"),
     ("seasonal", "Seasonal agent matches it to the winter camping season and checks for real signals"),
-    ("campaign", "Campaign agent links the payment link, a second domain, an advert and a phone number"),
+    ("campaign", "Campaign agent links the payment link, a second domain and the phone number the messages share"),
     ("verify", "An analyst reviews the evidence and marks it Analyst verified"),
     ("approve", "An authorised official approves it (Officially approved)"),
     ("distribute", "Global block approved: a new signed protection version reaches every device"),
@@ -114,8 +114,9 @@ def seed() -> dict:
             auth.create_user(email, f"demo-helper-{i}-pass", "citizen", f"Demo Helper {i}", "Dubai" if i == 1 else "Sharjah", True)
         helpers.append(_user(email))
     if not rows(db().execute("SELECT id FROM citizen_reports WHERE raw_text=?", (SCENARIO["sms_text"],))):
-        for u in helpers:
-            community.submit(u, "sms", SCENARIO["sms_text"], u["emirate"])
+        community.submit(helpers[0], "sms", SCENARIO["sms_text"], helpers[0]["emirate"])
+        # the same scammers rotate to a second domain; the phone number stays the same
+        community.submit(helpers[1], "sms", SCENARIO["sms_text"].replace(SCENARIO["payment_link"], SCENARIO["related_url"]), helpers[1]["emirate"])
     # the hunter also finds a second domain serving the same kit path (simulated discovery, real analysis)
     rel = pipeline.analyse(SCENARIO["related_url"], "quick")
     pipeline.save(rel, None)

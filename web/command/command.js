@@ -83,6 +83,19 @@ $('#login-form').addEventListener('submit', async e => {
     start();
   } catch (err) { $('#login-error').textContent = err.message; }
 });
+let DEMO = { enabled: false, accounts: [] };
+async function loadDemoLogins() {
+  try { DEMO = await (await fetch('/api/public/demo')).json(); } catch { return; }
+  const box = $('#demo-logins');
+  if (!DEMO.enabled) return;
+  box.hidden = false;
+  DEMO.accounts.filter(a => a.app === 'command').forEach(a => box.append(h('button', { type: 'button', onclick: () => {
+    $('#l-email').value = a.email; $('#l-pass').value = a.password; $('#login-form').requestSubmit();
+  } }, h('b', {}, a.label), h('small', {}, a.email))));
+  const want = decodeURIComponent((location.hash.match(/demo=([^&]+)/) || [])[1] || '');
+  const acct = DEMO.accounts.find(a => a.email === want && a.app === 'command');
+  if (acct && !TOKEN) { $('#l-email').value = acct.email; $('#l-pass').value = acct.password; }
+}
 function signOut() {
   if (TOKEN) fetch('/api/auth/logout', { method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` } });
   TOKEN = null; ME = null; sessionStorage.removeItem('raqeeb_cmd_token');
@@ -105,7 +118,9 @@ async function start() {
   $$('[data-perm]').forEach(el => { el.hidden = !can(el.dataset.perm); });
   $('#t-status').replaceChildren(h('option', { value: '' }, 'All statuses'),
     ...Object.entries(META.statuses).map(([k, v]) => h('option', { value: k }, v)));
-  show('overview');
+  $('#demo-flag').hidden = !DEMO.enabled;
+  $('#nav-demo').hidden = !DEMO.enabled;
+  show(DEMO.enabled && location.hash.includes('demo') ? 'demo' : 'overview');
   loadCounters();
   connect();
 }
@@ -128,17 +143,25 @@ async function loadCounters() {
   $('#c-await').textContent = OV.awaiting_block;
   $('#c-block').textContent = OV.blocked;
   $('#c-rep').textContent = OV.reports_today;
+  const n = OV.under_review + OV.corroborated;
+  $('#n-review').hidden = !n; $('#n-review').textContent = n;
 }
 
 // schematic layout of the seven emirates (west to east, north to south) as grid areas
 const MAP_AREA = { 'Abu Dhabi': 'ad', 'Dubai': 'dxb', 'Sharjah': 'shj', 'Ajman': 'ajm', 'Umm Al Quwain': 'uaq', 'Ras Al Khaimah': 'rak', 'Fujairah': 'fuj' };
 function renderMap(geo, box) {
   const max = Math.max(1, ...geo.map(g => g.reports + g.threats));
+  const detail = g => {
+    const cats = Object.entries(g.categories || {}).sort((x, y) => y[1] - x[1]).map(([c, n]) => `${catLabel(c)} (${n})`).join(', ');
+    $('#map-detail').textContent = `${g.emirate}: ${g.reports} citizen reports, ${g.threats} threats, ${g.confirmed} officially approved` +
+      (g.campaigns?.length ? `, campaigns ${g.campaigns.join(', ')}` : '') + (cats ? `. Categories: ${cats}.` : '.') +
+      ' Reporting location is where citizens reported from, not where criminals are.';
+  };
   box.replaceChildren(...geo.map(g => {
     const heat = g.reports + g.threats === 0 ? 0 : Math.ceil(3 * (g.reports + g.threats) / max);
-    return h('div', { class: `tile heat-${heat}`, style: `grid-area:${MAP_AREA[g.emirate]}` },
-      h('b', {}, g.emirate), h('span', { class: 'n' }, g.reports), ' reports · ', h('span', { class: 'n' }, g.threats), ' threats',
-      g.confirmed ? h('div', {}, `${g.confirmed} confirmed`) : null);
+    const t = h('button', { class: `tile heat-${heat}`, style: `grid-area:${MAP_AREA[g.emirate]}`, onclick: () => { $$('.tile', box).forEach(x => x.classList.remove('sel')); t.classList.add('sel'); detail(g); } },
+      h('b', {}, g.emirate), h('span', { class: 'n' }, g.reports), ' reports · ', h('span', { class: 'n' }, g.threats), ' threats');
+    return t;
   }));
 }
 function bars(box, items, labelFn, warm) {
@@ -146,18 +169,25 @@ function bars(box, items, labelFn, warm) {
   box.replaceChildren(...(items.length ? items.map(i => h('div', { class: `bar ${warm ? 'warm' : ''}` },
     h('span', {}, labelFn(i)), h('i', { style: `width:${Math.round(100 * i.n / max)}%` }), h('b', {}, i.n))) : [h('p', { class: 'note' }, 'Nothing yet.')]));
 }
+const clock = ts => new Date(ts * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 loaders.overview = async () => {
-  const [ov, geo, br] = await Promise.all([api('/api/command/overview'), api('/api/intel/geography'), api('/api/intel/briefing?period=day')]);
+  const [ov, geo, br, act] = await Promise.all([api('/api/command/overview'), api('/api/intel/geography'), api('/api/intel/briefing?period=day'), api('/api/command/activity')]);
   OV = ov;
-  const k = [['New threats today', ov.new_today], ['In review', ov.under_review], ['Community corroborated', ov.corroborated, true],
-    ['Confirmed malicious', ov.confirmed], ['Awaiting block decision', ov.awaiting_block, true], ['Blocked for everyone', ov.blocked],
-    ['Citizen reports today', ov.reports_today], ['Linked campaigns', ov.campaigns], ['Protection version', `v${ov.protection_version}`]];
-  $('#ov-kpis').replaceChildren(...k.map(([t, v, attn]) => h('div', { class: attn && v ? 'attn' : '' }, h('dt', {}, t), h('dd', {}, v))));
+  const k = [['Threats discovered today', ov.new_today], ['Suspicious domains observed today', ov.suspicious_domains_today],
+    ['Look-alike websites', ov.lookalikes], ['Known malicious indicators', ov.known_malicious, 'bad'], ['Active scam campaigns', ov.campaigns],
+    ['Citizen reports awaiting review', ov.reports_awaiting, 'attn'], ['Analyst verified', ov.analyst_verified], ['Officially approved', ov.confirmed, 'ok'],
+    ['Awaiting block decision', ov.awaiting_block, 'attn'], ['Blocked for everyone', ov.blocked]];
+  $('#ov-kpis').replaceChildren(...k.map(([t, v, cls]) => h('div', { class: cls && v ? cls : '' }, h('dt', {}, t), h('dd', {}, v))));
+  $('#ov-season').textContent = ov.active_seasons.length ? `Seasonal watch: ${ov.active_seasons.slice(0, 2).join(' · ')}` : '';
   renderMap(geo, $('#map'));
+  $('#map-detail').textContent = 'Select an emirate for its breakdown.';
   $('#ov-brief').textContent = br.summary;
   $('#ov-actions').replaceChildren(...(br.recommended_actions.length ? br.recommended_actions.map(a => h('li', {}, a)) : [h('li', {}, 'No pending decisions.')]));
   bars($('#ov-status'), ov.by_status, i => statusLabel(i.status));
   bars($('#ov-brands'), ov.by_brand, i => i.brand, true);
+  $('#ov-activity').replaceChildren(...(act.length ? act.map(i => h('li', {}, h('time', {}, clock(i.ts)),
+    h('div', {}, h('b', {}, i.title), i.demo ? h('span', { class: 'pill demo', style: 'margin-left:8px' }, 'Demo') : null, h('span', { class: 'meta' }, i.detail))))
+    : [h('li', {}, h('span', {}), h('span', { class: 'meta' }, 'No activity yet. Run a hunt, or wait for citizen reports.'))]));
   $('#ov-sub').textContent = `Signed in as ${ME.display_name}${ME.display_name !== ME.role_name ? ` (${ME.role_name})` : ''}. Live state of RAQEEB across the UAE.`;
 };
 
@@ -178,13 +208,14 @@ function threatItem(t) {
   const li = h('li', { tabindex: 0, 'data-id': t.id, onclick: () => openThreat(t.id) },
     h('div', { class: `score ${v}` }, Math.round(t.risk || 0), h('small', {}, t.severity || '')),
     h('div', {}, h('div', { class: 'host' }, t.normalized),
-      h('div', { class: 'meta' }, h('span', { class: 't-id' }, t.id), '  ', pill(t.status), t.block_status === 'global' ? h('span', { class: 'pill global' }, 'Blocked') : null),
+      h('div', { class: 'meta' }, h('span', { class: 't-id' }, t.id), '  ', pill(t.status), t.block_status === 'global' ? h('span', { class: 'pill global' }, 'Blocked') : null,
+        t.demo ? h('span', { class: 'pill demo' }, 'Demo') : null),
       h('div', { class: 'meta' }, [catLabel(t.category), t.brand, `${t.report_count} report${t.report_count === 1 ? '' : 's'}`, ago(t.last_seen)].filter(Boolean).join('  ·  '))));
   li.addEventListener('keydown', e => { if (e.key === 'Enter') openThreat(t.id); });
   return li;
 }
 const DECISIONS = [
-  ['analyst_verified', 'Mark analyst verified'], ['confirmed_malicious', 'Confirm malicious'], ['rejected', 'Reject'],
+  ['analyst_verified', 'Mark analyst verified'], ['confirmed_malicious', 'Officially approve'], ['rejected', 'Reject'],
   ['false_positive', 'False positive'], ['duplicate', 'Duplicate'], ['resolved', 'Resolved'], ['under_review', 'Back to review'],
 ];
 async function openThreat(id) {
@@ -197,6 +228,7 @@ async function openThreat(id) {
   const kids = [
     h('div', { class: 'verdict-line' }, h('span', { class: 'verdict-word', style: 'font-size:28px' }, t.id), pill(t.status),
       t.block_status === 'global' ? h('span', { class: 'pill global' }, `Blocked (${t.block_scope})`) : t.block_status !== 'none' ? h('span', { class: 'pill' }, t.block_status) : null),
+    t.demo ? h('p', { class: 'pill demo' }, 'Demonstration record (seeded)') : null,
     h('p', { class: 'full-url' }, t.original),
     h('dl', { class: 'facts' }, [
       ['Indicator', `${t.indicator_type}: ${t.normalized}`], ['Category', catLabel(t.category)], ['Impersonates', t.brand || '–'],
@@ -209,7 +241,7 @@ async function openThreat(id) {
   ];
   if (can('verify_threat')) {
     kids.push(h('h3', { class: 'section-h' }, 'Review decision'),
-      h('div', { class: 'decide' }, DECISIONS.filter(([s]) => s !== t.status).map(([s, label]) => {
+      h('div', { class: 'decide' }, DECISIONS.filter(([s]) => s !== t.status && (s !== 'confirmed_malicious' || can('approve_threat'))).map(([s, label]) => {
         const b = h('button', { class: 'ghost', onclick: () => act(b, async () => {
           const note = s === 'false_positive' || s === 'rejected' ? prompt('Reason (recorded in the audit log):') || '' : '';
           await api(`/api/threats/${t.id}/status`, { status: s, note });
@@ -229,11 +261,14 @@ async function openThreat(id) {
       const b = h('button', { class: 'primary', onclick: () => act(b, async () => { await api(`/api/threats/${t.id}/block`, { expiry_days: +days.value }); openThreat(t.id); loadCounters(); }, 'Published to every phone') }, 'Approve global block');
       box2.append(h('p', {}, `Will block the ${scope[0]} “${scope[1]}” for everyone and publish a new signed version.`), days, b);
     } else {
-      box2.append(h('p', {}, 'Global blocking is available once the threat is confirmed malicious.'));
+      box2.append(h('p', {}, 'Global blocking is available once an authorised official has approved the threat (Officially approved).'));
     }
     kids.push(box2);
   }
   const tools = h('div', { class: 'actions' });
+  if (['url', 'domain', 'qr'].includes(t.indicator_type)) {
+    tools.append(h('button', { class: 'ghost', onclick: () => { show('domain'); $('#scan-url').value = t.original; setMode('deep'); $('#scan-form').requestSubmit(); } }, 'Investigate in Domain Intelligence'));
+  }
   if (can('view_evidence') && ['url', 'domain', 'qr'].includes(t.indicator_type)) {
     const ev = h('button', { class: 'ghost', onclick: () => act(ev, async () => {
       ev.textContent = 'Collecting live evidence…';
@@ -393,31 +428,98 @@ function renderFacts(live, box) {
   ].filter(([, v]) => v);
   if (facts.length) box.append(h('dl', { class: 'facts live' }, facts.map(([k, v]) => h('div', {}, h('dt', {}, k), h('dd', {}, v)))));
 }
-$('#scan-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const box = $('#scan-result');
-  const live = can('view_evidence') && $('#scan-live').checked;
-  box.replaceChildren(h('p', { class: 'empty-text' }, live ? 'Running live checks…' : 'Checking…'));
-  try { renderDetail(await api('/api/scan', { url: $('#scan-url').value, live }), box); }
-  catch (err) { box.replaceChildren(h('p', {}, `Couldn’t check that link: ${err.message}`)); }
-});
 $$('[data-hunt]').forEach(b => b.addEventListener('click', async () => {
   $('#hunt-status').textContent = `Starting ${b.textContent.toLowerCase()}…`;
   try { await api('/api/hunt', { mode: b.dataset.hunt, limit: b.dataset.hunt === 'replay' ? 12 : 400 }); }
   catch (e) { $('#hunt-status').textContent = e.message; }
 }));
 
-/* ---------------- early watch ---------------- */
-loaders.watch = async () => {
+/* ---------------- domain intelligence (Link Intelligence Engine) ---------------- */
+let scanMode = 'quick';
+function setMode(m) { scanMode = m; $$('#scan-form [data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === m); b.setAttribute('aria-checked', String(b.dataset.mode === m)); }); }
+$$('#scan-form [data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+$('#scan-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const box = $('#scan-result'), url = $('#scan-url').value.trim();
+  const btn = $('#scan-form .primary'); btn.disabled = true;
+  box.replaceChildren(h('div', { class: 'panel' }, h('ul', { class: 'stages' }, ['validation', 'static', 'registry', 'signatures', 'ml', ...(scanMode === 'deep' ? ['domain', 'sandbox', 'visual'] : [])]
+    .map(s => h('li', { class: 'running' }, s))), h('p', { class: 'meta' }, scanMode === 'deep' ? 'Deep scan running: registration, DNS, certificate, isolated browser visit and visual check. This can take 20–40 seconds.' : 'Analysing…')));
+  try {
+    let r = await api('/api/v1/scan', { url, mode: scanMode });
+    while (r.status === 'running') { await new Promise(res => setTimeout(res, 1500)); r = await api(`/api/v1/scan/${r.scan_id}`); }
+    renderScan(r, box);
+  } catch (err) { box.replaceChildren(h('div', { class: 'panel' }, h('p', {}, `Couldn’t analyse that URL: ${err.message}`))); }
+  finally { btn.disabled = false; }
+});
+const yesNo = v => v === true ? 'Yes' : v === false ? 'No' : '–';
+function kv(pairs) { return h('dl', { class: 'kv' }, pairs.filter(([, v]) => v !== undefined && v !== null && v !== '').flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)])); }
+function unavailable(x) { return h('p', { class: 'meta' }, x?.reason || x?.error || 'Not available'); }
+async function renderScan(r, box) {
+  const reg = r.official_domain_comparison || {}, ml = r.ml_result || {}, sig = r.signature_result || {};
+  const dom = r.domain_intelligence || {}, web = r.website_analysis || {}, vis = r.visual_analysis || {};
+  const banner = h('div', { class: `verdict-banner ${r.verdict}` },
+    h('div', {}, h('div', { class: 'vb-word' }, r.verdict), h('div', { class: 'meta' }, `${r.scan_id} · ${r.mode} scan · ${r.duration_seconds}s`)),
+    h('p', { class: 'vb-why' }, r.explanation?.en || ''),
+    h('dl', { class: 'vb-nums' },
+      h('div', {}, h('dt', {}, 'Risk score'), h('dd', {}, r.risk_score ?? '–', h('small', { class: 'meta' }, ` ${r.risk_level}`))),
+      h('div', {}, h('dt', {}, 'Confidence'), h('dd', {}, r.assessment_confidence)),
+      h('div', {}, h('dt', {}, 'Completeness'), h('dd', {}, `${Math.round((r.analysis_completeness || 0) * 100)}%`, h('div', { class: 'meter' }, h('i', { style: `width:${Math.round((r.analysis_completeness || 0) * 100)}%` }))))));
+  const stages = h('ul', { class: 'stages', 'aria-label': 'Pipeline stages' }, Object.entries(r.stages || {}).map(([k, v]) => h('li', { class: v }, `${k}: ${v.replace('_', ' ')}`)));
+  const twin = r.twin_view ? (() => {
+    const t = r.twin_view;
+    return h('div', { class: 'twin' }, twinRow('This link', t.scam_segments, 'scam'), twinRow('Official', t.official_segments, 'real'),
+      h('p', { class: 'twin-note' }, t.unicode_tricks.length ? `Look-alike characters: ${t.unicode_tricks.map(u => `“${u.char}” is ${u.name}`).join('; ')}.` : `${Math.round(t.similarity * 100)}% similar to the official domain.`));
+  })() : null;
+  const p = (title, ...kids) => h('article', { class: 'panel' }, h('h3', {}, title), ...kids);
+  const rd = dom.rdap || {}, dns = dom.dns || {}, cert = dom.certificate || {};
+  const related = await api(`/api/threats?q=${encodeURIComponent(r.registered_domain)}`).catch(() => []);
+  box.replaceChildren(banner, stages, twin || '',
+    h('div', { class: 'report-grid' },
+      p('Identity', kv([['Submitted', h('span', { class: 'mono' }, r.submitted_url)], ['Normalised', h('span', { class: 'mono' }, r.normalised_url)],
+        ['Final destination', r.final_url ? h('span', { class: 'mono' }, r.final_url) : 'Not followed (quick scan)'], ['Registered domain', r.registered_domain],
+        ['Detected brand', r.detected_brand || 'None'], ['Official domain', reg.official_domain_match ? `Yes: ${reg.organisation} (${reg.matched_domain})` : 'No'],
+        ['Closest official', reg.closest_official ? `${reg.closest_official}, similarity ${reg.similarity}` : '–']])),
+      p('Machine learning', ml.available ? kv([['Prediction', ml.prediction], ['Model score', `${ml.probability} (threshold ${ml.decision_threshold}; not a calibrated probability)`],
+        ['Model', ml.model_version], ['Top contributions', h('ul', {}, ml.feature_contributions.map(f => h('li', {}, `${f.description}: ${f.contribution > 0 ? '+' : ''}${f.contribution}`)))]]) : unavailable(ml)),
+      p('Threat intelligence', kv([['Known threat', yesNo(sig.known_threat)], ['Sources checked', sig.sources_checked?.join(', ')],
+        ['Not checked', sig.sources_skipped?.map(x => `${x.source} (${x.reason})`).join(', ')], ['Errors', Object.entries(sig.errors || {}).map(([k, v]) => `${k}: ${v}`).join('; ')]]),
+        sig.matches?.length ? h('ul', { class: 'ev-list' }, sig.matches.map(m => h('li', {}, h('span', { class: 'stage' }, m.source), h('span', {}, `${m.classification}: ${m.indicator}`), h('span', { class: 'str' }, m.reference || '')))) : null),
+      p('Registration and DNS', dom.available === false ? unavailable(dom) : kv([['Registrar', rd.registrar || (rd.error ? `unavailable: ${rd.error}` : '–')], ['Registered', rd.registered],
+        ['Domain age', rd.age_days != null ? `${rd.age_days} days` : null], ['Nameservers', rd.nameservers?.join(', ')], ['Abuse contact', rd.abuse_contact],
+        ['A records', dns.a?.join(', ') || (dns.nxdomain ? 'Domain does not resolve' : dns.error)], ['MX', dns.mx?.join(', ')], ['TXT', dns.txt?.slice(0, 3).join(' | ')]])),
+      p('Certificate', !cert.available ? unavailable(cert) : cert.https === false ? h('p', {}, 'No HTTPS') : kv([['Valid', yesNo(cert.valid)], ['Issuer', cert.issuer], ['Issued', cert.not_before],
+        ['Expires', cert.not_after], ['Age', cert.age_days != null ? `${cert.age_days} days` : null], ['Names', cert.subject_alt_names?.slice(0, 6).join(', ')],
+        ['SHA-256', cert.fingerprint_sha256 ? h('span', { class: 'mono' }, cert.fingerprint_sha256) : null], ['Error', cert.validation_error]])),
+      p('Live page (isolated browser)', !web.available ? unavailable(web) : h('div', {}, kv([['Mode', web.mode], ['HTTP status', web.http_status], ['Redirects', web.redirect_count],
+        ['Page title', web.page_title], ['Password fields', web.password_fields], ['Payment fields', yesNo(web.payment_fields)], ['Email / phone fields', `${web.email_fields} / ${web.telephone_fields}`],
+        ['Forms', web.forms?.map(f => `${f.method.toUpperCase()} ${f.action}${f.external ? ' (another site)' : ''}`).join('; ')], ['Third-party domains', web.third_party_domains?.slice(0, 8).join(', ')],
+        ['Blocked internal requests', web.blocked_internal_requests?.length || 0], ['Downloads blocked', web.downloads_blocked?.join(', ') || 'None']]),
+        web.redirect_chain?.length ? h('ol', { class: 'timeline-mini' }, web.redirect_chain.map(c => h('li', { class: 'mono' }, `${c.status} ${c.url}`))) : null,
+        web.visible_text ? h('details', {}, h('summary', {}, 'Extracted text'), h('pre', { class: 'text' }, web.visible_text)) : null)),
+      p('Visual impersonation', h('div', {}, vis.available ? kv([['Closest reference', vis.closest_reference], ['Perceptual', vis.perceptual_similarity], ['Layout', vis.layout_similarity],
+        ['Overall', vis.overall_visual_similarity], ['Detected brand', vis.detected_brand || 'None']]) : unavailable(vis),
+        vis.brand_text_found?.length ? h('p', {}, `Brand names on the page: ${vis.brand_text_found.join(', ')}`) : null,
+        vis.ocr?.available ? h('details', {}, h('summary', {}, 'Text read from the screenshot (OCR)'), h('pre', { class: 'text' }, vis.ocr.text)) : null,
+        h('div', { id: 'shot-slot' }))),
+      p('Related records', related.length ? h('ul', { class: 'linked' }, related.slice(0, 6).map(t => h('li', {}, h('button', { class: 'ghost small', onclick: () => { show('threats'); openThreat(t.id); } }, t.id), ' ',
+        pill(t.status), ` ${t.normalized} · ${t.report_count} reports · first seen ${when(t.first_seen)}`))) : h('p', { class: 'meta' }, 'No threat records for this domain yet.'),
+        can('verify_threat') && r.verdict !== 'SAFE' ? h('button', { class: 'primary', onclick: async ev => { const t = await act(ev.currentTarget, () => api('/api/threats', { indicator: r.submitted_url, indicator_type: 'url', note: `Link engine ${r.verdict} ${r.risk_score} (${r.scan_id})` }), 'Threat record opened'); if (t) { show('threats'); openThreat(t.id); } } }, 'Open a threat record') : null)),
+    p('Evidence', h('ul', { class: 'ev-list' }, r.evidence.map(e => h('li', { class: e.direction }, h('span', { class: 'stage' }, e.stage), h('span', {}, e.detail_en), h('span', { class: 'str' }, `${e.direction === 'trust' ? '−' : '+'}${e.strength} · ${e.reliability}`))))),
+    p('Recommended action and limitations', h('p', {}, r.recommended_action.en), h('ul', { class: 'limits' }, r.limitations.map(l => h('li', {}, l)))));
+  if (web.screenshot && can('view_evidence')) authedBlob(`/api/v1/scan/${r.scan_id}/screenshot`).then(u => $('#shot-slot')?.append(h('img', { class: 'shot', src: u, alt: `Screenshot of ${r.final_url}` }))).catch(() => {});
+}
+async function loadWatch() {
   const rows = await api('/api/intel/early-watch');
-  $('#w-rows').replaceChildren(...(rows.length ? rows.map(f => {
+  $('#w-rows').replaceChildren(...(rows.length ? rows.slice(0, 60).map(f => {
     const b = h('button', { class: 'ghost small', onclick: () => act(b, async () => {
       const t = await api('/api/intel/early-watch/promote', { url: f.url, note: f.reason });
       b.replaceWith(h('button', { class: 'ghost small', onclick: () => { show('threats'); openThreat(t.id); } }, `Open ${t.id}`));
     }, 'Promoted to a threat record') }, 'Promote');
-    return h('tr', {}, h('td', {}, f.host), h('td', {}, Math.round(f.risk)), h('td', {}, f.brand || '–'), h('td', {}, f.source), h('td', {}, f.reason), h('td', {}, can('verify_threat') ? b : ''));
-  }) : [h('tr', {}, h('td', { colspan: 6 }, 'Nothing new on watch. Run a hunt from the Hunt feed to look for new look-alike domains.'))]));
-};
+    return h('tr', {}, h('td', { class: 'mono' }, f.host), h('td', {}, Math.round(f.risk)), h('td', {}, f.brand || '–'), h('td', {}, f.source), h('td', {}, f.reason),
+      h('td', {}, h('button', { class: 'ghost small', onclick: () => { $('#scan-url').value = f.url; scrollTo(0, 0); $('#scan-form').requestSubmit(); } }, 'Investigate'), ' ', can('verify_threat') ? b : ''));
+  }) : [h('tr', {}, h('td', { colspan: 6 }, 'Nothing new on watch. Run a hunt from Live Threat Intelligence to look for new look-alike domains.'))]));
+}
+loaders.domain = async () => { if (can('view_investigations')) await loadWatch(); else $('#watch-panel').hidden = true; };
 
 /* ---------------- campaigns ---------------- */
 let graphMode = 'threats';
@@ -596,16 +698,51 @@ loaders.audit = async () => {
   $('#au-rows').replaceChildren(...rows.map(a => h('tr', {}, h('td', {}, when(a.ts)), h('td', {}, a.actor || 'system'), h('td', {}, a.action), h('td', {}, a.detail))));
 };
 loaders.users = async () => {
+  const orgs = await api('/api/v1/organizations');
+  $('#org-rows').replaceChildren(...orgs.map(o => h('tr', {}, h('td', {}, o.name, h('div', { class: 'meta', lang: 'ar' }, o.name_ar || '')), h('td', {}, o.sector),
+    h('td', {}, o.domains.map(d => h('div', { class: 'mono' }, d.domain, ' ', h('span', { class: `pill ${d.status === 'verified' ? 'resolved' : 'demo'}` }, d.status === 'verified' ? 'verified' : 'unverified')))),
+    h('td', {}, o.origin))));
+  if (!can('manage_users')) return;
   const users = await api('/api/admin/users');
   const roles = ['super_admin', 'police_admin', 'cyber_analyst', 'investigation_officer', 'intel_analyst', 'supervisor', 'citizen'];
   $('#u-role').replaceChildren(...roles.filter(r => r !== 'citizen').map(r => h('option', { value: r }, r.replace(/_/g, ' '))));
-  $('#u-rows').replaceChildren(...users.map(u => {
+  $('#u-rows').replaceChildren(...users.filter(u => u.role !== 'citizen').map(u => {
     const sel = h('select', { 'aria-label': `Role for ${u.email}`, disabled: u.id === ME.id, onchange: async () => { await api(`/api/admin/users/${u.id}`, { role: sel.value }, 'PATCH'); toast('Role changed', u.email); } },
       roles.map(r => h('option', { value: r, selected: r === u.role }, r.replace(/_/g, ' '))));
     const dis = h('button', { class: 'ghost small', disabled: u.id === ME.id, onclick: async () => { await api(`/api/admin/users/${u.id}`, { disabled: !u.disabled }, 'PATCH'); loaders.users(); } }, u.disabled ? 'Enable' : 'Disable');
     return h('tr', {}, h('td', {}, u.display_name), h('td', {}, u.email), h('td', {}, sel), h('td', {}, u.disabled ? 'Disabled' : 'Active'), h('td', {}, dis));
   }));
 };
+$('#org-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  try {
+    await api('/api/v1/organizations', { name: $('#org-name').value, domains: $('#org-domains').value.split(',').map(x => x.trim()).filter(Boolean), verification_source: $('#org-source').value || null });
+    $('#org-form').reset(); loaders.users(); toast('Organisation saved');
+  } catch (err) { toast('Couldn’t save the organisation', err.message); }
+});
+
+/* ---------------- demo scenario ---------------- */
+const STEP_WHO = { verify: 'Analyst: Threat Verification', approve: 'Official: Threat Verification', distribute: 'Official: approve global block',
+  citizen_check: 'Citizen: paste the link in PROTECT', community: 'Citizen: report the advert in PROTECT', command_update: 'Analyst: verify the new report' };
+loaders.demo = async () => {
+  const st = await api('/api/demo/status');
+  $('#demo-steps').replaceChildren(...st.steps.map(s => h('li', { class: s.done ? 'done' : '' }, h('span', {}, s.title), h('span', { class: 'who-does' }, s.done ? 'Done' : STEP_WHO[s.id] || 'Automatic (steps 1–5)'))));
+  const sc = st.scenario;
+  const copy = (label, text) => [h('p', { class: 'meta' }, label), h('div', { class: 'copy' }, h('pre', { class: 'text' }, text),
+    h('button', { class: 'ghost small', onclick: () => { navigator.clipboard?.writeText(text); toast('Copied'); } }, 'Copy'))];
+  $('#demo-kit').replaceChildren(h('h3', {}, 'Presenter kit'),
+    st.threat_id ? h('p', {}, 'Main threat: ', h('button', { class: 'ghost small', onclick: () => { show('threats'); openThreat(st.threat_id); } }, st.threat_id),
+      st.campaign_id ? ` · campaign ${st.campaign_id}` : '') : h('p', { class: 'meta' }, 'Run steps 1–5 to create the scenario.'),
+    ...copy('Step 9: the citizen pastes this payment link in PROTECT', sc.payment_link),
+    ...copy('Step 10: the citizen reports this advertisement in PROTECT (type: Scam advertisement)', sc.ad_text),
+    h('p', { class: 'meta' }, 'All domains, numbers and messages in this scenario are invented for the demonstration and marked as demo data.'));
+};
+$('#demo-seed').addEventListener('click', e => act(e.currentTarget, async () => { await api('/api/demo/seed', {}); loaders.demo(); loadCounters(); }, 'Steps 1–5 done'));
+$('#demo-reset').addEventListener('click', e => {
+  if (!confirm('Remove all demo-seeded records and demo-account activity? Real data is not touched.')) return;
+  act(e.currentTarget, async () => { await api('/api/demo/reset', {}); loaders.demo(); loadCounters(); }, 'Demo data removed');
+});
+
 $('#u-form').addEventListener('submit', async e => {
   e.preventDefault();
   try { await api('/api/admin/users', { email: $('#u-email').value, password: $('#u-pass').value, role: $('#u-role').value }); $('#u-form').reset(); loaders.users(); toast('Account added'); }
@@ -653,4 +790,4 @@ function connect() {
   };
 }
 
-if (TOKEN) start();
+loadDemoLogins().then(() => { if (TOKEN) start(); });

@@ -162,7 +162,7 @@ def demo_status(user=Depends(require("view_command"))):
 @demo_router.post("/api/demo/seed")
 async def demo_seed(user=Depends(require("approve_threat"))):
     out = _demo_on().seed()
-    await hub.send("citizen_report", {"ref": "demo", "type": "sms", "risk": None, "severity": None, "emirate": None, "threats": []})
+    await hub.send("threat", {"id": out["status"]["threat_id"], "status": "under_review", "status_label": "Under investigation"})
     return out
 
 

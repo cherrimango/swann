@@ -283,7 +283,44 @@ def overview(user=Depends(require_official)):
         "by_brand": rows(db().execute("SELECT brand, COUNT(*) n FROM threats WHERE brand != '' GROUP BY brand ORDER BY n DESC LIMIT 8")),
         "by_status": rows(db().execute("SELECT status, COUNT(*) n FROM threats GROUP BY status")),
         "protection_version": q("SELECT COALESCE(MAX(version),0) FROM protection_versions"),
+        "suspicious_domains_today": q("SELECT COUNT(DISTINCT host) FROM feed WHERE ts >= ? AND risk >= 35", day),
+        "lookalikes": q("SELECT COUNT(*) FROM threats WHERE indicator_type IN ('url','domain','qr') AND brand != '' AND status NOT IN ('rejected','false_positive')"),
+        "known_malicious": q("SELECT COUNT(*) FROM threats WHERE status IN ('analyst_verified','confirmed_malicious')"),
+        "analyst_verified": q("SELECT COUNT(*) FROM threats WHERE status='analyst_verified'"),
+        "reports_awaiting": q("SELECT COUNT(*) FROM citizen_reports WHERE status IN ('under_review','analysing','new','community_corroborated')"),
+        "active_seasons": [p["season"] for p in agents.seasonal_agent()["predicted"] if p.get("basis") == "seasonal pattern"],
+        "demo_records": q("SELECT COUNT(*) FROM threats WHERE demo=1"),
     }
+
+
+@router.get("/api/command/activity")
+def activity(user=Depends(require_official)):
+    """Live intelligence activity, built only from recorded events (findings, reviews, publications, reports)."""
+    items = []
+    for f in rows(db().execute("""SELECT agent, subject, confidence, reasoning, source, created FROM findings
+                                  WHERE agent != 'intelligence_briefing' ORDER BY created DESC LIMIT 25""")):
+        items.append({"kind": "finding", "ts": f["created"], "demo": (f["source"] or "").startswith("DEMO"),
+                      "title": f"{f['agent'].replace('_', ' ').capitalize()}: {f['subject'][:80]}", "detail": f["reasoning"][:200]})
+    for a in rows(db().execute("""SELECT action, detail, ts, actor FROM audit WHERE action IN
+            ('threat_status','protection_publish','rollback','threat_added','evidence','demo_seed') ORDER BY ts DESC LIMIT 25""")):
+        d = json.loads(a["detail"]) if (a["detail"] or "").startswith("{") else {}
+        if a["action"] == "threat_status":
+            title = f"{d.get('id')} marked {intel.STATUS_LABELS.get(d.get('status'), d.get('status'))}"
+        elif a["action"] == "protection_publish":
+            title = f"Protection v{d.get('version')} published ({d.get('rules')} rules)"
+        elif a["action"] == "demo_seed":
+            title = "Demo scenario seeded"
+        else:
+            title = a["action"].replace("_", " ").capitalize() + (f" {d.get('id')}" if d.get("id") else "")
+        items.append({"kind": a["action"], "ts": a["ts"], "demo": a["actor"] == "demo-seed" or a["action"] == "demo_seed",
+                      "title": title, "detail": f"by {a['actor']}" + (f" · {d.get('notes')}" if d.get("notes") else "")})
+    for r in rows(db().execute("""SELECT r.ref, r.type, r.emirate, r.created, r.threat_ids, u.email FROM citizen_reports r
+                                  LEFT JOIN users u ON u.id = r.user_id ORDER BY r.created DESC LIMIT 25""")):
+        n = len(json.loads(r["threat_ids"] or "[]"))
+        items.append({"kind": "report", "ts": r["created"], "demo": (r["email"] or "").endswith("@raqeeb.demo"),
+                      "title": f"Citizen report {r['ref']} ({community.REPORT_TYPES.get(r['type'], r['type'])})",
+                      "detail": f"{r['emirate'] or 'Emirate not given'} · linked to {n} indicator{'s' if n != 1 else ''}"})
+    return sorted(items, key=lambda i: -i["ts"])[:40]
 
 
 @router.get("/api/intel/graph")

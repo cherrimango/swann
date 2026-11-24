@@ -336,7 +336,7 @@ def briefing_agent(period: str = "day") -> dict:
     }
     actions = []
     if data["awaiting_block_approval"]:
-        actions.append(f"Approve or reject {data['awaiting_block_approval']} confirmed threats waiting for a blocking decision.")
+        actions.append(f"Decide on {data['awaiting_block_approval']} officially approved threats waiting for a blocking decision.")
     if data["awaiting_review"]:
         actions.append(f"Review {data['awaiting_review']} threats in the verification queue, corroborated ones first.")
     if data["top_brands"]:
@@ -344,7 +344,7 @@ def briefing_agent(period: str = "day") -> dict:
         actions.append(f"Consider a public alert: {b['brand']} is the most impersonated brand this {period} ({b['n']} threats).")
     data["recommended_actions"] = actions
     text = (f"In the last {period}, RAQEEB recorded {data['new_threats']} new threats and {data['citizen_reports']} citizen reports. "
-            f"{data['confirmed']} confirmed malicious; {data['blocked_now']} currently blocked for all users. "
+            f"{data['confirmed']} officially approved; {data['blocked_now']} currently blocked for all users. "
             + (f"Most impersonated: {', '.join(b['brand'] for b in data['top_brands'][:3])}. " if data["top_brands"] else ""))
     data["summary"] = llm("Summarise this RAQEEB threat data for police analysts in 4 sentences:\n" + json.dumps(data, default=str)) or text
     data["summary_source"] = "llm" if os.environ.get("RAQEEB_LLM_URL") and data["summary"] != text else "rules"

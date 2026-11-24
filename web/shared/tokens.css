@@ -1,0 +1,51 @@
+/* RAQEEB design tokens, shared by the entry screen, COMMAND and PROTECT. */
+:root {
+  --navy-950: #071426;
+  --navy-900: #0B1F3A;
+  --blue-800: #123B68;
+  --blue-500: #2878C8;
+  --blue-300: #75B8EA;
+  --uae-green: #00843D;
+  --uae-red: #EF3340;
+  --white: #FFFFFF;
+  --bg-light: #F5F7FA;
+
+  --ok: #1FA463;          /* legible green on navy, derived from UAE green */
+  --danger: #FF5A66;      /* legible red on navy, derived from UAE red */
+  --warn: #F2B544;
+
+  --font-ui: 'Inter', 'Noto Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-tech: 'Roboto', 'Inter', 'Noto Sans Arabic', system-ui, sans-serif;
+  --font-ar: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --flag-line: linear-gradient(90deg, var(--uae-red) 0 9%, var(--uae-green) 9% 40%, rgba(255, 255, 255, .85) 40% 71%, #000 71% 100%);
+}
+[lang="ar"], [lang="ur"] { --font-ui: var(--font-ar); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--font-ui); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* wordmark: the one place the flag colours appear as a mark */
+.mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.mark-flag { width: 22px; height: 16px; border-radius: 3px; overflow: hidden; display: grid; grid-template-columns: 6px 1fr; grid-template-rows: repeat(3, 1fr); flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+.mark-flag i:first-child { grid-row: 1 / 4; background: var(--uae-red); }
+.mark-flag i:nth-child(2) { background: var(--uae-green); }
+.mark-flag i:nth-child(3) { background: #fff; }
+.mark-flag i:nth-child(4) { background: #000; }
+.mark-en { font: 800 19px/1 var(--font-tech); letter-spacing: 3px; }
+.mark-ar { font: 700 19px/1 var(--font-ar); color: var(--blue-300); }
+
+/* glassy headings: luminous, still crisp */
+.glass-h {
+  background: linear-gradient(180deg, #FFFFFF 0%, #DCEBFA 55%, #9CCBF0 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 28px rgba(117, 184, 234, .18);
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

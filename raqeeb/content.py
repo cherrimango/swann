@@ -182,13 +182,19 @@ def impact() -> dict:
 def geography() -> list[dict]:
     """Per-emirate counts for the map. Emirate level only: no precise citizen locations are ever stored."""
     from .auth import EMIRATES
-    counts = {e: {"emirate": e, "reports": 0, "threats": 0, "confirmed": 0} for e in EMIRATES}
+    counts = {e: {"emirate": e, "reports": 0, "threats": 0, "confirmed": 0, "categories": {}, "campaigns": set()} for e in EMIRATES}
     for e, n in db().execute("SELECT emirate, COUNT(*) FROM citizen_reports WHERE emirate IS NOT NULL GROUP BY emirate"):
         if e in counts:
             counts[e]["reports"] = n
-    for t in rows(db().execute("SELECT emirates, status FROM threats WHERE emirates IS NOT NULL")):
+    for t in rows(db().execute("SELECT emirates, status, category, campaign_id FROM threats WHERE emirates IS NOT NULL")):
         for e in (json.loads(t["emirates"]) or {}):
             if e in counts:
-                counts[e]["threats"] += 1
-                counts[e]["confirmed"] += t["status"] == "confirmed_malicious"
+                c = counts[e]
+                c["threats"] += 1
+                c["confirmed"] += t["status"] == "confirmed_malicious"
+                c["categories"][t["category"]] = c["categories"].get(t["category"], 0) + 1
+                if t["campaign_id"]:
+                    c["campaigns"].add(t["campaign_id"])
+    for c in counts.values():
+        c["campaigns"] = sorted(c["campaigns"])
     return list(counts.values())

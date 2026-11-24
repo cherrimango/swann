@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RAQEEB Command</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500..800&family=Readex+Pro:wght@300..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&family=Noto+Sans+Arabic:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/static/shared/tokens.css">
 <link rel="stylesheet" href="/static/command/command.css">
 </head>
 <body class="signed-out">
@@ -13,8 +14,9 @@
 <!-- SIGN IN -->
 <section id="login" class="login">
   <form id="login-form" class="login-card">
-    <div class="brand"><span class="word">RAQEEB</span><span class="word-ar" lang="ar">رقيب</span></div>
-    <p class="login-sub">Command: for authorised officials only. Every action is recorded.</p>
+    <a class="mark" href="/"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></a>
+    <h1 class="login-title glass-h">COMMAND</h1>
+    <p class="login-sub">For authorised officials and analysts. Every action is recorded in the audit log.</p>
     <label for="l-email">Email</label>
     <input id="l-email" type="email" autocomplete="username" required>
     <label for="l-pass">Password</label>
@@ -22,15 +24,15 @@
     <p id="login-error" class="form-error" role="alert"></p>
     <button class="primary" type="submit">Sign in</button>
     <p class="login-hint">First run? The accounts and passwords are in <code>data/first_run_credentials.txt</code> on the server.</p>
+    <div id="demo-logins" class="demo-logins" hidden><p>Demo accounts (demonstration only)</p></div>
   </form>
 </section>
 
 <header class="top">
   <button id="nav-toggle" class="ghost nav-toggle" aria-label="Show or hide navigation" aria-expanded="true">☰</button>
-  <div class="brand">
-    <span class="word">RAQEEB</span><span class="word-ar" lang="ar">رقيب</span>
-    <span class="role">Command</span>
-  </div>
+  <a class="mark" href="/"><span class="mark-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="mark-en">RAQEEB</span><span class="mark-ar" lang="ar">رقيب</span></a>
+  <span class="role">COMMAND</span>
+  <span id="demo-flag" class="demo-flag" hidden>Demo mode</span>
   <dl class="counters" aria-label="Live totals">
     <div><dt>Review queue</dt><dd id="c-review">–</dd></div>
     <div><dt>Awaiting block</dt><dd id="c-await">–</dd></div>
@@ -46,36 +48,33 @@
 </header>
 
 <nav class="rail" aria-label="Sections">
-  <p class="rail-group">Operations</p>
   <button data-view="overview" class="on">Overview</button>
-  <button data-view="threats" data-perm="view_investigations">Threats</button>
-  <button data-view="reports" data-perm="view_investigations">Citizen reports</button>
-  <button data-view="feed" data-perm="view_investigations">Hunt feed</button>
-  <button data-view="watch" data-perm="view_investigations">Early threat watch</button>
-  <button data-view="scan">Check a link</button>
-  <p class="rail-group">Intelligence</p>
-  <button data-view="campaigns" data-perm="view_investigations">Campaigns</button>
-  <button data-view="forecast">Forecast</button>
-  <button data-view="briefing">Briefing</button>
-  <button data-view="agents">Agents</button>
-  <p class="rail-group">Protection</p>
-  <button data-view="protection">Distribution</button>
-  <button data-view="community" data-perm="review_community">Community</button>
-  <p class="rail-group">Administration</p>
-  <button data-view="audit" data-perm="view_audit">Audit log</button>
-  <button data-view="users" data-perm="manage_users">Users and roles</button>
+  <button data-view="feed" data-perm="view_investigations">Live Threat Intelligence</button>
+  <button data-view="domain">Domain Intelligence</button>
+  <button data-view="campaigns" data-perm="view_investigations">Scam Campaigns</button>
+  <button data-view="agents">AI Investigation</button>
+  <button data-view="reports" data-perm="view_investigations">Citizen Reports</button>
+  <button data-view="threats" data-perm="view_investigations">Threat Verification<b id="n-review" class="count" hidden></b></button>
+  <button data-view="forecast">Seasonal Intelligence</button>
+  <button data-view="community" data-perm="review_community">Guardians &amp; Community</button>
+  <button data-view="protection">Alerts &amp; Distribution</button>
+  <button data-view="briefing">Intelligence Reports</button>
+  <button data-view="users" data-perm="manage_registry">Administration</button>
+  <button data-view="audit" data-perm="view_audit">Audit Logs</button>
+  <button data-view="demo" id="nav-demo" hidden>Demo scenario</button>
 </nav>
 
 <main>
   <!-- OVERVIEW -->
   <section id="v-overview" class="view on">
-    <h2>Overview</h2>
-    <p class="sub" id="ov-sub">Live state of RAQEEB across the UAE.</p>
+    <div class="view-head"><div><h2 class="glass-h">Overview</h2><p class="sub" id="ov-sub">Live state of RAQEEB across the UAE.</p></div>
+      <span class="live-pill" id="ov-season"></span></div>
     <dl id="ov-kpis" class="kpis"></dl>
     <div class="ov-grid">
-      <article class="panel"><h3>Reports and threats by emirate</h3><p class="note">Schematic map. Emirate-level counts only: RAQEEB never stores precise citizen locations.</p><div id="map" class="map"></div></article>
+      <article class="panel span-2"><div class="panel-head"><h3>Live intelligence activity</h3><span class="note">From recorded events only. Demo-seeded items are marked.</span></div><ol id="ov-activity" class="activity"></ol></article>
+      <article class="panel"><div class="panel-head"><h3>Threats by emirate</h3><span class="note">Schematic. Emirate level only.</span></div><div id="map" class="map"></div><div id="map-detail" class="map-detail"></div></article>
       <article class="panel"><h3>Today’s briefing</h3><p id="ov-brief" class="brief"></p><ol id="ov-actions" class="actions-list"></ol></article>
-      <article class="panel"><h3>Status of all threats</h3><div id="ov-status" class="bars"></div></article>
+      <article class="panel"><h3>Where threats are in the workflow</h3><div id="ov-status" class="bars"></div></article>
       <article class="panel"><h3>Most impersonated</h3><div id="ov-brands" class="bars"></div></article>
     </div>
   </section>
@@ -131,24 +130,23 @@
     </div></div>
   </section>
 
-  <!-- EARLY WATCH -->
-  <section id="v-watch" class="view">
-    <h2>Early threat watch</h2>
-    <p class="sub">Look-alike domains the threat hunter found that nobody has reported yet. Promote one to open a threat record for review.</p>
-    <table class="table"><thead><tr><th>Domain</th><th>Risk</th><th>Brand</th><th>Found by</th><th>Why</th><th></th></tr></thead><tbody id="w-rows"></tbody></table>
-  </section>
-
-  <!-- CHECK A LINK -->
-  <section id="v-scan" class="view">
+  <!-- DOMAIN INTELLIGENCE -->
+  <section id="v-domain" class="view">
+    <div class="view-head"><div><h2 class="glass-h">Domain Intelligence</h2>
+      <p class="sub">Run the Link Intelligence Engine. A quick scan uses the offline stages; a deep scan also checks registration, DNS, the certificate, the live page in an isolated browser, and visual similarity.</p></div></div>
     <form id="scan-form" class="scan-form">
-      <label for="scan-url" class="big-label">Check any link</label>
+      <label for="scan-url" class="sr">URL to investigate</label>
       <div class="scan-row">
-        <input id="scan-url" type="text" placeholder="Paste a link, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" required>
-        <button type="submit" class="primary">Check link</button>
+        <input id="scan-url" type="text" placeholder="Paste a URL, e.g. tamm-abudhabi-fines.top/pay" autocomplete="off" required>
+        <div class="seg" role="radiogroup" aria-label="Scan depth"><button type="button" data-mode="quick" class="on" role="radio" aria-checked="true">Quick</button><button type="button" data-mode="deep" role="radio" aria-checked="false">Deep</button></div>
+        <button type="submit" class="primary">Investigate</button>
       </div>
-      <label class="check" data-perm="view_evidence"><input id="scan-live" type="checkbox"> Run live checks (redirects, domain age, page content). Needs internet.</label>
     </form>
-    <div id="scan-result" class="detail"></div>
+    <div id="scan-result"></div>
+    <div class="panel" id="watch-panel">
+      <div class="panel-head"><h3>Early threat watch</h3><span class="note">Look-alike domains found by the Domain Hunter that nobody has reported yet. New does not mean malicious.</span></div>
+      <table class="table"><thead><tr><th>Domain</th><th>Risk</th><th>Brand</th><th>Found by</th><th>Why</th><th></th></tr></thead><tbody id="w-rows"></tbody></table>
+    </div>
   </section>
 
   <!-- CAMPAIGNS -->
@@ -223,16 +221,38 @@
     <table class="table"><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody id="au-rows"></tbody></table>
   </section>
 
-  <!-- USERS -->
+  <!-- ADMINISTRATION -->
   <section id="v-users" class="view">
-    <h2>Users and roles</h2>
-    <form id="u-form" class="inline-form">
-      <input id="u-email" type="email" placeholder="Email" required aria-label="Email">
-      <input id="u-pass" type="password" placeholder="Temporary password (8+ characters)" minlength="8" required aria-label="Temporary password">
-      <select id="u-role" aria-label="Role"></select>
-      <button class="primary" type="submit">Add account</button>
-    </form>
-    <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="u-rows"></tbody></table>
+    <div class="view-head"><div><h2 class="glass-h">Administration</h2><p class="sub">Official brand registry and accounts.</p></div></div>
+    <article class="panel">
+      <div class="panel-head"><h3>UAE official brand registry</h3><span class="note">Only verified domains are trusted. Candidates stay unverified until someone records a verification source.</span></div>
+      <form id="org-form" class="inline-form">
+        <input id="org-name" placeholder="Organisation" required aria-label="Organisation name">
+        <input id="org-domains" placeholder="Official domains, comma separated" required aria-label="Official domains">
+        <input id="org-source" placeholder="Verification source (optional URL or note)" aria-label="Verification source">
+        <button class="primary" type="submit">Save organisation</button>
+      </form>
+      <table class="table"><thead><tr><th>Organisation</th><th>Sector</th><th>Domains</th><th>Origin</th></tr></thead><tbody id="org-rows"></tbody></table>
+    </article>
+    <article class="panel" data-perm="manage_users">
+      <div class="panel-head"><h3>Accounts and roles</h3></div>
+      <form id="u-form" class="inline-form">
+        <input id="u-email" type="email" placeholder="Email" required aria-label="Email">
+        <input id="u-pass" type="password" placeholder="Temporary password (8+ characters)" minlength="8" required aria-label="Temporary password">
+        <select id="u-role" aria-label="Role"></select>
+        <button class="primary" type="submit">Add account</button>
+      </form>
+      <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="u-rows"></tbody></table>
+    </article>
+  </section>
+
+  <!-- DEMO SCENARIO -->
+  <section id="v-demo" class="view">
+    <div class="view-head"><div><h2 class="glass-h">Demo scenario: fake winter camping promotion</h2>
+      <p class="sub">Clearly labelled demonstration data. Step 1 is a simulated discovery; every later step runs RAQEEB’s real engine and workflow, and the checklist below is read from the database.</p></div>
+      <div class="actions-inline"><button id="demo-seed" class="primary" data-perm="approve_threat">Run steps 1–5</button><button id="demo-reset" class="ghost danger" data-perm="approve_threat">Remove demo data</button></div></div>
+    <ol id="demo-steps" class="steps"></ol>
+    <article class="panel" id="demo-kit"></article>
   </section>
 </main>
 
