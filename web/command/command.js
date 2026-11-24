@@ -476,7 +476,7 @@ async function renderScan(r, box) {
   box.replaceChildren(banner, stages, twin || '',
     h('div', { class: 'report-grid' },
       p('Identity', kv([['Submitted', h('span', { class: 'mono' }, r.submitted_url)], ['Normalised', h('span', { class: 'mono' }, r.normalised_url)],
-        ['Final destination', r.final_url ? h('span', { class: 'mono' }, r.final_url) : 'Not followed (quick scan)'], ['Registered domain', r.registered_domain],
+        ['Final destination', r.final_url ? h('span', { class: 'mono' }, r.final_url) : r.mode === 'deep' ? 'Not reached: the site could not be visited' : 'Not followed (quick scan)'], ['Registered domain', r.registered_domain],
         ['Detected brand', r.detected_brand || 'None'], ['Official domain', reg.official_domain_match ? `Yes: ${reg.organisation} (${reg.matched_domain})` : 'No'],
         ['Closest official', reg.closest_official ? `${reg.closest_official}, similarity ${reg.similarity}` : '–']])),
       p('Machine learning', ml.available ? kv([['Prediction', ml.prediction], ['Model score', `${ml.probability} (threshold ${ml.decision_threshold}; not a calibrated probability)`],
@@ -541,7 +541,7 @@ loaders.campaigns = async () => {
       return li;
     }) : [h('li', {}, 'No linked campaigns yet. They form as reports share links, numbers, kits or wording.')]));
     const nodes = g.graph.nodes.map(n => ({ id: n.id, kind: n.kind === 'domain' || n.kind === 'qr' ? 'url' : n.kind, label: `${n.id} ${n.label}` }));
-    startGraph({ nodes, edges: g.graph.edges }, n => KCOL[n.kind] || '#A7B4C6', () => 5, n => n.id === selectedNode);
+    startGraph({ nodes, edges: g.graph.edges }, n => KCOL[n.kind] || '#A7B4C6', () => 6, n => n.id === selectedNode || nodes.length <= 25);
   } else {
     const c = await api('/api/campaigns');
     $('#camp-title').textContent = 'Kits reused across domains';
