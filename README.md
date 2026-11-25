@@ -100,3 +100,29 @@ without it. Swagger UI: `/docs`.
 Data: the attached `url_dataset.csv` (provenance not stated in the archive), OpenPhish community feed, Phishing.Database
 (MIT), top-1M domain list. UAE scam patterns: public advisories (Abu Dhabi Police, Dubai Police, TDRA, ICP, Salik,
 Emirates Post, UAE banks). Fonts: Roboto and Noto Kufi Arabic (SIL OFL 1.1, licences in `web/shared/fonts/`).
+
+## The problem and the solution
+Scam links, fake messages and spoofed UAE brands reach residents faster than officials can verify and block them.
+SAWNN gives citizens a mobile-first app to check links, files, QR codes, messages and numbers, and gives
+authorised officials a command dashboard with live threat discovery, AI agents, reviewed citizen alerts and
+global blocking. Both run on one shared threat-intelligence backend.
+
+## Technical choices, tools, APIs and data
+- **Backend:** Python, FastAPI, Uvicorn, SQLite.
+- **Detection:** full-URL LightGBM + logistic regression model (scikit-learn), tldextract, rapidfuzz, DNS checks.
+- **Files and images:** Pillow, OpenCV, pypdf, QR decoding; optional Tesseract OCR and Playwright sandbox.
+- **Frontend:** vanilla JS PWA (English and Arabic, full RTL); Android client in Kotlin.
+- **Data:** url_dataset.csv, OpenPhish, Phishing.Database, top-1M domain list.
+- **Optional APIs (all work without keys):** Google Web Risk, VirusTotal, URLhaus, PhishTank, any OpenAI-compatible LLM.
+
+## How to build and run (Windows PowerShell)
+
+    cd sawnn
+    py -m venv .venv
+    .venv\Scripts\Activate.ps1
+    python -m pip install -r requirements.txt
+    $env:SAWNN_DEMO="1"
+    python -m uvicorn server.app:app --host 0.0.0.0 --port 8000
+
+Open http://localhost:8000/app (citizens), /command (officials), /signin (demo sign-in).
+Demo accounts and walkthrough: docs/SAWNN_DEMO_GUIDE.md
