@@ -331,6 +331,8 @@ textarea:focus, input:focus, select:focus { border-color: #fff; box-shadow: 0 0 
 .tabs .report-tab .ti { background: var(--red); }
 .tabs .report-tab .ti::before { background: #fff; }
 .panel-sheet, .sheet-body, dialog { background: #0C1D40; color: var(--ink); }
+.msg.me { background: #fff; color: var(--navy-950); }
+.msg.me a { color: var(--navy-950); }
 .msg .live { background: rgba(255, 255, 255, .06); border-color: var(--line); }
 .suggest button { background: rgba(255, 255, 255, .09); color: var(--ink); }
 .qr-box { background: rgba(3, 10, 26, .7); border: 1px solid var(--line); }
